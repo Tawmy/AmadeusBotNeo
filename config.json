@@ -1,0 +1,4 @@
+{
+    "cogs_directory": "cogs",
+    "cogs": ["base"]
+}
