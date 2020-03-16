@@ -35,7 +35,7 @@ async def on_ready():
 
     # Load extensions and update extended init message
     failed_extensions = await load_extensions()
-    init_embed_extended = await update_init_embed_extended("modules", init_embed_extended, failed_extensions)
+    init_embed_extended = await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
     await init_message_extended.edit(embed=init_embed_extended)
 
     # await asyncio.sleep(1)  # debug
@@ -64,7 +64,7 @@ async def prepare_init_messages():
     init_embed.set_thumbnail(url="https://i.imgur.com/fvMdvyu.png")
 
     init_embed_extended = init_embed
-    init_embed_extended.add_field(name="Modules", value="⌛ Loading...")
+    init_embed_extended.add_field(name="Extensions", value="⌛ Loading...")
     init_embed_extended.add_field(name="Configs", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Database", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Discord.py", value=discord.__version__)
@@ -86,13 +86,13 @@ async def send_init_message_extended(init_message_extended):
 
 
 async def update_init_embed_extended(update_type, init_embed_extended, error_value):
-    if update_type == "modules":
+    if update_type == "extensions":
         if len(error_value) == 0:
-            init_embed_extended.set_field_at(0, name="Modules", value="✅ Loaded")
+            init_embed_extended.set_field_at(0, name="Extensions", value="✅ Loaded")
         else:
             error_value = ', '.join(error_value)
-            init_embed_extended.set_field_at(0, name="Modules", value="⚠ Failed")
-            init_embed_extended.add_field(name="Failed modules", value=error_value)
+            init_embed_extended.set_field_at(0, name="Extensions", value="⚠ Failed")
+            init_embed_extended.add_field(name="Failed extensions", value=error_value)
         init_embed_extended.set_field_at(1, name="Configs", value="⌛ Loading...")
 
     elif update_type == "configs":
