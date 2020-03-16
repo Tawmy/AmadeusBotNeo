@@ -28,7 +28,7 @@ async def on_ready():
     bot.app_info = await bot.application_info()
 
     # prepare init embeds for both main and all other servers
-    init_embed, init_embed_extended = await prepare_init_messages()
+    init_embed, init_embed_extended = await prepare_init_embeds()
     init_message_extended = await send_init_message_extended(init_embed_extended)
 
     # await asyncio.sleep(1)  # debug
@@ -55,7 +55,7 @@ async def on_ready():
     await init_message_extended.edit(embed=init_embed_extended)
 
 
-async def prepare_init_messages():
+async def prepare_init_embeds():
     init_embed = discord.Embed()
     if bool(bot.app_info.icon_url):
         init_embed.set_author(name=bot.app_info.name, icon_url=bot.app_info.icon_url)
