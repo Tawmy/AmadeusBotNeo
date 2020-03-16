@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix=get_command_prefix())
 bot.config = {}
 with open("config.json", 'r') as file:
     try:
-        bot.config["config"] = json.load(file)
+        bot.config["bot"] = json.load(file)
         print("Configuration file loaded successfully")
     except ValueError as e:
         raise SystemExit(e)
@@ -75,7 +75,7 @@ async def prepare_init_messages():
 
 
 async def send_init_message_extended(init_message_extended):
-    channel = bot.get_channel(bot.config["config"]["primary_server"]["main_channel_id"])
+    channel = bot.get_channel(bot.config["bot"]["primary_server"]["main_channel_id"])
     if channel is not None:
         try:
             return await channel.send(embed=init_message_extended)
@@ -110,13 +110,13 @@ async def update_init_embed_extended(update_type, init_embed_extended, error_val
 
 async def load_extensions():
     failed = []
-    for extension in bot.config["config"]["extensions"]["list"]:
+    for extension in bot.config["bot"]["extensions"]["list"]:
         try:
-            bot.load_extension(bot.config["config"]["extensions"]["directory"] + "." + extension)
+            bot.load_extension(bot.config["bot"]["extensions"]["directory"] + "." + extension)
         except (discord.DiscordException, ModuleNotFoundError):
             failed.append(extension)
     return failed
 
 
 print("Connecting to Discord...")
-bot.run(bot.config["config"]["bot"]["token"], bot=True, reconnect=True)
+bot.run(bot.config["bot"]["token"], bot=True, reconnect=True)
