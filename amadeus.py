@@ -110,11 +110,11 @@ async def update_init_embed_extended(update_type, init_embed_extended, error_val
 
 async def load_extensions():
     failed = []
-    for cog in bot.config["config"]["cogs"]["list"]:
+    for extension in bot.config["config"]["extensions"]["list"]:
         try:
-            bot.load_extension(bot.config["config"]["cogs"]["directory"] + "." + cog)
+            bot.load_extension(bot.config["config"]["extensions"]["directory"] + "." + extension)
         except (discord.DiscordException, ModuleNotFoundError):
-            failed.append(cog)
+            failed.append(extension)
     return failed
 
 
