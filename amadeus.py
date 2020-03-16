@@ -2,6 +2,7 @@ import asyncio
 import json
 import platform
 
+import asyncpg
 import discord
 from discord.ext import commands
 
@@ -48,11 +49,10 @@ async def on_ready():
 
     # await asyncio.sleep(1)  # debug
 
-    # TODO implement database connection
-    # Connect to database -> still skipped right now
-    database_status = None
-    init_embed_extended = await update_init_embed_extended("database", init_embed_extended, database_status)
-    await init_message_extended.edit(embed=init_embed_extended)
+    # Connect to database
+    await connect_database(init_embed_extended, init_message_extended)
+
+    # TODO send message on all servers
 
 
 async def prepare_init_embeds():
@@ -82,14 +82,14 @@ async def send_init_message_extended(init_message_extended):
         print("Main channel not found, please fix this immediately.")
 
 
-async def update_init_embed_extended(update_type, init_embed_extended, error_value):
+async def update_init_embed_extended(update_type, init_embed_extended, value):
     if update_type == "extensions":
-        if len(error_value) == 0:
+        if len(value) == 0:
             init_embed_extended.set_field_at(0, name="Extensions", value="✅ Loaded")
         else:
-            error_value = ', '.join(error_value)
+            value = ', '.join(value)
             init_embed_extended.set_field_at(0, name="Extensions", value="⚠ Failed")
-            init_embed_extended.add_field(name="Failed extensions", value=error_value)
+            init_embed_extended.add_field(name="Failed extensions", value=value)
         init_embed_extended.set_field_at(1, name="Configs", value="⌛ Loading...")
 
     elif update_type == "configs":
@@ -98,7 +98,17 @@ async def update_init_embed_extended(update_type, init_embed_extended, error_val
         # TODO implement this
 
     elif update_type == "database":
-        init_embed_extended.set_field_at(2, name="Database", value="✅ Connected")
+        if value == 0:
+            init_embed_extended.set_field_at(2, name="Database", value="⌛ Connecting...")
+            init_embed_extended.set_footer(text="")
+        elif value == 1:
+            init_embed_extended.set_field_at(2, name="Database", value="✅ Connected")
+        elif value == 2:
+            init_embed_extended.set_field_at(2, name="Database", value="⚠ Failed")
+            reconnect_msg = "Retrying database connection in "
+            reconnect_msg += str(bot.config["bot"]["database"]["retry_timeout"])
+            reconnect_msg += " seconds..."
+            init_embed_extended.set_footer(text=reconnect_msg)
 
     # TODO else clause?
 
@@ -113,6 +123,27 @@ async def load_extensions():
         except (discord.DiscordException, ModuleNotFoundError):
             failed.append(extension)
     return failed
+
+
+async def connect_database(init_embed_extended, init_message_extended):
+    bot.database_pool = None
+
+    while bot.database_pool is None:
+        try:
+            bot.database_pool = await asyncpg.create_pool(host=bot.config["bot"]["database"]["ip"],
+                                                          database=bot.config["bot"]["database"]["name"],
+                                                          user=bot.config["bot"]["database"]["username"],
+                                                          password=bot.config["bot"]["database"]["password"],
+                                                          command_timeout=bot.config["bot"]["database"]["cmd_timeout"],
+                                                          timeout=bot.config["bot"]["database"]["timeout"])
+            await update_init_embed_extended("database", init_embed_extended, 1)
+            await init_message_extended.edit(embed=init_embed_extended)
+        except asyncio.futures.TimeoutError:
+            await update_init_embed_extended("database", init_embed_extended, 2)
+            await init_message_extended.edit(embed=init_embed_extended)
+            await asyncio.sleep(bot.config["bot"]["database"]["retry_timeout"])
+            await update_init_embed_extended("database", init_embed_extended, 0)
+            await init_message_extended.edit(embed=init_embed_extended)
 
 
 print("Connecting to Discord...")
