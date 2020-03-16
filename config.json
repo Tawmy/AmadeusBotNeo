@@ -1,4 +1,13 @@
 {
-    "cogs_directory": "cogs",
-    "cogs": ["base"]
+    "cogs": {
+        "directory": "cogs",
+        "list": ["base"]
+    },
+    "bot": {
+        "token": ""
+    },
+    "primary_server": {
+        "id": 111111111111111111,
+        "main_channel_id": 111111111111111111
+    }
 }
