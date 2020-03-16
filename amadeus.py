@@ -57,10 +57,7 @@ async def on_ready():
 
 async def prepare_init_embeds():
     init_embed = discord.Embed()
-    if bool(bot.app_info.icon_url):
-        init_embed.set_author(name=bot.app_info.name, icon_url=bot.app_info.icon_url)
-    else:
-        init_embed.set_author(name=bot.app_info.name)
+    init_embed.title = bot.app_info.name
     init_embed.set_thumbnail(url="https://i.imgur.com/fvMdvyu.png")
 
     init_embed_extended = init_embed
