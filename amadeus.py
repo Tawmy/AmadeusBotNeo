@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import json
 import platform
 
@@ -53,13 +54,15 @@ async def on_ready():
     await connect_database(init_embed_extended, init_message_extended)
 
     # Check changelog, add to startup embed
-    await check_changelog(init_embed_extended)
+    await check_changelog(init_embed, init_embed_extended)
     await init_message_extended.edit(embed=init_embed_extended)
 
     # Update guild table in database
     await update_guilds_table()
 
     # TODO send message on all servers
+    channel = bot.get_channel(bot.config["bot"]["primary_server"]["main_channel_id"])
+    await channel.send(embed=init_embed)
 
 
 @bot.event
@@ -103,7 +106,7 @@ async def prepare_init_embeds():
     init_embed.title = bot.app_info.name
     init_embed.set_thumbnail(url="https://i.imgur.com/fvMdvyu.png")
 
-    init_embed_extended = init_embed
+    init_embed_extended = copy.deepcopy(init_embed)
     init_embed_extended.add_field(name="Extensions", value="⌛ Loading...")
     init_embed_extended.add_field(name="Configs", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Database", value="⌛ Waiting...")
@@ -189,7 +192,7 @@ async def connect_database(init_embed_extended, init_message_extended):
             await init_message_extended.edit(embed=init_embed_extended)
 
 
-async def check_changelog(init_embed_extended):
+async def check_changelog(init_embed, init_embed_extended):
     sql = '''   (SELECT id, version, changes, acknowledged
                 FROM changelog
                 WHERE acknowledged = false
@@ -212,12 +215,15 @@ async def check_changelog(init_embed_extended):
     finally:
         await bot.database_pool.release(con)
 
-    init_embed_extended.title = init_embed_extended.title + " " + bot.version
+    embed_title = init_embed.title + " " + bot.version
+    init_embed.title = embed_title
+    init_embed_extended.title = embed_title
 
     if len(fields) > 0 and fields[0]["acknowledged"] is False:
 
         description = "**Changes:**\n"
         description += fields[0]["changes"]
+        init_embed.description = description
         init_embed_extended.description = description
 
         sql = '''   UPDATE changelog
@@ -230,7 +236,7 @@ async def check_changelog(init_embed_extended):
         finally:
             await bot.database_pool.release(con)
 
-        return init_embed_extended
+        return init_embed, init_embed_extended
 
 
 async def update_guilds_table():
