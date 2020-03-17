@@ -18,7 +18,7 @@ def get_command_prefix(amadeus, message):
 bot = commands.Bot(command_prefix=get_command_prefix)
 
 bot.config = {}
-with open("config.json", 'r') as file:
+with open("config/bot.json", 'r') as file:
     try:
         bot.config["bot"] = json.load(file)
         print("Configuration file loaded successfully")
@@ -178,7 +178,7 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
 
 async def load_extensions():
     failed = []
-    for extension in bot.config["bot"]["extensions"]["list"]:
+    for extension in bot.config["bot"]["extensions"]:
         try:
             bot.load_extension(bot.config["bot"]["extensions"]["directory"] + "." + extension)
         except (discord.DiscordException, ModuleNotFoundError):
