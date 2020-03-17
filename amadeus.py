@@ -8,12 +8,14 @@ import discord
 from discord.ext import commands
 
 
-def get_command_prefix():
-    return "+"
-    # TODO check database for prefix
+def get_command_prefix(amadeus, message):
+    try:
+        return amadeus.config[message.guild.id]["command_prefix"]
+    except KeyError:
+        return "+"
 
 
-bot = commands.Bot(command_prefix=get_command_prefix())
+bot = commands.Bot(command_prefix=get_command_prefix)
 
 bot.config = {}
 with open("config.json", 'r') as file:
