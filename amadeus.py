@@ -36,7 +36,7 @@ async def on_ready():
 
     # Load extensions and update extended init message
     failed_extensions = await load_extensions()
-    init_embed_extended = await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
+    await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
     await init_message_extended.edit(embed=init_embed_extended)
 
     # await asyncio.sleep(1)  # debug
@@ -44,13 +44,17 @@ async def on_ready():
     # TODO implement config loading
     # Load server configurations -> still skipped right now
     failed_configs = None
-    init_embed_extended = await update_init_embed_extended("configs", init_embed_extended, failed_configs)
+    await update_init_embed_extended("configs", init_embed_extended, failed_configs)
     await init_message_extended.edit(embed=init_embed_extended)
 
     # await asyncio.sleep(1)  # debug
 
     # Connect to database
     await connect_database(init_embed_extended, init_message_extended)
+
+    # Check changelog, add to startup embed
+    await check_changelog(init_embed_extended)
+    await init_message_extended.edit(embed=init_embed_extended)
 
     # Update guild table in database
     await update_guilds_table()
@@ -183,6 +187,50 @@ async def connect_database(init_embed_extended, init_message_extended):
             await asyncio.sleep(bot.config["bot"]["database"]["retry_timeout"])
             await update_init_embed_extended("database", init_embed_extended, 0)
             await init_message_extended.edit(embed=init_embed_extended)
+
+
+async def check_changelog(init_embed_extended):
+    sql = '''   (SELECT id, version, changes, acknowledged
+                FROM changelog
+                WHERE acknowledged = false
+                ORDER BY time
+                LIMIT 1)
+                
+                UNION ALL
+                
+                (SELECT id, version, changes, acknowledged
+                FROM changelog
+                WHERE acknowledged = true
+                ORDER BY time DESC
+                LIMIT 1)
+                '''
+
+    con = await bot.database_pool.acquire()
+    try:
+        fields = await con.fetch(sql)
+        bot.version = fields[0]["version"]
+    finally:
+        await bot.database_pool.release(con)
+
+    init_embed_extended.title = init_embed_extended.title + " " + bot.version
+
+    if len(fields) > 0 and fields[0]["acknowledged"] is False:
+
+        description = "**Changes:**\n"
+        description += fields[0]["changes"]
+        init_embed_extended.description = description
+
+        sql = '''   UPDATE changelog
+                    SET acknowledged = true
+                    WHERE id = $1::integer'''
+
+        con = await bot.database_pool.acquire()
+        try:
+            await con.execute(sql, fields[0]["id"])
+        finally:
+            await bot.database_pool.release(con)
+
+        return init_embed_extended
 
 
 async def update_guilds_table():
