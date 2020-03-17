@@ -180,7 +180,7 @@ async def load_extensions():
     failed = []
     for extension in bot.config["bot"]["extensions"]:
         try:
-            bot.load_extension(bot.config["bot"]["extensions"]["directory"] + "." + extension)
+            bot.load_extension("extensions." + extension)
         except (discord.DiscordException, ModuleNotFoundError):
             failed.append(extension)
     return failed
