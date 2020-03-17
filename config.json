@@ -17,4 +17,5 @@
         "retry_timeout": 10
     },
     "token": ""
+    "debug": false
 }
