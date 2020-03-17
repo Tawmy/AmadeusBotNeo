@@ -1,0 +1,34 @@
+{
+    "essential_channels": {
+        "name": "Essential Channels",
+        "description": "Channels that are required for bot operation",
+        "list": {
+            "bot_channel": {
+                "name": "Bot Channel",
+                "description": "The channel the bot posts its status messages in (eg updates)."
+            },
+            "mod_channel": {
+                "name": "Moderator Channel",
+                "description": "Moderation related messages are posted in this channel (eg user joins)."
+            },
+            "log_channel": {
+                "name": "Log Channel",
+                "description": "Logs are posted in this channel (eg deleted messages)"
+            }
+        }
+    },
+    "essential_roles": {
+        "name": "Essential Roles",
+        "description": "Roles that are required for bot operation",
+        "list": {
+            "bot_role": {
+                "name": "Bot Role",
+                "description": "Role the bot will be assigned. This role will need certain permissions."
+            },
+            "mod_role": {
+                "name": "Moderator Role",
+                "description": "Role to have default control over the bot"
+            }
+        }
+    }
+}

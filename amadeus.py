@@ -35,25 +35,30 @@ async def on_ready():
     init_embed, init_embed_extended = await prepare_init_embeds()
     init_message_extended = await send_init_message_extended(init_embed_extended)
 
-    # await asyncio.sleep(1)  # debug
+    if bot.config["bot"]["debug"]:
+        await asyncio.sleep(1)
 
     # Load extensions and update extended init message
     failed_extensions = await load_extensions()
     await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
     await init_message_extended.edit(embed=init_embed_extended)
 
-    # await asyncio.sleep(1)  # debug
+    if bot.config["bot"]["debug"]:
+        await asyncio.sleep(1)
 
-    # TODO implement config loading
-    # Load server configurations -> still skipped right now
-    failed_configs = None
-    await update_init_embed_extended("configs", init_embed_extended, failed_configs)
+    # Load server configurations
+    configs = await load_configs()
+    await update_init_embed_extended("configs", init_embed_extended, configs)
     await init_message_extended.edit(embed=init_embed_extended)
 
-    # await asyncio.sleep(1)  # debug
+    if bot.config["bot"]["debug"]:
+        await asyncio.sleep(1)
 
     # Connect to database
     await connect_database(init_embed_extended, init_message_extended)
+
+    if bot.config["bot"]["debug"]:
+        await asyncio.sleep(1)
 
     # Check changelog, add to startup embed
     await check_changelog(init_embed, init_embed_extended)
@@ -114,7 +119,6 @@ async def prepare_init_embeds():
     init_embed_extended.add_field(name="Database", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Discord.py", value=discord.__version__)
     init_embed_extended.add_field(name="Python", value=platform.python_version())
-    init_embed_extended.add_field(name="ID", value=bot.app_info.id)
 
     return [init_embed, init_embed_extended]
 
@@ -137,13 +141,22 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
         else:
             value = ', '.join(value)
             init_embed_extended.set_field_at(0, name="Extensions", value="⚠ Failed")
-            init_embed_extended.add_field(name="Failed extensions", value=value)
+            init_embed_extended.add_field(name="Extensions failed", value=value, inline="False")
         init_embed_extended.set_field_at(1, name="Configs", value="⌛ Loading...")
 
     elif update_type == "configs":
-        init_embed_extended.set_field_at(1, name="Configs", value="✅ Loaded")
+        successful_load = True
+        if len(value[1]) > 0:
+            init_embed_extended.add_field(name="Configs failed", value="\n".join(value[1]), inline=False)
+            successful_load = False
+        if len(value[0]) > 1:
+            init_embed_extended.add_field(name="Configs not found", value="\n".join(value[0]), inline=False)
+
+        if successful_load:
+            init_embed_extended.set_field_at(1, name="Configs", value="✅ Loaded")
+        else:
+            init_embed_extended.set_field_at(1, name="Configs", value="⚠ Failed")
         init_embed_extended.set_field_at(2, name="Database", value="⌛ Connecting...")
-        # TODO implement this
 
     elif update_type == "database":
         if value == 0:
@@ -171,6 +184,27 @@ async def load_extensions():
         except (discord.DiscordException, ModuleNotFoundError):
             failed.append(extension)
     return failed
+
+
+async def load_configs():
+    json_files = ["options"]
+    error_filenotfound_list = []
+    error_valueerror_list = []
+
+    for guild in bot.guilds:
+        json_files.append(str(guild.id))
+
+    for filename in json_files:
+        try:
+            with open("config/" + filename + ".json", 'r') as file:
+                try:
+                    bot.config[filename] = json.load(file)
+                except ValueError:
+                    error_valueerror_list.append(filename)
+        except FileNotFoundError:
+            error_filenotfound_list.append(filename)
+
+    return [error_filenotfound_list, error_valueerror_list]
 
 
 async def connect_database(init_embed_extended, init_message_extended):
