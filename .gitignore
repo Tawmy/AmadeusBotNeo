@@ -128,5 +128,4 @@ dmypy.json
 
 
 .DS_Store
-config.py
 venv_old
