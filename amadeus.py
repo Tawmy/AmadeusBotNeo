@@ -35,30 +35,18 @@ async def on_ready():
     init_embed, init_embed_extended = await prepare_init_embeds()
     init_message_extended = await send_init_message_extended(init_embed_extended)
 
-    if bot.config["bot"]["debug"]:
-        await asyncio.sleep(1)
-
     # Load extensions and update extended init message
     failed_extensions = await load_extensions()
     await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
     await init_message_extended.edit(embed=init_embed_extended)
-
-    if bot.config["bot"]["debug"]:
-        await asyncio.sleep(1)
 
     # Load server configurations
     configs = await load_configs()
     await update_init_embed_extended("configs", init_embed_extended, configs)
     await init_message_extended.edit(embed=init_embed_extended)
 
-    if bot.config["bot"]["debug"]:
-        await asyncio.sleep(1)
-
     # Connect to database
     await connect_database(init_embed_extended, init_message_extended)
-
-    if bot.config["bot"]["debug"]:
-        await asyncio.sleep(1)
 
     # Check changelog, add to startup embed
     await check_changelog(init_embed, init_embed_extended)
