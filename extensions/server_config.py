@@ -13,12 +13,14 @@ class Config(commands.Cog):
     @commands.command(name='setup')
     @commands.is_owner()
     async def setup(self, ctx, setup_user: discord.Member = "owner_has_not_specified_user"):
+        # Guild owner can give another user permission to execute setup
         if setup_user == "owner_has_not_specified_user":
             setup_user = ctx.author
 
         initial_embed_data = await self.prepare_initial_embed(ctx, setup_user)
         setup_message = await ctx.send(embed=initial_embed_data[0])
 
+        # TODO handle different reaction emoji
         if initial_embed_data[1]:
             await setup_message.add_reaction("✅")
         else:
@@ -44,6 +46,7 @@ class Config(commands.Cog):
         embed.description += bot_name + " will walk you through this process step by step.\n\n"
         embed.set_footer(text=setup_user.display_name, icon_url=setup_user.avatar_url_as(static_format="png"))
 
+        # Different prompt if server has been configured before
         is_initial_config = True
         json_file = str(ctx.guild.id) + '.json'
         if isfile('config/' + json_file):
@@ -59,18 +62,25 @@ class Config(commands.Cog):
         return [embed, is_initial_config]
 
     async def collect_setup_information(self, ctx, setup_message, setup_user):
+        # Iterate categories
         for cat_key, cat_val in self.bot.config["options"].items():
+            # Only iterate essential categories
             if cat_key.startswith("essential_"):
+                # Iterate options in category
                 for opt_key, opt_val in self.bot.config["options"][cat_key]["list"].items():
                     embed = await self.prepare_prompt(opt_val, 0)
                     obj = None
                     while obj is None:
                         user_input = await self.await_input(ctx, embed, setup_message, setup_user)
+                        # If user has not cancelled
                         if user_input not in ["cancel", "\"cancel\""]:
                             obj = await self.check_input(ctx, cat_key, user_input)
+                            # if input invalid
                             if obj is None:
                                 embed = await self.prepare_prompt(opt_val, 1)
                                 await setup_message.edit(embed=embed)
+                            # TODO else clause -> process data
+                        # If user has cancelled
                         else:
                             embed = await self.prepare_prompt(None, 2)
                             await setup_message.edit(embed=embed)
@@ -105,25 +115,31 @@ class Config(commands.Cog):
     async def copy_default_values(self, ctx):
         self.bot.config.setdefault(ctx.guild.id, {})
 
+        # Iterate categories
         for cat_key, cat_val in self.bot.config["options"].items():
+            # Only iterate non-essential categories
             if not cat_key.startswith("essential_"):
                 self.bot.config[ctx.guild.id].setdefault(cat_key, {})
+                # Iterate options in category
                 for opt_key, opt_val in self.bot.config["options"][cat_key].items():
+                    # Set option for server if not already set
                     self.bot.config[ctx.guild.id][cat_key].setdefault(opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
 
     async def prepare_prompt(self, opt_val, status):
         embed = discord.Embed()
+        # opt_val is None when no user input is to be prompted
         if opt_val is not None:
             embed.set_author(name="Please enter:")
             embed.title = opt_val["name"]
             embed.description = opt_val["description"]
             embed.set_footer(text="Type \"cancel\" to cancel")
+        # if input invalid
         if status == 1:
             embed.description += "\n\n⚠ Not found. Please try again."
+        # if setup cancelled
         if status == 2:
             embed.title = "Setup cancelled"
         return embed
-
 
 
 def setup(bot):
