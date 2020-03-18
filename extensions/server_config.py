@@ -19,27 +19,22 @@ class Config(commands.Cog):
         initial_embed_data = await self.prepare_initial_embed(ctx, setup_user)
         setup_message = await ctx.send(embed=initial_embed_data[0])
 
-        if initial_embed_data[1] is False:
-            if self.bot.config["bot"]["debug"]:
-                await asyncio.sleep(2)
-            else:
-                await asyncio.sleep(20)
-
-        if self.bot.config["bot"]["debug"]:
-            await self.copy_default_values(ctx)
-        else:
+        if initial_embed_data[1]:
             await setup_message.add_reaction("✅")
+        else:
+            await setup_message.add_reaction("🟦")
+            await setup_message.add_reaction("🟥")
 
-            def check(reaction, user):
-                return user == setup_user and setup_message.id == reaction.message.id and reaction.emoji == "✅"
-            try:
-                reaction, user = await self.bot.wait_for('reaction_add', timeout=120.0, check=check)
-            except asyncio.TimeoutError:
-                await setup_message.clear_reactions()
-                return
-            else:
-                await setup_message.clear_reactions()
-                await self.copy_default_values(ctx)
+        def check(reaction, user):
+            return user == setup_user and setup_message.id == reaction.message.id and reaction.emoji in ["✅", "🟦", "🟥"]
+        try:
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=120.0, check=check)
+        except asyncio.TimeoutError:
+            await setup_message.clear_reactions()
+            return
+        else:
+            await setup_message.clear_reactions()
+            await self.copy_default_values(ctx)
 
     async def prepare_initial_embed(self, ctx, setup_user):
         embed = discord.Embed()
@@ -47,7 +42,6 @@ class Config(commands.Cog):
         embed.title = bot_name + " Setup"
         embed.description = "Before " + bot_name + " can do its job, some channels and roles need to be configured. "
         embed.description += bot_name + " will walk you through this process step by step.\n\n"
-        embed.description += "Once you are ready, click the ✅ reaction under this message."
         embed.set_footer(text=setup_user.display_name, icon_url=setup_user.avatar_url_as(static_format="png"))
 
         is_initial_config = True
@@ -55,8 +49,12 @@ class Config(commands.Cog):
         if isfile('config/' + json_file):
             shutil.copy('config/' + json_file, 'config/backup/' + json_file)
             is_initial_config = False
-            embed.description += " This will only show after 20 seconds because:\n\n"
-            embed.description += "!! THIS WILL RESET YOUR SERVER CONFIGURATION ENTIRELY !!"
+            embed.description += "Your server has been configured before. "
+            embed.description += "You can choose to either overwrite only the channels and roles set during setup, or "
+            embed.description += "reset the configuration **entirely** (❗).\n\n"
+            embed.description += "🟦 *Regular setup* **|** 🟥 *Full reset*"
+        else:
+            embed.description += "Once you are ready, click the ✅ reaction under this message."
 
         return [embed, is_initial_config]
 
