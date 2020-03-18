@@ -34,7 +34,7 @@ class Config(commands.Cog):
             return
         else:
             await setup_message.clear_reactions()
-            await self.copy_default_values(ctx)
+            await self.collect_setup_information(ctx, setup_message, setup_user)
 
     async def prepare_initial_embed(self, ctx, setup_user):
         embed = discord.Embed()
@@ -58,6 +58,50 @@ class Config(commands.Cog):
 
         return [embed, is_initial_config]
 
+    async def collect_setup_information(self, ctx, setup_message, setup_user):
+        for cat_key, cat_val in self.bot.config["options"].items():
+            if cat_key.startswith("essential_"):
+                for opt_key, opt_val in self.bot.config["options"][cat_key]["list"].items():
+                    embed = await self.prepare_prompt(opt_val, 0)
+                    obj = None
+                    while obj is None:
+                        user_input = await self.await_input(ctx, embed, setup_message, setup_user)
+                        if user_input not in ["cancel", "\"cancel\""]:
+                            obj = await self.check_input(ctx, cat_key, user_input)
+                            if obj is None:
+                                embed = await self.prepare_prompt(opt_val, 1)
+                                await setup_message.edit(embed=embed)
+                        else:
+                            embed = await self.prepare_prompt(None, 2)
+                            await setup_message.edit(embed=embed)
+                            return None
+
+    async def await_input(self, ctx, embed, setup_message, setup_user):
+        await setup_message.edit(embed=embed)
+
+        def check(msg):
+            return msg.author is setup_user and msg.channel is ctx.channel
+
+        try:
+            msg = await self.bot.wait_for('message', timeout=180.0, check=check)
+        except asyncio.TimeoutError:
+            await self.prepare_prompt(None, 1)
+        else:
+            await msg.delete()
+            return msg.content
+
+    async def check_input(self, ctx, cat_key, user_input):
+        if cat_key == "essential_channels":
+            try:
+                return await commands.TextChannelConverter().convert(ctx, user_input)
+            except commands.CommandError:
+                return None
+        elif cat_key == "essential_roles":
+            try:
+                return await commands.RoleConverter().convert(ctx, user_input)
+            except commands.CommandError:
+                return None
+
     async def copy_default_values(self, ctx):
         self.bot.config.setdefault(ctx.guild.id, {})
 
@@ -67,18 +111,19 @@ class Config(commands.Cog):
                 for opt_key, opt_val in self.bot.config["options"][cat_key].items():
                     self.bot.config[ctx.guild.id][cat_key].setdefault(opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
 
-    async def prompt_channels(self, ctx):
-        for channel in self.bot.config["options"]["essential_channels"]["list"].values():
-            prompt_embed = await self.prepare_prompt(channel)
-            await ctx.send(embed=prompt_embed)
-
-    async def prepare_prompt(self, channel):
+    async def prepare_prompt(self, opt_val, status):
         embed = discord.Embed()
-        embed.set_author(name="Please enter:")
-        embed.title = channel["name"]
-        embed.description = channel["description"]
-        embed.set_footer(text="Type \"cancel\" to cancel")
+        if opt_val is not None:
+            embed.set_author(name="Please enter:")
+            embed.title = opt_val["name"]
+            embed.description = opt_val["description"]
+            embed.set_footer(text="Type \"cancel\" to cancel")
+        if status == 1:
+            embed.description += "\n\n⚠ Not found. Please try again."
+        if status == 2:
+            embed.title = "Setup cancelled"
         return embed
+
 
 
 def setup(bot):
