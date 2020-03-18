@@ -25,18 +25,21 @@ class Config(commands.Cog):
             else:
                 await asyncio.sleep(20)
 
-        await setup_message.add_reaction("✅")
-
-        def check(reaction, user):
-            return user == setup_user and setup_message.id == reaction.message.id and reaction.emoji == "✅"
-        try:
-            reaction, user = await self.bot.wait_for('reaction_add', timeout=120.0, check=check)
-        except asyncio.TimeoutError:
-            await setup_message.clear_reactions()
-            return
+        if self.bot.config["bot"]["debug"]:
+            await self.copy_default_values(ctx)
         else:
-            await setup_message.clear_reactions()
-            await self.collect_setup_information(ctx, initial_embed_data[0], setup_message, setup_user)
+            await setup_message.add_reaction("✅")
+
+            def check(reaction, user):
+                return user == setup_user and setup_message.id == reaction.message.id and reaction.emoji == "✅"
+            try:
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=120.0, check=check)
+            except asyncio.TimeoutError:
+                await setup_message.clear_reactions()
+                return
+            else:
+                await setup_message.clear_reactions()
+                await self.copy_default_values(ctx)
 
     async def prepare_initial_embed(self, ctx, setup_user):
         embed = discord.Embed()
@@ -57,9 +60,14 @@ class Config(commands.Cog):
 
         return [embed, is_initial_config]
 
-    async def collect_setup_information(self, ctx, embed, setup_message, setup_user):
-        # TODO
-        pass
+    async def copy_default_values(self, ctx):
+        self.bot.config.setdefault(ctx.guild.id, {})
+
+        for cat_key, cat_val in self.bot.config["options"].items():
+            if not cat_key.startswith("essential_"):
+                self.bot.config[ctx.guild.id].setdefault(cat_key, {})
+                for opt_key, opt_val in self.bot.config["options"][cat_key].items():
+                    self.bot.config[ctx.guild.id][cat_key].setdefault(opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
 
     async def prompt_channels(self, ctx):
         for channel in self.bot.config["options"]["essential_channels"]["list"].values():

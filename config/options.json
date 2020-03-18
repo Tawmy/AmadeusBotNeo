@@ -1,4 +1,11 @@
 {
+    "general": {
+        "command_prefix": {
+            "name": "Command Prefix",
+            "description": "The bot processes messages starting with this prefix as commands.",
+            "default": "!"
+        }
+    },
     "essential_channels": {
         "name": "Essential Channels",
         "description": "Channels that are required for bot operation",
