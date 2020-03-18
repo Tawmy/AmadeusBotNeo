@@ -39,9 +39,9 @@ class Config(commands.Cog):
             # Overwrite config entirely?
             # TODO seems to not work as intended
             if reaction.emoji == "🟥":
-                self.bot.config[ctx.guild.id] = {}
+                self.bot.config[str(ctx.guild.id)] = {}
             else:
-                self.bot.config.setdefault(ctx.guild.id, {})
+                self.bot.config.setdefault(str(ctx.guild.id), {})
             status = await self.collect_setup_information(ctx, setup_message, setup_user)
             # If input chain not successful (cancelled or timeout)
             if status is False:
@@ -81,7 +81,7 @@ class Config(commands.Cog):
         for cat_key, cat_val in self.bot.config["options"].items():
             # Only iterate essential categories
             if cat_key.startswith("essential_"):
-                self.bot.config[ctx.guild.id].setdefault(cat_key, {})
+                self.bot.config[str(ctx.guild.id)].setdefault(cat_key, {})
                 # Iterate options in category
                 for opt_key, opt_val in self.bot.config["options"][cat_key]["list"].items():
                     embed = await self.prepare_prompt(opt_val, 0)
@@ -96,7 +96,7 @@ class Config(commands.Cog):
                                 embed = await self.prepare_prompt(opt_val, 1)
                                 await setup_message.edit(embed=embed)
                             else:
-                                self.bot.config[ctx.guild.id][cat_key].setdefault(opt_key, obj.id)
+                                self.bot.config[str(ctx.guild.id)][cat_key].setdefault(opt_key, obj.id)
                         # If user has cancelled
                         else:
                             embed = await self.prepare_prompt(None, 2)
@@ -135,11 +135,11 @@ class Config(commands.Cog):
         for cat_key, cat_val in self.bot.config["options"].items():
             # Only iterate non-essential categories
             if not cat_key.startswith("essential_"):
-                self.bot.config[ctx.guild.id].setdefault(cat_key, {})
+                self.bot.config[str(ctx.guild.id)].setdefault(cat_key, {})
                 # Iterate options in category
                 for opt_key, opt_val in self.bot.config["options"][cat_key].items():
                     # Set option for server if not already set
-                    self.bot.config[ctx.guild.id][cat_key].setdefault(opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
+                    self.bot.config[str(ctx.guild.id)][cat_key].setdefault(opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
 
     async def prepare_prompt(self, opt_val, status):
         embed = discord.Embed()
@@ -169,7 +169,7 @@ class Config(commands.Cog):
         while save_status is False and retries > 0:
             with open(json_file, 'w+') as file:
                 try:
-                    json.dump(self.bot.config[ctx.guild.id], file)
+                    json.dump(self.bot.config[str(ctx.guild.id)], file)
                     return True
                 except Exception as e:
                     print(e)
