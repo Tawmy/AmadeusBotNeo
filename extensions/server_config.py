@@ -20,7 +20,6 @@ class Config(commands.Cog):
         initial_embed_data = await self.prepare_initial_embed(ctx, setup_user)
         setup_message = await ctx.send(embed=initial_embed_data[0])
 
-        # TODO handle different reaction emoji
         if initial_embed_data[1]:
             await setup_message.add_reaction("✅")
         else:
@@ -36,7 +35,19 @@ class Config(commands.Cog):
             return
         else:
             await setup_message.clear_reactions()
-            await self.collect_setup_information(ctx, setup_message, setup_user)
+            # Overwrite config entirely?
+            if reaction.emoji == "🟥":
+                self.bot.config[ctx.guild.id] = {}
+            else:
+                self.bot.config.setdefault(ctx.guild.id, {})
+            status = await self.collect_setup_information(ctx, setup_message, setup_user)
+            # If input chain not successful (cancelled or timeout)
+            if status is False:
+                return
+            await self.copy_default_values(ctx)
+            # TODO save config in file
+            embed = await self.prepare_prompt(None, 3)
+            await setup_message.edit(embed=embed)
 
     async def prepare_initial_embed(self, ctx, setup_user):
         embed = discord.Embed()
@@ -66,6 +77,7 @@ class Config(commands.Cog):
         for cat_key, cat_val in self.bot.config["options"].items():
             # Only iterate essential categories
             if cat_key.startswith("essential_"):
+                self.bot.config[ctx.guild.id].setdefault(cat_key, {})
                 # Iterate options in category
                 for opt_key, opt_val in self.bot.config["options"][cat_key]["list"].items():
                     embed = await self.prepare_prompt(opt_val, 0)
@@ -79,12 +91,14 @@ class Config(commands.Cog):
                             if obj is None:
                                 embed = await self.prepare_prompt(opt_val, 1)
                                 await setup_message.edit(embed=embed)
-                            # TODO else clause -> process data
+                            else:
+                                self.bot.config[ctx.guild.id][cat_key].setdefault(opt_key, obj.id)
                         # If user has cancelled
                         else:
                             embed = await self.prepare_prompt(None, 2)
                             await setup_message.edit(embed=embed)
-                            return None
+                            return False
+        return True
 
     async def await_input(self, ctx, embed, setup_message, setup_user):
         await setup_message.edit(embed=embed)
@@ -113,8 +127,6 @@ class Config(commands.Cog):
                 return None
 
     async def copy_default_values(self, ctx):
-        self.bot.config.setdefault(ctx.guild.id, {})
-
         # Iterate categories
         for cat_key, cat_val in self.bot.config["options"].items():
             # Only iterate non-essential categories
@@ -139,6 +151,9 @@ class Config(commands.Cog):
         # if setup cancelled
         if status == 2:
             embed.title = "Setup cancelled"
+        if status == 3:
+            embed.title = "Setup successful!"
+            embed.description = "You can now use " + self.bot.app_info.name + "!"
         return embed
 
 
