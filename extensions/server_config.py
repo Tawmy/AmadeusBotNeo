@@ -1,4 +1,5 @@
 import asyncio
+import json
 import shutil
 from os.path import isfile
 
@@ -36,6 +37,7 @@ class Config(commands.Cog):
         else:
             await setup_message.clear_reactions()
             # Overwrite config entirely?
+            # TODO seems to not work as intended
             if reaction.emoji == "🟥":
                 self.bot.config[ctx.guild.id] = {}
             else:
@@ -45,8 +47,10 @@ class Config(commands.Cog):
             if status is False:
                 return
             await self.copy_default_values(ctx)
-            # TODO save config in file
-            embed = await self.prepare_prompt(None, 3)
+            if await self.save_config(ctx):
+                embed = await self.prepare_prompt(None, 3)
+            else:
+                embed = await self.prepare_prompt(None, 4)
             await setup_message.edit(embed=embed)
 
     async def prepare_initial_embed(self, ctx, setup_user):
@@ -149,12 +153,29 @@ class Config(commands.Cog):
         if status == 1:
             embed.description += "\n\n⚠ Not found. Please try again."
         # if setup cancelled
-        if status == 2:
+        elif status == 2:
             embed.title = "Setup cancelled"
-        if status == 3:
+        elif status == 3:
             embed.title = "Setup successful!"
             embed.description = "You can now use " + self.bot.app_info.name + "!"
+        elif status == 4:
+            embed.title = "Could not save config!"
         return embed
+
+    async def save_config(self, ctx):
+        json_file = 'config/' + str(ctx.guild.id) + '.json'
+        save_status = False
+        retries = 4
+        while save_status is False and retries > 0:
+            with open(json_file, 'w+') as file:
+                try:
+                    json.dump(self.bot.config[ctx.guild.id], file)
+                    return True
+                except Exception as e:
+                    print(e)
+            retries -= 1
+            await asyncio.sleep(1)
+        return False
 
 
 def setup(bot):
