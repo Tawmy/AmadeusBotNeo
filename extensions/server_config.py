@@ -33,11 +33,12 @@ class Config(commands.Cog):
             reaction, user = await self.bot.wait_for('reaction_add', timeout=120.0, check=check)
         except asyncio.TimeoutError:
             await setup_message.clear_reactions()
+            embed = await self.prepare_prompt(None, 2)
+            await setup_message.edit(embed=embed)
             return
         else:
             await setup_message.clear_reactions()
             # Overwrite config entirely?
-            # TODO seems to not work as intended
             if reaction.emoji == "🟥":
                 self.bot.config[str(ctx.guild.id)] = {}
             else:
@@ -75,6 +76,27 @@ class Config(commands.Cog):
             embed.description += "Once you are ready, click the ✅ reaction under this message."
 
         return [embed, is_initial_config]
+
+    async def prepare_prompt(self, opt_val, status):
+        embed = discord.Embed()
+        # opt_val is None when no user input is to be prompted
+        if opt_val is not None:
+            embed.set_author(name="Please enter:")
+            embed.title = opt_val["name"]
+            embed.description = opt_val["description"]
+            embed.set_footer(text="Type \"cancel\" to cancel")
+        # if input invalid
+        if status == 1:
+            embed.description += "\n\n⚠ Not found. Please try again."
+        # if setup cancelled
+        elif status == 2:
+            embed.title = "Setup cancelled"
+        elif status == 3:
+            embed.title = "Setup successful!"
+            embed.description = "You can now use " + self.bot.app_info.name + "!"
+        elif status == 4:
+            embed.title = "Could not save config!"
+        return embed
 
     async def collect_setup_information(self, ctx, setup_message, setup_user):
         # Iterate categories
@@ -140,27 +162,6 @@ class Config(commands.Cog):
                 for opt_key, opt_val in self.bot.config["options"][cat_key].items():
                     # Set option for server if not already set
                     self.bot.config[str(ctx.guild.id)][cat_key].setdefault(opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
-
-    async def prepare_prompt(self, opt_val, status):
-        embed = discord.Embed()
-        # opt_val is None when no user input is to be prompted
-        if opt_val is not None:
-            embed.set_author(name="Please enter:")
-            embed.title = opt_val["name"]
-            embed.description = opt_val["description"]
-            embed.set_footer(text="Type \"cancel\" to cancel")
-        # if input invalid
-        if status == 1:
-            embed.description += "\n\n⚠ Not found. Please try again."
-        # if setup cancelled
-        elif status == 2:
-            embed.title = "Setup cancelled"
-        elif status == 3:
-            embed.title = "Setup successful!"
-            embed.description = "You can now use " + self.bot.app_info.name + "!"
-        elif status == 4:
-            embed.title = "Could not save config!"
-        return embed
 
     async def save_config(self, ctx):
         json_file = 'config/' + str(ctx.guild.id) + '.json'
