@@ -43,11 +43,15 @@ class Config(commands.Cog):
                 self.bot.config[str(ctx.guild.id)] = {}
             else:
                 self.bot.config.setdefault(str(ctx.guild.id), {})
-            status = await self.collect_setup_information(ctx, setup_message, setup_user)
+            collected_information = await self.collect_setup_information(ctx, setup_message, setup_user)
             # If input chain not successful (cancelled or timeout)
-            if status is False:
+            if collected_information is None:
                 return
+            # Apply all the previously collected information to server config
+            self.bot.config[str(ctx.guild.id)].update(collected_information)
+            # Copy default values to server config
             await self.copy_default_values(ctx)
+            # Save server config to json file and give feedback on its success
             if await self.save_config(ctx):
                 embed = await self.prepare_prompt(None, 3)
             else:
@@ -99,11 +103,12 @@ class Config(commands.Cog):
         return embed
 
     async def collect_setup_information(self, ctx, setup_message, setup_user):
+        collected_information = {}
         # Iterate categories
         for cat_key, cat_val in self.bot.config["options"].items():
             # Only iterate essential categories
             if cat_key.startswith("essential_"):
-                self.bot.config[str(ctx.guild.id)].setdefault(cat_key, {})
+                collected_information[cat_key] = {}
                 # Iterate options in category
                 for opt_key, opt_val in self.bot.config["options"][cat_key]["list"].items():
                     embed = await self.prepare_prompt(opt_val, 0)
@@ -118,13 +123,13 @@ class Config(commands.Cog):
                                 embed = await self.prepare_prompt(opt_val, 1)
                                 await setup_message.edit(embed=embed)
                             else:
-                                self.bot.config[str(ctx.guild.id)][cat_key].setdefault(opt_key, obj.id)
+                                collected_information[cat_key].setdefault(opt_key, obj.id)
                         # If user has cancelled
                         else:
                             embed = await self.prepare_prompt(None, 2)
                             await setup_message.edit(embed=embed)
-                            return False
-        return True
+                            return None
+        return collected_information
 
     async def await_input(self, ctx, embed, setup_message, setup_user):
         await setup_message.edit(embed=embed)
