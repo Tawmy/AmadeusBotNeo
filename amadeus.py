@@ -55,9 +55,14 @@ async def on_ready():
     # Update guild table in database
     await update_guilds_table()
 
-    # TODO send message on all servers
-    channel = bot.get_channel(bot.config["bot"]["primary_server"]["main_channel_id"])
-    await channel.send(embed=init_embed)
+    # Send startup message on all servers
+    if bot.config["bot"]["debug"] is False:
+        for guild_id in bot.config:
+            if guild_id not in ["bot", "options"]:
+                await asyncio.sleep(2e-1)
+                guild = bot.get_guild(int(guild_id))
+                channel = guild.get_channel(bot.config[guild_id]["essential_channels"]["bot_channel"])
+                await channel.send(embed=init_embed)
 
 
 @bot.event
