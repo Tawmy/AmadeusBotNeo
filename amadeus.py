@@ -189,9 +189,9 @@ async def load_configs():
 
     for filename in json_files:
         try:
-            with open("config/" + filename + ".json", 'r') as file:
+            with open("config/" + filename + ".json", 'r') as json_file:
                 try:
-                    bot.config[filename] = json.load(file)
+                    bot.config[filename] = json.load(json_file)
                 except ValueError:
                     error_valueerror_list.append(filename)
         except FileNotFoundError:
