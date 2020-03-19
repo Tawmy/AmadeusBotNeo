@@ -56,13 +56,7 @@ async def on_ready():
     await update_guilds_table()
 
     # Send startup message on all servers
-    if bot.config["bot"]["debug"] is False:
-        for guild_id in bot.config:
-            if guild_id not in ["bot", "options"]:
-                await asyncio.sleep(2e-1)
-                guild = bot.get_guild(int(guild_id))
-                channel = guild.get_channel(bot.config[guild_id]["essential_channels"]["bot_channel"])
-                await channel.send(embed=init_embed)
+    await send_startup_message(init_embed)
 
 
 @bot.event
@@ -279,6 +273,16 @@ async def update_guilds_table():
     for bot_guild in bot.guilds:
         if bot_guild.id not in db_guild_ids:
             await upsert_guild(bot_guild)
+
+
+async def send_startup_message(init_embed):
+    if bot.config["bot"]["debug"] is False:
+        for guild_id in bot.config:
+            if guild_id not in ["bot", "options"]:
+                await asyncio.sleep(2e-1)
+                guild = bot.get_guild(int(guild_id))
+                channel = guild.get_channel(bot.config[guild_id]["essential_channels"]["bot_channel"])
+                await channel.send(embed=init_embed)
 
 
 print("Connecting to Discord...")
