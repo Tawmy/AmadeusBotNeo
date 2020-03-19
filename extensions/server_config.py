@@ -54,6 +54,9 @@ class Config(commands.Cog):
             # Save server config to json file and give feedback on its success
             if await self.save_config(ctx):
                 embed = await self.prepare_prompt(None, 3)
+                permissions_embed = await self.check_bot_permissions(ctx)
+                for field in permissions_embed.fields:
+                    embed.add_field(name=field.name, value=field.value, inline=field.inline)
             else:
                 embed = await self.prepare_prompt(None, 4)
             await setup_message.edit(embed=embed)
@@ -97,7 +100,9 @@ class Config(commands.Cog):
             embed.title = "Setup cancelled"
         elif status == 3:
             embed.title = "Setup successful!"
-            embed.description = "You can now use " + self.bot.app_info.name + "!"
+            embed.description = "You can now use " + self.bot.app_info.name + "!\n\n"
+            embed.description += "Below are all the permissions the bot needs in the channels just set up. "
+            embed.description += "Please make sure to grant it access to all of these."
         elif status == 4:
             embed.title = "Could not save config!"
         return embed
@@ -182,6 +187,22 @@ class Config(commands.Cog):
             retries -= 1
             await asyncio.sleep(1)
         return False
+
+    async def check_bot_permissions(self, ctx):
+        embed = discord.Embed()
+        for ch_key, ch_val in self.bot.config[str(ctx.guild.id)]["essential_channels"].items():
+            channel = ctx.guild.get_channel(ch_val)
+            permissions_have = channel.permissions_for(ctx.guild.me)
+            permissions_need = self.bot.config["options"]["essential_channels"]["list"][ch_key]["permissions"]
+            permissions_embed = ""
+            for permission in permissions_need:
+                if getattr(permissions_have, permission) is True:
+                    permissions_embed += "✅ " + permission + "\n"
+                else:
+                    permissions_embed += "❌ " + permission + "\n"
+            if len(permissions_embed) > 0:
+                embed.add_field(name="#" + str(channel), value=permissions_embed)
+        return embed
 
 
 def setup(bot):
