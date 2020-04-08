@@ -12,15 +12,17 @@ class AmadeusMenu:
 
         self.__reaction_emoji = None
 
-    async def __set_option(self, name, emoji):
-        self.__embed.add_field(name=name, value=emoji)
-        self.__reaction_emoji.append(emoji)
-
-    async def set_options(self, names):
+    async def set_options(self, names, descriptions=None):
         self.__embed.clear_fields()
         self.__reaction_emoji = []
         for i, name in enumerate(names):
-            await self.__set_option(name, self.bot.config["bot"]["menu_emoji"][i])
+            name = self.bot.config["bot"]["menu_emoji"][i] + " " + name
+            if descriptions is not None and descriptions[i] is not None:
+                value = descriptions[i]
+            else:
+                value = "\u200b"
+            self.__embed.add_field(name=name, value=value)
+            self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][i])
 
     async def set_title(self, title):
         self.__embed.title = title
