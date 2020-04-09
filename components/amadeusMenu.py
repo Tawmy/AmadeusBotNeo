@@ -73,7 +73,6 @@ class AmadeusMenu:
             try:
                 reaction, user = await self.bot.wait_for('reaction_add', timeout=timeout_seconds, check=check)
             except asyncio.TimeoutError:
-                await message.delete()
                 return None
             else:
                 if reaction.emoji in self.__reaction_emoji:
