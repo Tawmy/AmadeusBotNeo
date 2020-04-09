@@ -41,6 +41,7 @@ class AmadeusMenu:
             self.__reaction_emoji.append(emoji)
 
     async def show_menu(self, ctx, timeout_seconds, message=None):
+        await self.__prepare_footer(ctx)
         if len(self.__embed.fields) == 0 and len(self.__reaction_emoji) == 0:
             return None
         else:
@@ -50,6 +51,16 @@ class AmadeusMenu:
                 await message.edit(embed=self.__embed)
             await self.__add_reactions(message)
             return await self.__await_user_reaction(ctx, message, timeout_seconds)
+
+    async def __prepare_footer(self, ctx):
+        if self.__is_user_specific:
+            if self.__specified_user is not None:
+                name = self.__specified_user.display_name
+                avatar = self.__specified_user.avatar_url_as(static_format="png")
+            else:
+                name = ctx.author.display_name
+                avatar = ctx.author.avatar_url_as(static_format="png")
+            self.__embed.set_footer(text=name, icon_url=avatar)
 
     async def __add_reactions(self, message):
         for emoji in self.__reaction_emoji:

@@ -23,12 +23,23 @@ class AmadeusPrompt:
             self.__specified_user = user
 
     async def show_prompt(self, ctx, timeout_seconds, message=None):
+        await self.__prepare_footer(ctx)
         if message is None:
             message = await ctx.send(embed=self.__embed)
         else:
             await message.edit(embed=self.__embed)
         user_input = await self.__await_user_input(ctx, timeout_seconds)
         return [user_input, message]
+
+    async def __prepare_footer(self, ctx):
+        if self.__is_user_specific:
+            if self.__specified_user is not None:
+                name = self.__specified_user.display_name
+                avatar = self.__specified_user.avatar_url_as(static_format="png")
+            else:
+                name = ctx.author.display_name
+                avatar = ctx.author.avatar_url_as(static_format="png")
+            self.__embed.set_footer(text=name, icon_url=avatar)
 
     async def __await_user_input(self, ctx, timeout_seconds):
         def check(user_message):
