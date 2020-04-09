@@ -72,7 +72,6 @@ class AmadeusPrompt:
         try:
             user_message = await self.bot.wait_for('message', timeout=timeout_seconds, check=check)
         except asyncio.TimeoutError:
-            await user_message.delete()
             return None
         else:
             await user_message.delete()
