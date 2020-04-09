@@ -42,15 +42,18 @@ class AmadeusPrompt:
         return [message, user_input]
 
     async def __prepare_footer(self, ctx):
+        text = ""
+        avatar = ""
         if self.__is_user_specific:
             if self.__specified_user is not None:
-                name = self.__specified_user.display_name
+                text = self.__specified_user.display_name
                 avatar = self.__specified_user.avatar_url_as(static_format="png")
             else:
-                name = ctx.author.display_name
+                text = ctx.author.display_name
                 avatar = ctx.author.avatar_url_as(static_format="png")
-            name += " | Type \"" + self.__cancel_string + "\" to cancel"
-            self.__embed.set_footer(text=name, icon_url=avatar)
+            text += " | "
+        text += "Type \"" + self.__cancel_string + "\" to cancel"
+        self.__embed.set_footer(text=text, icon_url=avatar)
 
     async def __await_user_input(self, ctx, timeout_seconds):
         def check(user_message):
