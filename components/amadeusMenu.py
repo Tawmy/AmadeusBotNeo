@@ -31,6 +31,12 @@ class AmadeusMenu:
     async def set_description(self, description):
         self.__embed.description = description
 
+    async def append_description(self, description):
+        if self.__embed.description is not None and len(self.__embed.description) > 0:
+            self.__embed.description += description
+        else:
+            await self.set_description(description)
+
     async def set_user_specific(self, is_user_specific, user=None):
         self.__is_user_specific = is_user_specific
         if user is not None:
