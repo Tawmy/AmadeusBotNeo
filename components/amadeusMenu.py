@@ -10,7 +10,7 @@ class AmadeusMenu:
         self.__embed = discord.Embed()
         self.__embed.title = prompt
 
-        self.__reaction_emoji = None
+        self.__reaction_emoji = []
 
     async def set_options(self, names, descriptions=None):
         self.__embed.clear_fields()
@@ -33,16 +33,20 @@ class AmadeusMenu:
     async def set_user_specific(self, is_user_specific):
         self.__is_user_specific = is_user_specific
 
+    async def append_emoji(self, emoji_list):
+        for emoji in emoji_list:
+            self.__reaction_emoji.append(emoji)
+
     async def show_menu(self, ctx, timeout_seconds, message=None):
-        if len(self.__embed.fields) > 0:
+        if len(self.__embed.fields) == 0 and len(self.__reaction_emoji) == 0:
+            return None
+        else:
             if message is None:
                 message = await ctx.send(embed=self.__embed)
             else:
                 await message.edit(embed=self.__embed)
             await self.__add_reactions(message)
             return await self.__await_user_reaction(ctx, message, timeout_seconds)
-        else:
-            return None
 
     async def __add_reactions(self, message):
         for emoji in self.__reaction_emoji:
