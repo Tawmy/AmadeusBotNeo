@@ -33,7 +33,7 @@ class AmadeusPrompt:
         else:
             await message.edit(embed=self.__embed)
         user_input = await self.__await_user_input(ctx, timeout_seconds)
-        return [user_input, message]
+        return [message, user_input]
 
     async def __prepare_footer(self, ctx):
         if self.__is_user_specific:

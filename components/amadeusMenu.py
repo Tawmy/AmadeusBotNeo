@@ -88,6 +88,6 @@ class AmadeusMenu:
             else:
                 if reaction.emoji in self.__reaction_emoji:
                     await message.clear_reactions()
-                    return [self.__reaction_emoji.index(reaction.emoji), reaction.emoji, message]
+                    return [message, self.__reaction_emoji.index(reaction.emoji), reaction.emoji]
                 else:
                     await message.remove_reaction(reaction.emoji, user)
