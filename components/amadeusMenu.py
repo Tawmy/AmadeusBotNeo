@@ -6,6 +6,7 @@ class AmadeusMenu:
     def __init__(self, bot, prompt):
         self.bot = bot
         self.__is_user_specific = False
+        self.__specified_user = None
 
         self.__embed = discord.Embed()
         self.__embed.title = prompt
@@ -30,8 +31,10 @@ class AmadeusMenu:
     async def set_description(self, description):
         self.__embed.description = description
 
-    async def set_user_specific(self, is_user_specific):
+    async def set_user_specific(self, is_user_specific, user=None):
         self.__is_user_specific = is_user_specific
+        if user is not None:
+            self.__specified_user = user
 
     async def append_emoji(self, emoji_list):
         for emoji in emoji_list:
@@ -57,7 +60,10 @@ class AmadeusMenu:
             result = False
             if user != message.author and reaction.message.id == message.id:
                 if self.__is_user_specific:
-                    if user is ctx.author:
+                    if self.__specified_user is not None:
+                        if user == self.__specified_user:
+                            result = True
+                    elif user == ctx.author:
                         result = True
                 else:
                     result = True

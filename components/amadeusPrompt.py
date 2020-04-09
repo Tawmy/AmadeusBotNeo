@@ -20,7 +20,7 @@ class AmadeusPrompt:
     async def set_user_specific(self, is_user_specific, user=None):
         self.__is_user_specific = is_user_specific
         if user is not None:
-            self.__is_user_specific = is_user_specific
+            self.__specified_user = user
 
     async def show_prompt(self, ctx, timeout_seconds, message=None):
         if message is None:
@@ -34,7 +34,7 @@ class AmadeusPrompt:
         def check(user_message):
             result = False
             if user_message.channel is ctx.channel:
-                if self.__is_user_specific is True:
+                if self.__is_user_specific:
                     if self.__specified_user is not None:
                         if user_message.author == self.__specified_user:
                             result = True
