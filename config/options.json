@@ -1,5 +1,10 @@
 {
     "general": {
+        "enabled": {
+            "name": "Bot Enabled",
+            "description": "Enables the bot on this server.",
+            "default": true
+        },
         "command_prefix": {
             "name": "Command Prefix",
             "description": "The bot processes messages starting with this prefix as commands.",

@@ -26,6 +26,76 @@ with open("config/bot.json", 'r') as file:
         raise SystemExit(e)
 
 
+@bot.check
+async def global_check(ctx):
+    # TODO check if bot ready
+
+    # block DMs
+    if ctx.guild.id is None:
+        return False
+
+    guild_config = bot.config.get(str(ctx.guild.id))
+
+    # Is bot enabled on server? (set to True during setup)
+    if guild_config.get("general", {}).get("enabled") in [None, False]:
+        raise BotNotConfigured
+
+    guild_config_cat = guild_config.get("limits", {}).get("categories")
+    if guild_config_cat is not None:
+        # Is extension enabled on server?
+        if guild_config_cat.get(ctx.command.cog_name, {}).get("enabled") is False:
+            raise CategoryDisabled
+
+        # Does the extension have role limits?
+        wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
+        bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
+        result = await check_role_limits(ctx, wl, bl)
+        if result == 1:
+            raise CategoryNotWhitelistedRole
+        elif result == 2:
+            raise CategoryBlacklistedRole
+
+    guild_config_com = guild_config.get("limits", {}).get("commands")
+    if guild_config_com is not None:
+        # Is command enabled on the server?
+        if guild_config_com.get(ctx.command.name).get("enabled") is False:
+            raise CommandDisabled
+
+        # Does the command have channel limits?
+        wl = guild_config_com.get(ctx.command.name).get("channels", {}).get("whitelist", [])
+        bl = guild_config_com.get(ctx.command.name).get("channels", {}).get("blacklist", [])
+        if len(wl) > 0 and ctx.channel.id not in wl:
+            raise CommandNoteWhitelistedChannel
+        if ctx.channel.id in bl:
+            raise CommandBlacklistedChannel
+
+        # Does the command have role limits?
+        wl = guild_config_com.get(ctx.command.name).get("roles", {}).get("whitelist", [])
+        bl = guild_config_com.get(ctx.command.name).get("roles", {}).get("blacklist", [])
+        result = await check_role_limits(ctx, wl, bl)
+        if result == 1:
+            raise CommandNotWhitelistedRole
+        if result == 2:
+            raise CommandBlacklistedRole
+
+    # TODO time limits
+
+    return True
+
+
+async def check_role_limits(ctx, wl, bl):
+    if len(wl) + len(bl) > 0:
+        match = False
+        for role in ctx.author.roles:
+            # TODO check if this can throw exception if bl/wl is None
+            if role.id in wl:
+                match = True
+            if role.id in bl:
+                return 2
+        if len(wl) > 0 and match is False:
+            return 1
+    return 0
+
 @bot.event
 async def on_ready():
     print("Connected to Discord")
@@ -283,6 +353,69 @@ async def send_startup_message(init_embed):
                 guild = bot.get_guild(int(guild_id))
                 channel = guild.get_channel(bot.config[guild_id]["essential_channels"]["bot_channel"])
                 await channel.send(embed=init_embed)
+
+
+# EXCEPTIONS
+
+
+class BotNotConfigured(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "The bot is not configured on this server. Please make sure the server runs the setup command."
+        super().__init__(message, *args)
+
+
+class CategoryDisabled(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "This command category is disabled on this server."
+        super().__init__(message, *args)
+
+
+class CategoryNotWhitelistedRole(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "You do not have any of the roles required to run commands from this category."
+        # TODO list roles
+        super().__init__(message, *args)
+
+
+class CategoryBlacklistedRole(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "You have a role that forbids you from using commands from this category."
+        # TODO list roles
+        super().__init__(message, *args)
+
+
+class CommandDisabled(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "This command is disabled on this server."
+        super().__init__(message, *args)
+
+
+class CommandNoteWhitelistedChannel(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "This command is not enabled in this channel."
+        super().__init__(message, *args)
+
+
+class CommandBlacklistedChannel(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "This command is disabled in this channel."
+        super().__init__(message, *args)
+
+
+class CommandNotWhitelistedRole(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "You do not have any of the roles required to run this command."
+        # TODO list roles
+        super().__init__(message, *args)
+
+
+class CommandBlacklistedRole(commands.CheckFailure):
+    def __init__(self, *args):
+        message = "You have a role that forbids you from using this command."
+        # TODO list roles
+        super().__init__(message, *args)
+
+# TODO time exceptions
 
 
 print("Connecting to Discord...")
