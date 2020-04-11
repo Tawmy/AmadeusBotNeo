@@ -168,8 +168,11 @@ async def load_extensions():
     for extension in bot.config["bot"]["extensions"]:
         try:
             bot.load_extension("extensions." + extension)
-        except (discord.DiscordException, ModuleNotFoundError):
+        except (commands.ExtensionNotFound, commands.ExtensionFailed, commands.NoEntryPointError) as ex:
+            print(ex)
             failed.append(extension)
+        except commands.ExtensionAlreadyLoaded as ex:
+            print(ex)
     return failed
 
 
