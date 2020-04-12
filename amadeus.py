@@ -54,30 +54,30 @@ async def global_check(ctx):
         bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
         result = await check_role_limits(ctx, wl, bl)
         if result[0] == 1:
-            raise CategoryNotWhitelistedRole(result[1])
+            raise CategoryNoWhitelistedRole(result[1])
         elif result[0] == 2:
             raise CategoryBlacklistedRole(result[1])
 
     guild_config_com = guild_config.get("limits", {}).get("commands")
     if guild_config_com is not None:
         # Is command enabled on the server?
-        if guild_config_com.get(ctx.command.name).get("enabled") is False:
+        if guild_config_com.get(ctx.command.name, {}).get("enabled") is False:
             raise CommandDisabled
 
         # Does the command have channel limits?
-        wl = guild_config_com.get(ctx.command.name).get("channels", {}).get("whitelist", [])
-        bl = guild_config_com.get(ctx.command.name).get("channels", {}).get("blacklist", [])
+        wl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("whitelist", [])
+        bl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("blacklist", [])
         if len(wl) > 0 and ctx.channel.id not in wl:
             raise CommandNotWhitelistedChannel
         if ctx.channel.id in bl:
             raise CommandBlacklistedChannel
 
         # Does the command have role limits?
-        wl = guild_config_com.get(ctx.command.name).get("roles", {}).get("whitelist", [])
-        bl = guild_config_com.get(ctx.command.name).get("roles", {}).get("blacklist", [])
+        wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
+        bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
         result = await check_role_limits(ctx, wl, bl)
         if result[0] == 1:
-            raise CommandNotWhitelistedRole(result[1])
+            raise CommandNoWhitelistedRole(result[1])
         if result[0] == 2:
             raise CommandBlacklistedRole(result[1])
 
@@ -410,7 +410,7 @@ class CategoryRoleRestricted(commands.CheckFailure):
         super().__init__(message)
 
 
-class CategoryNotWhitelistedRole(CategoryRoleRestricted):
+class CategoryNoWhitelistedRole(CategoryRoleRestricted):
     def __init__(self, missing_roles):
         self.description = "You do not have any of the roles required to run commands from this category:\n\n**"
         self.missing_roles = []
@@ -463,7 +463,7 @@ class CommandRoleRestricted(commands.CheckFailure):
         super().__init__(message)
 
 
-class CommandNotWhitelistedRole(CommandRoleRestricted):
+class CommandNoWhitelistedRole(CommandRoleRestricted):
     def __init__(self, missing_roles):
         self.description = "You do not have any of the roles required to run this command:\n\n**"
         self.missing_roles = []
@@ -480,7 +480,7 @@ class CommandNotWhitelistedRole(CommandRoleRestricted):
 class CommandBlacklistedRole(CommandRoleRestricted):
     def __init__(self, role):
         self.role = role.name
-        self.description = "You have a role that prevents you from using this command:\n\n"
+        self.description = "You have a role that forbids you from using this command:\n\n"
         self.description += "**" + self.role + "**"
         super().__init__()
 
