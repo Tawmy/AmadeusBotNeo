@@ -37,8 +37,11 @@ async def global_check(ctx):
     guild_config = bot.config.get(str(ctx.guild.id))
 
     # Is bot enabled on server? (set to True during setup)
-    if guild_config.get("general", {}).get("enabled") in [None, False]:
+    bot_status = guild_config.get("general", {}).get("enabled")
+    if bot_status is None:
         raise BotNotConfigured
+    elif bot_status is False:
+        raise BotDisabled
 
     guild_config_cat = guild_config.get("limits", {}).get("categories")
     if guild_config_cat is not None:
@@ -51,9 +54,9 @@ async def global_check(ctx):
         bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
         result = await check_role_limits(ctx, wl, bl)
         if result[0] == 1:
-            raise CategoryNotWhitelistedRole
+            raise CategoryNotWhitelistedRole(result[1])
         elif result[0] == 2:
-            raise CategoryBlacklistedRole
+            raise CategoryBlacklistedRole(result[1])
 
     guild_config_com = guild_config.get("limits", {}).get("commands")
     if guild_config_com is not None:
@@ -142,7 +145,7 @@ async def on_command_error(ctx, message):
 async def prepare_error_embed(ctx, message):
     embed = discord.Embed()
     embed.title = str(message)
-    if message.description is not None:
+    if hasattr(message, "description"):
         embed.description = message.description
     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
     return embed
@@ -382,33 +385,57 @@ async def send_startup_message(init_embed):
 
 class BotNotConfigured(commands.CheckFailure):
     def __init__(self, *args):
-        message = "The bot is not configured on this server. Please make sure the server runs the setup command."
+        self.description = "The bot is not configured on this server. Please make sure the server runs the setup command."
+        message = "Bot not configured"
+        super().__init__(message, *args)
+
+
+class BotDisabled(commands.CheckFailure):
+    def __init__(self, *args):
+        self.description = "The bot is disabled on this server. It will not respond to any commands."
+        message = "Bot disabled"
         super().__init__(message, *args)
 
 
 class CategoryDisabled(commands.CheckFailure):
-    def __init__(self, *args):
-        message = "This command category is disabled on this server."
-        super().__init__(message, *args)
+    def __init__(self):
+        self.description = "This command category is disabled on this server."
+        message = "Category disabled"
+        super().__init__(message)
 
 
-class CategoryNotWhitelistedRole(commands.CheckFailure):
-    def __init__(self, *args):
-        message = "You do not have any of the roles required to run commands from this category."
-        # TODO list roles
-        super().__init__(message, *args)
+class CategoryRoleRestricted(commands.CheckFailure):
+    def __init__(self):
+        message = "Role restricted category"
+        super().__init__(message)
 
 
-class CategoryBlacklistedRole(commands.CheckFailure):
-    def __init__(self, *args):
-        message = "You have a role that forbids you from using commands from this category."
-        # TODO list roles
-        super().__init__(message, *args)
+class CategoryNotWhitelistedRole(CategoryRoleRestricted):
+    def __init__(self, missing_roles):
+        self.description = "You do not have any of the roles required to run commands from this category:\n\n**"
+        self.missing_roles = []
+
+        for role in missing_roles:
+            self.missing_roles.append(role.name)
+
+        self.description += '**, **'.join(self.missing_roles)
+        self.description += "**"
+
+        super().__init__()
+
+
+class CategoryBlacklistedRole(CategoryRoleRestricted):
+    def __init__(self, role):
+        self.role = role.name
+        self.description = "You have a role that forbids you from using commands from this category:\n\n"
+        self.description += "**" + self.role + "**"
+        super().__init__()
 
 
 class CommandDisabled(commands.CheckFailure):
     def __init__(self, *args):
-        message = "This command is disabled on this server."
+        message = "Command disabled"
+        self.description = "This command is disabled on this server."
         super().__init__(message, *args)
 
 
