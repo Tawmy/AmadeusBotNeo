@@ -65,7 +65,7 @@ async def global_check(ctx):
         wl = guild_config_com.get(ctx.command.name).get("channels", {}).get("whitelist", [])
         bl = guild_config_com.get(ctx.command.name).get("channels", {}).get("blacklist", [])
         if len(wl) > 0 and ctx.channel.id not in wl:
-            raise CommandNoteWhitelistedChannel
+            raise CommandNotWhitelistedChannel
         if ctx.channel.id in bl:
             raise CommandBlacklistedChannel
 
@@ -142,9 +142,11 @@ async def on_command_error(ctx, message):
 async def prepare_error_embed(ctx, message):
     embed = discord.Embed()
     embed.title = str(message)
-    embed.description = message.description
+    if message.description is not None:
+        embed.description = message.description
     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
     return embed
+
 
 @bot.event
 async def on_guild_join(guild):
@@ -410,16 +412,22 @@ class CommandDisabled(commands.CheckFailure):
         super().__init__(message, *args)
 
 
-class CommandNoteWhitelistedChannel(commands.CheckFailure):
-    def __init__(self, *args):
-        message = "This command is not enabled in this channel."
-        super().__init__(message, *args)
+class CommandChannelRestricted(commands.CheckFailure):
+    def __init__(self):
+        message = "Channel restricted command"
+        super().__init__(message)
 
 
-class CommandBlacklistedChannel(commands.CheckFailure):
-    def __init__(self, *args):
-        message = "This command is disabled in this channel."
-        super().__init__(message, *args)
+class CommandNotWhitelistedChannel(CommandChannelRestricted):
+    def __init__(self):
+        self.description = "This command is not enabled in this channel."
+        super().__init__()
+
+
+class CommandBlacklistedChannel(CommandChannelRestricted):
+    def __init__(self):
+        self.description = "This command is disabled in this channel."
+        super().__init__()
 
 
 class CommandRoleRestricted(commands.CheckFailure):
