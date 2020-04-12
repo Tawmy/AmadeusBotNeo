@@ -12,6 +12,9 @@ class AmadeusPrompt:
         self.__embed = discord.Embed()
         self.__embed.title = title
 
+    async def set_author(self, name, url="", icon_url=""):
+        self.__embed.set_author(name=name, url=url, icon_url=icon_url)
+
     async def set_title(self, title):
         self.__embed.title = title
 

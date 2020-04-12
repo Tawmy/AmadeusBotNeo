@@ -25,6 +25,9 @@ class AmadeusMenu:
             self.__embed.add_field(name=name, value=value)
             self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][i])
 
+    async def set_author(self, name, url="", icon_url=""):
+        self.__embed.set_author(name=name, url=url, icon_url=icon_url)
+
     async def set_title(self, title):
         self.__embed.title = title
 
