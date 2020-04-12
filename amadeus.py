@@ -35,54 +35,55 @@ async def global_check(ctx):
     if ctx.guild.id is None:
         return False
 
-    guild_config = bot.config.get(str(ctx.guild.id))
+    if ctx.command.name != "setup":
+        guild_config = bot.config.get(str(ctx.guild.id), {})
 
-    # Is bot enabled on server? (set to True during setup)
-    bot_status = guild_config.get("general", {}).get("enabled")
-    if bot_status is None:
-        raise BotNotConfigured
-    elif bot_status is False:
-        raise BotDisabled
+        # Is bot enabled on server? (set to True during setup)
+        bot_status = guild_config.get("general", {}).get("enabled")
+        if bot_status is None:
+            raise ex.BotNotConfigured
+        elif bot_status is False:
+            raise ex.BotDisabled
 
-    guild_config_cat = guild_config.get("limits", {}).get("categories")
-    if guild_config_cat is not None:
-        # Is extension enabled on server?
-        if guild_config_cat.get(ctx.command.cog_name, {}).get("enabled") is False:
-            raise CategoryDisabled
+        guild_config_cat = guild_config.get("limits", {}).get("categories")
+        if guild_config_cat is not None:
+            # Is extension enabled on server?
+            if guild_config_cat.get(ctx.command.cog_name, {}).get("enabled") is False:
+                raise ex.CategoryDisabled
 
-        # Does the extension have role limits?
-        wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
-        bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
-        result = await check_role_limits(ctx, wl, bl)
-        if result[0] == 1:
-            raise CategoryNoWhitelistedRole(result[1])
-        elif result[0] == 2:
-            raise CategoryBlacklistedRole(result[1])
+            # Does the extension have role limits?
+            wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
+            bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
+            result = await check_role_limits(ctx, wl, bl)
+            if result[0] == 1:
+                raise ex.CategoryNoWhitelistedRole(result[1])
+            elif result[0] == 2:
+                raise ex.CategoryBlacklistedRole(result[1])
 
-    guild_config_com = guild_config.get("limits", {}).get("commands")
-    if guild_config_com is not None:
-        # Is command enabled on the server?
-        if guild_config_com.get(ctx.command.name, {}).get("enabled") is False:
-            raise CommandDisabled
+        guild_config_com = guild_config.get("limits", {}).get("commands")
+        if guild_config_com is not None:
+            # Is command enabled on the server?
+            if guild_config_com.get(ctx.command.name, {}).get("enabled") is False:
+                raise ex.CommandDisabled
 
-        # Does the command have channel limits?
-        wl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("whitelist", [])
-        bl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("blacklist", [])
-        if len(wl) > 0 and ctx.channel.id not in wl:
-            raise CommandNotWhitelistedChannel
-        if ctx.channel.id in bl:
-            raise CommandBlacklistedChannel
+            # Does the command have channel limits?
+            wl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("whitelist", [])
+            bl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("blacklist", [])
+            if len(wl) > 0 and ctx.channel.id not in wl:
+                raise ex.CommandNotWhitelistedChannel
+            if ctx.channel.id in bl:
+                raise ex.CommandBlacklistedChannel
 
-        # Does the command have role limits?
-        wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
-        bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
-        result = await check_role_limits(ctx, wl, bl)
-        if result[0] == 1:
-            raise CommandNoWhitelistedRole(result[1])
-        if result[0] == 2:
-            raise CommandBlacklistedRole(result[1])
+            # Does the command have role limits?
+            wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
+            bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
+            result = await check_role_limits(ctx, wl, bl)
+            if result[0] == 1:
+                raise ex.CommandNoWhitelistedRole(result[1])
+            if result[0] == 2:
+                raise ex.CommandBlacklistedRole(result[1])
 
-    # TODO time limits
+        # TODO time limits
 
     return True
 
