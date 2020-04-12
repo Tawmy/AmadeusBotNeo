@@ -127,3 +127,10 @@ class DatabaseNotConnected(commands.CheckFailure):
         self.description = "To execute this command, the bot needs to be connected to its database. "
         self.description += "That connection has not been established yet."
         super().__init__(message)
+
+
+class BotNotReady(commands.CheckFailure):
+    def __init__(self):
+        message = "Bot is not ready"
+        self.description = "The bot has not finished starting up yet. Please try again in a minute."
+        super().__init__(message)

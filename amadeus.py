@@ -29,7 +29,8 @@ with open("config/bot.json", 'r') as file:
 
 @bot.check
 async def global_check(ctx):
-    # TODO check if bot ready
+    if bot.ready in [None, False]:
+        raise ex.BotNotReady
 
     if ctx.command.name not in bot.config["bot"]["no_global_check"]:
         guild_config = bot.config.get(str(ctx.guild.id), {})
@@ -103,6 +104,7 @@ async def check_role_limits(ctx, wl, bl):
 
 @bot.event
 async def on_ready():
+    bot.ready = False
     print("Connected to Discord")
     bot.app_info = await bot.application_info()
 
@@ -119,6 +121,8 @@ async def on_ready():
     configs = await load_configs()
     await update_init_embed_extended("configs", init_embed_extended, configs)
     await init_message_extended.edit(embed=init_embed_extended)
+
+    bot.ready = True
 
     # Connect to database
     await connect_database(init_embed_extended, init_message_extended)
