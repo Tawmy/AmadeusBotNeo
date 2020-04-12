@@ -74,7 +74,7 @@ async def global_check(ctx):
         bl = guild_config_com.get(ctx.command.name).get("roles", {}).get("blacklist", [])
         result = await check_role_limits(ctx, wl, bl)
         if result == 1:
-            raise CommandNotWhitelistedRole
+            raise CommandNotWhitelistedRole(ctx, wl)
         if result == 2:
             raise CommandBlacklistedRole
 
@@ -128,6 +128,19 @@ async def on_ready():
     # Send startup message on all servers
     await send_startup_message(init_embed)
 
+
+@bot.event
+async def on_command_error(ctx, message):
+    embed = await prepare_error_embed(ctx, message)
+    await ctx.send(embed=embed)
+
+
+async def prepare_error_embed(ctx, message):
+    embed = discord.Embed()
+    embed.title = str(message)
+    embed.description = message.description
+    embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
+    return embed
 
 @bot.event
 async def on_guild_join(guild):
@@ -406,10 +419,18 @@ class CommandBlacklistedChannel(commands.CheckFailure):
 
 
 class CommandNotWhitelistedRole(commands.CheckFailure):
-    def __init__(self, *args):
-        message = "You do not have any of the roles required to run this command."
-        # TODO list roles
-        super().__init__(message, *args)
+    def __init__(self, ctx, missing_role_ids):
+        self.description = "You do not have any of the roles required to run this command:\n\n**"
+        self.missing_roles = []
+        message = "Role restricted command"
+
+        for role_id in missing_role_ids:
+            self.missing_roles.append(ctx.guild.get_role(role_id).name)
+
+        self.description += '**, **'.join(self.missing_roles)
+        self.description += "**"
+
+        super().__init__(message)
 
 
 class CommandBlacklistedRole(commands.CheckFailure):
