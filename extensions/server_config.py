@@ -6,6 +6,7 @@ from os.path import isfile
 import discord
 from discord.ext import commands
 
+from components import checks
 from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt
 
@@ -15,7 +16,7 @@ class Config(commands.Cog):
         self.bot = bot
 
     @commands.command(name='setup')
-    @commands.is_owner()
+    @commands.check(checks.is_guild_owner)
     async def setup(self, ctx, setup_user: discord.Member = "owner_has_not_specified_user"):
         # Guild owner can give another user permission to execute setup
         if setup_user == "owner_has_not_specified_user":

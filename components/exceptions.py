@@ -104,3 +104,11 @@ class CommandBlacklistedRole(CommandRoleRestricted):
 
 # TODO time exceptions
 
+
+class NotGuildOwner(commands.CheckFailure):
+    def __init__(self, owner):
+        message = "Not server owner"
+        self.description = "This command can only be run by the server owner. You will have to ask "
+        self.description += owner.mention
+        self.description += " to run it for you."
+        super().__init__(message)
