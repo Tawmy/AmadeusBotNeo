@@ -11,7 +11,7 @@ from discord.ext import commands
 def get_command_prefix(amadeus, message):
     try:
         return amadeus.config[message.guild.id]["command_prefix"]
-    except KeyError:
+    except (KeyError, AttributeError):
         return "+"
 
 
@@ -206,7 +206,7 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
         if len(value[1]) > 0:
             init_embed_extended.add_field(name="Configs failed", value="\n".join(value[1]), inline=False)
             successful_load = False
-        if len(value[0]) > 1:
+        if len(value[0]) > 0:
             init_embed_extended.add_field(name="Configs not found", value="\n".join(value[0]), inline=False)
 
         if successful_load:
@@ -238,8 +238,11 @@ async def load_extensions():
     for extension in bot.config["bot"]["extensions"]:
         try:
             bot.load_extension("extensions." + extension)
-        except (discord.DiscordException, ModuleNotFoundError):
+        except (commands.ExtensionNotFound, commands.ExtensionFailed, commands.NoEntryPointError) as ex:
+            print(ex)
             failed.append(extension)
+        except commands.ExtensionAlreadyLoaded as ex:
+            print(ex)
     return failed
 
 
@@ -277,7 +280,7 @@ async def connect_database(init_embed_extended, init_message_extended):
                                                           timeout=bot.config["bot"]["database"]["timeout"])
             await update_init_embed_extended("database", init_embed_extended, 1)
             await init_message_extended.edit(embed=init_embed_extended)
-        except asyncio.futures.TimeoutError:
+        except (asyncio.futures.TimeoutError, OSError):
             await update_init_embed_extended("database", init_embed_extended, 2)
             await init_message_extended.edit(embed=init_embed_extended)
             await asyncio.sleep(bot.config["bot"]["database"]["retry_timeout"])
