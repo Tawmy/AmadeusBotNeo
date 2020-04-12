@@ -10,9 +10,9 @@ from discord.ext import commands
 
 def get_command_prefix(amadeus, message):
     try:
-        return amadeus.config[message.guild.id]["command_prefix"]
+        return amadeus.config[str(message.guild.id)]["general"]["command_prefix"]
     except (KeyError, AttributeError):
-        return "+"
+        return "!"
 
 
 bot = commands.Bot(command_prefix=get_command_prefix)
