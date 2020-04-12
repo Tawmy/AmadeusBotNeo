@@ -50,9 +50,9 @@ async def global_check(ctx):
         wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
         bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
         result = await check_role_limits(ctx, wl, bl)
-        if result == 1:
+        if result[0] == 1:
             raise CategoryNotWhitelistedRole
-        elif result == 2:
+        elif result[0] == 2:
             raise CategoryBlacklistedRole
 
     guild_config_com = guild_config.get("limits", {}).get("commands")
@@ -73,10 +73,10 @@ async def global_check(ctx):
         wl = guild_config_com.get(ctx.command.name).get("roles", {}).get("whitelist", [])
         bl = guild_config_com.get(ctx.command.name).get("roles", {}).get("blacklist", [])
         result = await check_role_limits(ctx, wl, bl)
-        if result == 1:
-            raise CommandNotWhitelistedRole(ctx, wl)
-        if result == 2:
-            raise CommandBlacklistedRole
+        if result[0] == 1:
+            raise CommandNotWhitelistedRole(result[1])
+        if result[0] == 2:
+            raise CommandBlacklistedRole(result[1])
 
     # TODO time limits
 
@@ -91,10 +91,14 @@ async def check_role_limits(ctx, wl, bl):
             if role.id in wl:
                 match = True
             if role.id in bl:
-                return 2
+                return [2, role]
         if len(wl) > 0 and match is False:
-            return 1
-    return 0
+            role_list = []
+            for role_id in wl:
+                role_list.append(ctx.guild.get_role(role_id))
+            return [1, role_list]
+    return [0]
+
 
 @bot.event
 async def on_ready():
@@ -418,26 +422,32 @@ class CommandBlacklistedChannel(commands.CheckFailure):
         super().__init__(message, *args)
 
 
-class CommandNotWhitelistedRole(commands.CheckFailure):
-    def __init__(self, ctx, missing_role_ids):
+class CommandRoleRestricted(commands.CheckFailure):
+    def __init__(self):
+        message = "Role restricted command"
+        super().__init__(message)
+
+
+class CommandNotWhitelistedRole(CommandRoleRestricted):
+    def __init__(self, missing_roles):
         self.description = "You do not have any of the roles required to run this command:\n\n**"
         self.missing_roles = []
-        message = "Role restricted command"
 
-        for role_id in missing_role_ids:
-            self.missing_roles.append(ctx.guild.get_role(role_id).name)
+        for role in missing_roles:
+            self.missing_roles.append(role.name)
 
         self.description += '**, **'.join(self.missing_roles)
         self.description += "**"
 
-        super().__init__(message)
+        super().__init__()
 
 
-class CommandBlacklistedRole(commands.CheckFailure):
-    def __init__(self, *args):
-        message = "You have a role that forbids you from using this command."
-        # TODO list roles
-        super().__init__(message, *args)
+class CommandBlacklistedRole(CommandRoleRestricted):
+    def __init__(self, role):
+        self.role = role.name
+        self.description = "You have a role that prevents you from using this command:\n\n"
+        self.description += "**" + self.role + "**"
+        super().__init__()
 
 # TODO time exceptions
 
