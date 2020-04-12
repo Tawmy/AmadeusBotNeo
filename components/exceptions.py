@@ -1,6 +1,37 @@
 from discord.ext import commands
 
 
+class BotNotReady(commands.CheckFailure):
+    def __init__(self):
+        message = "Bot is not ready"
+        self.description = "The bot has not finished starting up yet. Please try again in a minute."
+        super().__init__(message)
+
+
+class NoDirectMessages(commands.CheckFailure):
+    def __init__(self):
+        message = "Not permitted in DMs"
+        self.description = "This command cannot be run in direct messages. It needs to be run on a server."
+        super().__init__(message)
+
+
+class DatabaseNotConnected(commands.CheckFailure):
+    def __init__(self):
+        message = "Database not connected"
+        self.description = "To execute this command, the bot needs to be connected to its database. "
+        self.description += "That connection has not been established yet."
+        super().__init__(message)
+
+
+class NotGuildOwner(commands.CheckFailure):
+    def __init__(self, owner):
+        message = "Not server owner"
+        self.description = "This command can only be run by the server owner. You will have to ask "
+        self.description += owner.mention
+        self.description += " to run it for you."
+        super().__init__(message)
+
+
 class BotNotConfigured(commands.CheckFailure):
     def __init__(self, *args):
         self.description = "The bot is not configured on this server. Please make sure the server owner runs the `!setup` command. They can optinally specify another user to run the setup for them."
@@ -103,34 +134,3 @@ class CommandBlacklistedRole(CommandRoleRestricted):
         super().__init__()
 
 # TODO time exceptions
-
-
-class NotGuildOwner(commands.CheckFailure):
-    def __init__(self, owner):
-        message = "Not server owner"
-        self.description = "This command can only be run by the server owner. You will have to ask "
-        self.description += owner.mention
-        self.description += " to run it for you."
-        super().__init__(message)
-
-
-class NoDirectMessages(commands.CheckFailure):
-    def __init__(self):
-        message = "Not permitted in DMs"
-        self.description = "This command cannot be run in direct messages. It needs to be run on a server."
-        super().__init__(message)
-
-
-class DatabaseNotConnected(commands.CheckFailure):
-    def __init__(self):
-        message = "Database not connected"
-        self.description = "To execute this command, the bot needs to be connected to its database. "
-        self.description += "That connection has not been established yet."
-        super().__init__(message)
-
-
-class BotNotReady(commands.CheckFailure):
-    def __init__(self):
-        message = "Bot is not ready"
-        self.description = "The bot has not finished starting up yet. Please try again in a minute."
-        super().__init__(message)
