@@ -13,3 +13,10 @@ def block_dms(ctx):
         raise ex.NoDirectMessages
     else:
         return True
+
+
+def needs_database(ctx):
+    if ctx.bot.database_pool is None:
+        raise ex.DatabaseNotConnected
+    else:
+        return True

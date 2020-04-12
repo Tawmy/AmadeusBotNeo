@@ -119,3 +119,11 @@ class NoDirectMessages(commands.CheckFailure):
         message = "Not permitted in DMs"
         self.description = "This command cannot be run in direct messages. It needs to be run on a server."
         super().__init__(message)
+
+
+class DatabaseNotConnected(commands.CheckFailure):
+    def __init__(self):
+        message = "Database not connected"
+        self.description = "To execute this command, the bot needs to be connected to its database. "
+        self.description += "That connection has not been established yet."
+        super().__init__(message)
