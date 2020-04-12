@@ -31,11 +31,7 @@ with open("config/bot.json", 'r') as file:
 async def global_check(ctx):
     # TODO check if bot ready
 
-    # block DMs
-    if ctx.guild.id is None:
-        return False
-
-    if ctx.command.name != "setup":
+    if ctx.command.name not in bot.config["bot"]["no_global_check"]:
         guild_config = bot.config.get(str(ctx.guild.id), {})
 
         # Is bot enabled on server? (set to True during setup)

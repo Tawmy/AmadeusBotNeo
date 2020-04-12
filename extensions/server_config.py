@@ -17,6 +17,7 @@ class Config(commands.Cog):
 
     @commands.command(name='setup')
     @commands.check(checks.is_guild_owner)
+    @commands.check(checks.block_dms)
     async def setup(self, ctx, setup_user: discord.Member = "owner_has_not_specified_user"):
         # Guild owner can give another user permission to execute setup
         if setup_user == "owner_has_not_specified_user":

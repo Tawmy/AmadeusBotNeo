@@ -112,3 +112,10 @@ class NotGuildOwner(commands.CheckFailure):
         self.description += owner.mention
         self.description += " to run it for you."
         super().__init__(message)
+
+
+class NoDirectMessages(commands.CheckFailure):
+    def __init__(self):
+        message = "Not permitted in DMs"
+        self.description = "This command cannot be run in direct messages. It needs to be run on a server."
+        super().__init__(message)
