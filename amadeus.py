@@ -43,21 +43,24 @@ async def global_check(ctx):
             raise ex.BotDisabled
 
         guild_config_cat = guild_config.get("limits", {}).get("categories")
+        guild_config_com = guild_config.get("limits", {}).get("commands")
+
         if guild_config_cat is not None:
             # Is extension enabled on server?
             if guild_config_cat.get(ctx.command.cog_name, {}).get("enabled") is False:
                 raise ex.CategoryDisabled
 
-            # Does the extension have role limits?
-            wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
-            bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
-            result = await check_role_limits(ctx, wl, bl)
-            if result[0] == 1:
-                raise ex.CategoryNoWhitelistedRole(result[1])
-            elif result[0] == 2:
-                raise ex.CategoryBlacklistedRole(result[1])
+            # Do not check for extension role limits if command has role limits specified
+            if not await command_has_role_limits(ctx, guild_config_com):
+                # Does the extension have role limits?
+                wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
+                bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
+                result = await check_role_limits(ctx, wl, bl)
+                if result[0] == 1:
+                    raise ex.CategoryNoWhitelistedRole(result[1])
+                elif result[0] == 2:
+                    raise ex.CategoryBlacklistedRole(result[1])
 
-        guild_config_com = guild_config.get("limits", {}).get("commands")
         if guild_config_com is not None:
             # Is command enabled on the server?
             if guild_config_com.get(ctx.command.name, {}).get("enabled") is False:
@@ -83,6 +86,14 @@ async def global_check(ctx):
         # TODO time limits
 
     return True
+
+
+async def command_has_role_limits(ctx, guild_config_com):
+    if guild_config_com is not None:
+        wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
+        bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
+        return len(wl) + len(bl) > 0
+    return False
 
 
 async def check_role_limits(ctx, wl, bl):
