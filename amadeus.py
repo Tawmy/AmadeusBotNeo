@@ -178,7 +178,8 @@ async def on_command_error(ctx, message):
         if bot_channel_id is not None:
             bot_channel = ctx.guild.get_channel(bot_channel_id)
             embed = await prepare_command_error_embed(ctx, message.original)
-            await bot_channel.send(embed=embed)
+            if embed is not None:
+                await bot_channel.send(embed=embed)
     else:
         error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
         if error_config is not None:
@@ -209,8 +210,13 @@ async def on_command_error(ctx, message):
 
 async def prepare_command_error_embed(ctx, message):
     embed = discord.Embed()
-    embed.title = message.text
-    if message.code == 50013:
+    if hasattr(message, "text"):
+        embed.title = message.text
+    else:
+        # TODO do this properly
+        print(message)
+        return None
+    if hasattr(message, "code") and message.code == 50013:
         string_list = await bot.strings.get_string(ctx, "amadeus", "exception_forbidden")
         values = [ctx.channel.mention, ctx.author.mention, ctx.command.name]
         embed.description = await bot.strings.insert_into_string(string_list, values)
