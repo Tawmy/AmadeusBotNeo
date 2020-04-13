@@ -6,7 +6,7 @@ import platform
 import asyncpg
 import discord
 from discord.ext import commands
-from components import exceptions as ex
+from components import exceptions as ex, strings
 
 
 def get_command_prefix(amadeus, message):
@@ -17,6 +17,7 @@ def get_command_prefix(amadeus, message):
 
 
 bot = commands.Bot(command_prefix=get_command_prefix)
+bot.strings = strings.Strings()
 bot.ready = False
 bot.corrupt_configs = []
 
@@ -144,6 +145,11 @@ async def on_ready():
         await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
         await init_message_extended.edit(embed=init_embed_extended)
 
+        # Load strings
+        strings_status = await bot.strings.load_strings()
+        await update_init_embed_extended("strings", init_embed_extended, strings_status)
+        await init_message_extended.edit(embed=init_embed_extended)
+
         # Load server configurations
         configs = await load_configs()
         await update_init_embed_extended("configs", init_embed_extended, configs)
@@ -205,9 +211,9 @@ async def prepare_command_error_embed(ctx, message):
     embed = discord.Embed()
     embed.title = message.text
     if message.code == 50013:
-        embed.description = "Cannot reply in " + ctx.channel.mention + " due to missing permissions.\n\n"
-        embed.description += "This was caused by " + ctx.author.mention
-        embed.description += " running the `" + ctx.command.name + "` command."
+        string_list = await bot.strings.get_string(ctx, "amadeus", "exception_forbidden")
+        values = [ctx.channel.mention, ctx.author.mention, ctx.command.name]
+        embed.description = await bot.strings.insert_into_string(string_list, values)
     return embed
 
 
@@ -263,6 +269,7 @@ async def prepare_init_embeds():
 
     init_embed_extended = copy.deepcopy(init_embed)
     init_embed_extended.add_field(name="Extensions", value="⌛ Loading...")
+    init_embed_extended.add_field(name="Strings", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Configs", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Database", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Discord.py", value=discord.__version__)
@@ -290,7 +297,14 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
             value = ', '.join(value)
             init_embed_extended.set_field_at(0, name="Extensions", value="⚠ Failed")
             init_embed_extended.add_field(name="Extensions failed", value=value, inline="False")
-        init_embed_extended.set_field_at(1, name="Configs", value="⌛ Loading...")
+        init_embed_extended.set_field_at(1, name="Strings", value="⌛ Loading...")
+
+    elif update_type == "strings":
+        if value:
+            init_embed_extended.set_field_at(1, name="Strings", value="✅ Loaded")
+        else:
+            init_embed_extended.set_field_at(1, name="Strings", value="⚠ Failed")
+        init_embed_extended.set_field_at(2, name="Configs", value="⌛ Loading...")
 
     elif update_type == "configs":
         successful_load = True
@@ -301,19 +315,19 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
             init_embed_extended.add_field(name="Configs not found", value="\n".join(value), inline=False)
 
         if successful_load:
-            init_embed_extended.set_field_at(1, name="Configs", value="✅ Loaded")
+            init_embed_extended.set_field_at(2, name="Configs", value="✅ Loaded")
         else:
-            init_embed_extended.set_field_at(1, name="Configs", value="⚠ Failed")
-        init_embed_extended.set_field_at(2, name="Database", value="⌛ Connecting...")
+            init_embed_extended.set_field_at(2, name="Configs", value="⚠ Failed")
+        init_embed_extended.set_field_at(3, name="Database", value="⌛ Connecting...")
 
     elif update_type == "database":
         if value == 0:
-            init_embed_extended.set_field_at(2, name="Database", value="⌛ Connecting...")
+            init_embed_extended.set_field_at(3, name="Database", value="⌛ Connecting...")
             init_embed_extended.set_footer(text="")
         elif value == 1:
-            init_embed_extended.set_field_at(2, name="Database", value="✅ Connected")
+            init_embed_extended.set_field_at(3, name="Database", value="✅ Connected")
         elif value == 2:
-            init_embed_extended.set_field_at(2, name="Database", value="⚠ Failed")
+            init_embed_extended.set_field_at(3, name="Database", value="⚠ Failed")
             reconnect_msg = "Retrying database connection in "
             reconnect_msg += str(bot.config["bot"]["database"]["retry_timeout"])
             reconnect_msg += " seconds..."
