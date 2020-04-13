@@ -33,6 +33,10 @@ async def global_check(ctx):
         raise ex.BotNotReady
 
     if ctx.command.name not in bot.config["bot"]["no_global_check"]:
+        if discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"]):
+            if bot.config[str(ctx.guild.id)].get("general", {}).get("mods_override_limits", {}):
+                return True
+
         guild_config = bot.config.get(str(ctx.guild.id), {})
 
         # Is bot enabled on server? (set to True during setup)
@@ -151,6 +155,28 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(ctx, message):
+    error_config = bot.config[str(ctx.guild.id)].get("errors")
+    if error_config is not None:
+        if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
+            return
+        if isinstance(message, (ex.BotDisabled, ex.CategoryDisabled, ex.CommandDisabled)) and error_config.get(
+                "hide_disabled_errors"):
+            return
+        if isinstance(message, (ex.CommandNotWhitelistedChannel, ex.CommandBlacklistedChannel)) and error_config.get(
+                "hide_channel_errors"):
+            return
+        if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
+            if error_config.get("hide_role_errors"):
+                return
+            elif error_config.get("hide_whitelist_role"):
+                message.description = message.description.split(":\n", 1)[0]
+                message.description += "."
+        if isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
+            if error_config.get("hide_role_errors"):
+                return
+            elif error_config.get("hide_blacklist_role"):
+                message.description = message.description.split(":\n", 1)[0]
+                message.description += "."
     embed = await prepare_error_embed(ctx, message)
     await ctx.send(embed=embed)
 
