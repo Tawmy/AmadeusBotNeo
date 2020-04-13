@@ -33,10 +33,6 @@ async def global_check(ctx):
         raise ex.BotNotReady
 
     if ctx.command.name not in bot.config["bot"]["no_global_check"]:
-        if discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"]):
-            if bot.config[str(ctx.guild.id)].get("general", {}).get("mods_override_limits", {}):
-                return True
-
         guild_config = bot.config.get(str(ctx.guild.id), {})
 
         # Is bot enabled on server? (set to True during setup)
@@ -48,14 +44,21 @@ async def global_check(ctx):
 
         guild_config_cat = guild_config.get("limits", {}).get("categories")
         guild_config_com = guild_config.get("limits", {}).get("commands")
+        moderator_skip_enabled = bot.config[str(ctx.guild.id)].get("general", {}).get("mods_override_limits", {})
+        if discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"]):
+            user_is_moderator = True
+        else:
+            user_is_moderator = False
 
         if guild_config_cat is not None:
             # Is extension enabled on server?
             if guild_config_cat.get(ctx.command.cog_name, {}).get("enabled") is False:
                 raise ex.CategoryDisabled
 
+            if moderator_skip_enabled and user_is_moderator:
+                pass
             # Do not check for extension role limits if command has role limits specified
-            if not await command_has_role_limits(ctx, guild_config_com):
+            elif not await command_has_role_limits(ctx, guild_config_com):
                 # Does the extension have role limits?
                 wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
                 bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
@@ -70,22 +73,25 @@ async def global_check(ctx):
             if guild_config_com.get(ctx.command.name, {}).get("enabled") is False:
                 raise ex.CommandDisabled
 
-            # Does the command have channel limits?
-            wl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("whitelist", [])
-            bl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("blacklist", [])
-            if len(wl) > 0 and ctx.channel.id not in wl:
-                raise ex.CommandNotWhitelistedChannel
-            if ctx.channel.id in bl:
-                raise ex.CommandBlacklistedChannel
+            if moderator_skip_enabled and user_is_moderator:
+                pass
+            else:
+                # Does the command have channel limits?
+                wl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("whitelist", [])
+                bl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("blacklist", [])
+                if len(wl) > 0 and ctx.channel.id not in wl:
+                    raise ex.CommandNotWhitelistedChannel
+                if ctx.channel.id in bl:
+                    raise ex.CommandBlacklistedChannel
 
-            # Does the command have role limits?
-            wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
-            bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
-            result = await check_role_limits(ctx, wl, bl)
-            if result[0] == 1:
-                raise ex.CommandNoWhitelistedRole(result[1])
-            if result[0] == 2:
-                raise ex.CommandBlacklistedRole(result[1])
+                # Does the command have role limits?
+                wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
+                bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
+                result = await check_role_limits(ctx, wl, bl)
+                if result[0] == 1:
+                    raise ex.CommandNoWhitelistedRole(result[1])
+                if result[0] == 2:
+                    raise ex.CommandBlacklistedRole(result[1])
 
         # TODO time limits
 

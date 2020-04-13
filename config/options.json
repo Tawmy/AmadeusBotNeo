@@ -12,7 +12,7 @@
         },
         "mods_override_limits": {
             "name": "Moderators Override Limits",
-            "description": "Defines whether users with the moderator role override all channel-, category-, and command limits.",
+            "description": "Defines whether users with the moderator role override all category-, and command limits.",
             "default": true
         }
     },
