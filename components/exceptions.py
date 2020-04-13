@@ -15,6 +15,16 @@ class NoDirectMessages(commands.CheckFailure):
         super().__init__(message)
 
 
+class CorruptConfig(commands.CheckFailure):
+    def __init__(self):
+        message = "Corrupt configuration"
+        self.description = "The bot was unable to load this server's configuration file."
+        self.description += "The bot cannot function on this server without it.\n\n"
+        self.description += "This can be fixed by running the `!setup` command again."
+        self.description += "Make sure to do a full reset."
+        super().__init__(message)
+
+
 class DatabaseNotConnected(commands.CheckFailure):
     def __init__(self):
         message = "Database not connected"

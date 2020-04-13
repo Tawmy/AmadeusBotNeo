@@ -40,7 +40,10 @@ async def global_check(ctx):
         # Is bot enabled on server? (set to True during setup)
         bot_status = guild_config.get("general", {}).get("enabled")
         if bot_status is None:
-            raise ex.BotNotConfigured
+            if str(ctx.guild.id) in bot.corrupt_configs:
+                raise ex.CorruptConfig
+            else:
+                raise ex.BotNotConfigured
         elif bot_status is False:
             raise ex.BotDisabled
 
@@ -163,7 +166,7 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(ctx, message):
-    error_config = bot.config[str(ctx.guild.id)].get("errors")
+    error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
     if error_config is not None:
         if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
             return
@@ -272,11 +275,11 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
 
     elif update_type == "configs":
         successful_load = True
-        if len(value[1]) > 0:
-            init_embed_extended.add_field(name="Configs failed", value="\n".join(value[1]), inline=False)
+        if len(bot.corrupt_configs) > 0:
+            init_embed_extended.add_field(name="Configs failed", value="\n".join(bot.corrupt_configs), inline=False)
             successful_load = False
-        if len(value[0]) > 0:
-            init_embed_extended.add_field(name="Configs not found", value="\n".join(value[0]), inline=False)
+        if len(value) > 0:
+            init_embed_extended.add_field(name="Configs not found", value="\n".join(value), inline=False)
 
         if successful_load:
             init_embed_extended.set_field_at(1, name="Configs", value="✅ Loaded")
@@ -318,7 +321,6 @@ async def load_extensions():
 async def load_configs():
     json_files = ["options"]
     error_filenotfound_list = []
-    error_valueerror_list = []
 
     for guild in bot.guilds:
         json_files.append(str(guild.id))
@@ -329,11 +331,11 @@ async def load_configs():
                 try:
                     bot.config[filename] = json.load(json_file)
                 except ValueError:
-                    error_valueerror_list.append(filename)
+                    bot.corrupt_configs.append(filename)
         except FileNotFoundError:
             error_filenotfound_list.append(filename)
 
-    return [error_filenotfound_list, error_valueerror_list]
+    return error_filenotfound_list
 
 
 async def connect_database(init_embed_extended, init_message_extended):

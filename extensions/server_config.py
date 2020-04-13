@@ -47,6 +47,8 @@ class Config(commands.Cog):
         await self.copy_default_values(ctx)
         # Save server config to json file and give feedback on its success
         if await self.save_config(ctx):
+            if str(ctx.guild.id) in self.bot.corrupt_configs:
+                self.bot.corrupt_configs.remove(str(ctx.guild.id))
             embed = await self.prepare_status_embed(True)
             permissions_embed = await self.check_bot_permissions(ctx)
             for field in permissions_embed.fields:
