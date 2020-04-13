@@ -167,33 +167,51 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(ctx, message):
-    error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
-    if error_config is not None:
-        if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
-            return
-        if isinstance(message, (ex.BotDisabled, ex.CategoryDisabled, ex.CommandDisabled)) and error_config.get(
-                "hide_disabled_errors"):
-            return
-        if isinstance(message, (ex.CommandNotWhitelistedChannel, ex.CommandBlacklistedChannel)) and error_config.get(
-                "hide_channel_errors"):
-            return
-        if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
-            if error_config.get("hide_role_errors"):
+    if isinstance(message, commands.CommandInvokeError):
+        bot_channel_id = bot.config.get(str(ctx.guild.id), {}).get("essential_channels", {}).get("bot_channel")
+        if bot_channel_id is not None:
+            bot_channel = ctx.guild.get_channel(bot_channel_id)
+            embed = await prepare_command_error_embed(ctx, message.original)
+            await bot_channel.send(embed=embed)
+    else:
+        error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
+        if error_config is not None:
+            if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
                 return
-            elif error_config.get("hide_whitelist_role"):
-                message.description = message.description.split(":\n", 1)[0]
-                message.description += "."
-        if isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
-            if error_config.get("hide_role_errors"):
+            if isinstance(message, (ex.BotDisabled, ex.CategoryDisabled, ex.CommandDisabled)) and error_config.get(
+                    "hide_disabled_errors"):
                 return
-            elif error_config.get("hide_blacklist_role"):
-                message.description = message.description.split(":\n", 1)[0]
-                message.description += "."
-    embed = await prepare_error_embed(ctx, message)
-    await ctx.send(embed=embed)
+            if isinstance(message,
+                          (ex.CommandNotWhitelistedChannel, ex.CommandBlacklistedChannel)) and error_config.get(
+                    "hide_channel_errors"):
+                return
+            if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
+                if error_config.get("hide_role_errors"):
+                    return
+                elif error_config.get("hide_whitelist_role"):
+                    message.description = message.description.split(":\n", 1)[0]
+                    message.description += "."
+            if isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
+                if error_config.get("hide_role_errors"):
+                    return
+                elif error_config.get("hide_blacklist_role"):
+                    message.description = message.description.split(":\n", 1)[0]
+                    message.description += "."
+        embed = await prepare_command_error_embed_custom(ctx, message)
+        await ctx.send(embed=embed)
 
 
-async def prepare_error_embed(ctx, message):
+async def prepare_command_error_embed(ctx, message):
+    embed = discord.Embed()
+    embed.title = message.text
+    if message.code == 50013:
+        embed.description = "Cannot reply in " + ctx.channel.mention + " due to missing permissions.\n\n"
+        embed.description += "This was caused by " + ctx.author.mention
+        embed.description += " running the `" + ctx.command.name + "` command."
+    return embed
+
+
+async def prepare_command_error_embed_custom(ctx, message):
     embed = discord.Embed()
     embed.title = str(message)
     if hasattr(message, "description"):
