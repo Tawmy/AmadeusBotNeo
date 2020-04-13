@@ -1,5 +1,4 @@
 {
-    "extensions": ["base", "config"],
     "extensions": ["base", "server_config"],
     "primary_server": {
         "id": 111111111111111111,
@@ -15,7 +14,7 @@
         "retry_timeout": 10
     },
     "token": "",
-    "debug": false
+    "debug": false,
     "menu_emoji": ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵",
                       "🇶", "🇷", "🇸", "🇹"]
 }
