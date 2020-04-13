@@ -28,6 +28,10 @@ class Strings:
             return "en"
 
     async def insert_into_string(self, strings, values, position=None):
+        if type(strings) is str:
+            strings = [strings]
+        if type(values) is str:
+            values = [values]
         if len(strings) == len(values) + 1:
             string_with_values = strings[0]
             for i, value in enumerate(values):
