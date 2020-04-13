@@ -331,7 +331,8 @@ async def load_configs():
                 try:
                     bot.config[filename] = json.load(json_file)
                 except ValueError:
-                    bot.corrupt_configs.append(filename)
+                    if filename not in bot.corrupt_configs:
+                        bot.corrupt_configs.append(filename)
         except FileNotFoundError:
             error_filenotfound_list.append(filename)
 
