@@ -1,0 +1,96 @@
+{
+    "categories": {
+        "name": "Categories",
+        "description": "Limits for command categories",
+        "categoryName": {
+            "enabled": {
+                "name": "Category Enabled",
+                "description": "Enables command category on the server.",
+                "default": true,
+                "default_exceptions": {}
+            },
+            "roles": {
+                "name": "Category Role Limits",
+                "description": "Role limits for the category.",
+                "list": {
+                    "whitelist": {
+                        "name": "Whitelist",
+                        "description": "Allow usage of category only by these roles."
+                    },
+                    "blacklist": {
+                        "name": "Blacklist",
+                        "description": "Disallow usage of category by these roles. Overrides whitelist."
+                    }
+                }
+            }
+        }
+    },
+    "commands": {
+        "name": "Commands",
+        "description": "limits for commands",
+        "commandName": {
+            "enabled": {
+                "name": "Command Enabled",
+                "description": "Enables command on the server.",
+                "default": true,
+                "default_exceptions": {}
+            },
+            "channels": {
+                "name": "Command Channel Limits",
+                "description": "Channel limits for the command.",
+                "list": {
+                    "whitelist": {
+                        "name": "Whitelist",
+                        "description": "Allow usage of command only in these channels."
+                    },
+                    "blacklist": {
+                        "name": "Blacklist",
+                        "description": "Disallow usage of command in these channels. Overrides whitelist."
+                    },
+                    "timeLimits": {
+                        "name": "Command Time Limits (Channels)",
+                        "description": "Time limits for command in these channels. Format: N usages in M seconds.",
+                        "list": {
+                            "amount": {
+                                "name": "Amount of usages",
+                                "description": "The command can be used this many times in the timespan in this channel."
+                            },
+                            "time": {
+                                "name": "Timeframe for usages",
+                                "description": "The command usages apply to this timeframe (seconds)."
+                            }
+                        }
+                    }
+                }
+            },
+            "roles": {
+                "name": "Command Role Limits",
+                "description": "Role limits for the command.",
+                "list": {
+                    "whitelist": {
+                        "name": "Whitelist",
+                        "description": "Allow usage of command only by these roles."
+                    },
+                    "blacklist": {
+                        "name": "Blacklist",
+                        "description": "Disallow usage of command by these roles. Overrides whitelist."
+                    },
+                    "timeLimits": {
+                        "name": "Command Time Limits (Roles)",
+                        "description": "Time limits for command usage by these roles. Format: N usages in M seconds.",
+                        "list": {
+                            "amount": {
+                                "name": "Amount of usages",
+                                "description": "The command can be used this many times in the timespan by the role."
+                            },
+                            "time": {
+                                "name": "Timeframe for usages",
+                                "description": "The command usages apply to this timeframe (seconds)."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

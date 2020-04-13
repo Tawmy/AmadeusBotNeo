@@ -6,6 +6,7 @@ import platform
 import asyncpg
 import discord
 from discord.ext import commands
+from components import exceptions as ex
 
 
 def get_command_prefix(amadeus, message):
@@ -16,6 +17,8 @@ def get_command_prefix(amadeus, message):
 
 
 bot = commands.Bot(command_prefix=get_command_prefix)
+bot.ready = False
+bot.corrupt_configs = []
 
 bot.config = {}
 with open("config/bot.json", 'r') as file:
@@ -26,8 +29,108 @@ with open("config/bot.json", 'r') as file:
         raise SystemExit(e)
 
 
+@bot.check
+async def global_check(ctx):
+    if not bot.ready:
+        raise ex.BotNotReady
+
+    if ctx.command.name not in bot.config["bot"]["no_global_check"]:
+        guild_config = bot.config.get(str(ctx.guild.id), {})
+
+        # Is bot enabled on server? (set to True during setup)
+        bot_status = guild_config.get("general", {}).get("enabled")
+        if bot_status is None:
+            if str(ctx.guild.id) in bot.corrupt_configs:
+                raise ex.CorruptConfig
+            else:
+                raise ex.BotNotConfigured
+        elif bot_status is False:
+            raise ex.BotDisabled
+
+        guild_config_cat = guild_config.get("limits", {}).get("categories")
+        guild_config_com = guild_config.get("limits", {}).get("commands")
+        moderator_skip_enabled = bot.config[str(ctx.guild.id)].get("general", {}).get("mods_override_limits", {})
+        if discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"]):
+            user_is_moderator = True
+        else:
+            user_is_moderator = False
+
+        if guild_config_cat is not None:
+            # Is extension enabled on server?
+            if guild_config_cat.get(ctx.command.cog_name, {}).get("enabled") is False:
+                raise ex.CategoryDisabled
+
+            if moderator_skip_enabled and user_is_moderator:
+                pass
+            # Do not check for extension role limits if command has role limits specified
+            elif not await command_has_role_limits(ctx, guild_config_com):
+                # Does the extension have role limits?
+                wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
+                bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
+                result = await check_role_limits(ctx, wl, bl)
+                if result[0] == 1:
+                    raise ex.CategoryNoWhitelistedRole(result[1])
+                elif result[0] == 2:
+                    raise ex.CategoryBlacklistedRole(result[1])
+
+        if guild_config_com is not None:
+            # Is command enabled on the server?
+            if guild_config_com.get(ctx.command.name, {}).get("enabled") is False:
+                raise ex.CommandDisabled
+
+            if moderator_skip_enabled and user_is_moderator:
+                pass
+            else:
+                # Does the command have channel limits?
+                wl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("whitelist", [])
+                bl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("blacklist", [])
+                if len(wl) > 0 and ctx.channel.id not in wl:
+                    raise ex.CommandNotWhitelistedChannel
+                if ctx.channel.id in bl:
+                    raise ex.CommandBlacklistedChannel
+
+                # Does the command have role limits?
+                wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
+                bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
+                result = await check_role_limits(ctx, wl, bl)
+                if result[0] == 1:
+                    raise ex.CommandNoWhitelistedRole(result[1])
+                if result[0] == 2:
+                    raise ex.CommandBlacklistedRole(result[1])
+
+        # TODO time limits
+
+    return True
+
+
+async def command_has_role_limits(ctx, guild_config_com):
+    if guild_config_com is not None:
+        wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
+        bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
+        return len(wl) + len(bl) > 0
+    return False
+
+
+async def check_role_limits(ctx, wl, bl):
+    if len(wl) + len(bl) > 0:
+        match = False
+        for role in ctx.author.roles:
+            # TODO check if this can throw exception if bl/wl is None
+            if role.id in wl:
+                match = True
+            if role.id in bl:
+                return [2, role]
+        if len(wl) > 0 and match is False:
+            role_list = []
+            for role_id in wl:
+                role_list.append(ctx.guild.get_role(role_id))
+            return [1, role_list]
+    return [0]
+
+
 @bot.event
 async def on_ready():
+    bot.ready = False
     print("Connected to Discord")
     bot.app_info = await bot.application_info()
 
@@ -45,6 +148,8 @@ async def on_ready():
     await update_init_embed_extended("configs", init_embed_extended, configs)
     await init_message_extended.edit(embed=init_embed_extended)
 
+    bot.ready = True
+
     # Connect to database
     await connect_database(init_embed_extended, init_message_extended)
 
@@ -57,6 +162,43 @@ async def on_ready():
 
     # Send startup message on all servers
     await send_startup_message(init_embed)
+
+
+@bot.event
+async def on_command_error(ctx, message):
+    error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
+    if error_config is not None:
+        if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
+            return
+        if isinstance(message, (ex.BotDisabled, ex.CategoryDisabled, ex.CommandDisabled)) and error_config.get(
+                "hide_disabled_errors"):
+            return
+        if isinstance(message, (ex.CommandNotWhitelistedChannel, ex.CommandBlacklistedChannel)) and error_config.get(
+                "hide_channel_errors"):
+            return
+        if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
+            if error_config.get("hide_role_errors"):
+                return
+            elif error_config.get("hide_whitelist_role"):
+                message.description = message.description.split(":\n", 1)[0]
+                message.description += "."
+        if isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
+            if error_config.get("hide_role_errors"):
+                return
+            elif error_config.get("hide_blacklist_role"):
+                message.description = message.description.split(":\n", 1)[0]
+                message.description += "."
+    embed = await prepare_error_embed(ctx, message)
+    await ctx.send(embed=embed)
+
+
+async def prepare_error_embed(ctx, message):
+    embed = discord.Embed()
+    embed.title = str(message)
+    if hasattr(message, "description"):
+        embed.description = message.description
+    embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
+    return embed
 
 
 @bot.event
@@ -133,11 +275,11 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
 
     elif update_type == "configs":
         successful_load = True
-        if len(value[1]) > 0:
-            init_embed_extended.add_field(name="Configs failed", value="\n".join(value[1]), inline=False)
+        if len(bot.corrupt_configs) > 0:
+            init_embed_extended.add_field(name="Configs failed", value="\n".join(bot.corrupt_configs), inline=False)
             successful_load = False
-        if len(value[0]) > 0:
-            init_embed_extended.add_field(name="Configs not found", value="\n".join(value[0]), inline=False)
+        if len(value) > 0:
+            init_embed_extended.add_field(name="Configs not found", value="\n".join(value), inline=False)
 
         if successful_load:
             init_embed_extended.set_field_at(1, name="Configs", value="✅ Loaded")
@@ -179,7 +321,6 @@ async def load_extensions():
 async def load_configs():
     json_files = ["options"]
     error_filenotfound_list = []
-    error_valueerror_list = []
 
     for guild in bot.guilds:
         json_files.append(str(guild.id))
@@ -190,11 +331,12 @@ async def load_configs():
                 try:
                     bot.config[filename] = json.load(json_file)
                 except ValueError:
-                    error_valueerror_list.append(filename)
+                    if filename not in bot.corrupt_configs:
+                        bot.corrupt_configs.append(filename)
         except FileNotFoundError:
             error_filenotfound_list.append(filename)
 
-    return [error_filenotfound_list, error_valueerror_list]
+    return error_filenotfound_list
 
 
 async def connect_database(init_embed_extended, init_message_extended):

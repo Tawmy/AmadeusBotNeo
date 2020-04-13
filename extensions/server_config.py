@@ -6,6 +6,7 @@ from os.path import isfile
 import discord
 from discord.ext import commands
 
+from components import checks
 from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt
 
@@ -15,7 +16,8 @@ class Config(commands.Cog):
         self.bot = bot
 
     @commands.command(name='setup')
-    @commands.is_owner()
+    @commands.check(checks.is_guild_owner)
+    @commands.check(checks.block_dms)
     async def setup(self, ctx, setup_user: discord.Member = "owner_has_not_specified_user"):
         # Guild owner can give another user permission to execute setup
         if setup_user == "owner_has_not_specified_user":
@@ -45,6 +47,8 @@ class Config(commands.Cog):
         await self.copy_default_values(ctx)
         # Save server config to json file and give feedback on its success
         if await self.save_config(ctx):
+            if str(ctx.guild.id) in self.bot.corrupt_configs:
+                self.bot.corrupt_configs.remove(str(ctx.guild.id))
             embed = await self.prepare_status_embed(True)
             permissions_embed = await self.check_bot_permissions(ctx)
             for field in permissions_embed.fields:
