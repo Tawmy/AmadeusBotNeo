@@ -17,6 +17,8 @@ def get_command_prefix(amadeus, message):
 
 
 bot = commands.Bot(command_prefix=get_command_prefix)
+bot.ready = False
+bot.corrupt_configs = []
 
 bot.config = {}
 with open("config/bot.json", 'r') as file:
@@ -29,7 +31,7 @@ with open("config/bot.json", 'r') as file:
 
 @bot.check
 async def global_check(ctx):
-    if bot.ready in [None, False]:
+    if not bot.ready:
         raise ex.BotNotReady
 
     if ctx.command.name not in bot.config["bot"]["no_global_check"]:
