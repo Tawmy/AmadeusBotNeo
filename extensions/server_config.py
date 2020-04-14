@@ -49,67 +49,57 @@ class Config(commands.Cog):
         if await self.save_config(ctx):
             if str(ctx.guild.id) in self.bot.corrupt_configs:
                 self.bot.corrupt_configs.remove(str(ctx.guild.id))
-            embed = await self.prepare_status_embed(True)
+            embed = await self.prepare_status_embed(ctx, True)
             permissions_embed = await self.check_bot_permissions(ctx)
             for field in permissions_embed.fields:
                 embed.add_field(name=field.name, value=field.value, inline=field.inline)
         else:
-            embed = await self.prepare_status_embed(False)
+            embed = await self.prepare_status_embed(ctx, False)
         await result[0].edit(embed=embed)
 
     async def prepare_setup_menu(self, ctx, setup_menu):
         bot_name = self.bot.app_info.name
-        title = bot_name + " Setup"
-        description = "Before " + bot_name + " can do its job, some channels and roles need to be configured. "
-        description += bot_name + " will walk you through this process step by step.\n\n"
+        string_list = await self.bot.strings.get_string(ctx, "server_config", "setup_title")
+        title = await self.bot.strings.insert_into_string(string_list, bot_name, "left")
+        string_list = await self.bot.strings.get_string(ctx, "server_config", "setup_introduction")
+        description = await self.bot.strings.insert_into_string(string_list, [bot_name, bot_name])
 
         # Different prompt if server has been configured before
         json_file = str(ctx.guild.id) + '.json'
         if isfile('config/' + json_file):
             shutil.copy('config/' + json_file, 'config/backup/' + json_file)
-            description += "Your server has been configured before. "
-            description += "You can choose to either overwrite only the channels and roles set during setup, or "
-            description += "reset the configuration **entirely** (❗).\n\n"
-            description += "🟦 *Regular setup* **|** 🟥 *Full reset*"
+            description += await self.bot.strings.get_string(ctx, "server_config", "server_configured_before")
             emoji = ["🟦", "🟥"]
         else:
-            description += "Once you are ready, click the ✅ reaction under this message."
+            description += await self.bot.strings.get_string(ctx, "server_config", "setup_confirm_ready")
             emoji = ["✅"]
 
         await setup_menu.set_title(title)
         await setup_menu.set_description(description)
         await setup_menu.append_emoji(emoji)
 
-    async def prepare_prompt(self, setup_prompt, opt_val, status):
+    async def prepare_prompt(self, ctx, setup_prompt, opt_obj, status):
         # opt_val is None when no user input is to be prompted
-        if opt_val is not None:
-            await setup_prompt.set_author("Please enter:")
-            await setup_prompt.set_title(opt_val["name"])
-            await setup_prompt.set_description(opt_val["description"])
+        if opt_obj is not None:
+            await setup_prompt.set_author(await self.bot.strings.get_string(ctx, "server_config", "prompt_please_enter"))
+            cfg_strings = await self.bot.strings.extract_config_strings(ctx, opt_obj)
+            await setup_prompt.set_title(cfg_strings[0])
+            await setup_prompt.set_description(cfg_strings[1])
         # if input invalid
         if status == 1:
-            await setup_prompt.append_description("\n\n⚠ Not found. Please try again.")
+            await setup_prompt.append_description(await self.bot.strings.get_string(ctx, "server_config", "prompt_error_not_found"))
         # if setup cancelled
         elif status == 2:
-            await setup_prompt.set_description("Setup cancelled")
-        elif status == 3:
-            await setup_prompt.set_title("Setup successful!")
-            description = "You can now use " + self.bot.app_info.name + "!\n\n"
-            description += "Below are all the permissions the bot needs in the channels just set up. "
-            description += "Please make sure to grant it access to all of these."
-            await setup_prompt.set_description(description)
-        elif status == 4:
-            await setup_prompt.set_title("Could not save config!")
+            await setup_prompt.set_description(await self.bot.strings.get_string(ctx, "server_config", "setup_cancelled"))
 
-    async def prepare_status_embed(self, successful_bool):
+    async def prepare_status_embed(self, ctx, successful_bool):
         embed = discord.Embed()
         if successful_bool:
-            embed.title = "Setup successful!"
-            embed.description = "You can now use " + self.bot.app_info.name + "!\n\n"
-            embed.description += "Below are all the permissions the bot needs in the channels just set up. "
-            embed.description += "Please make sure to grant it access to all of these."
+            embed.title = await self.bot.strings.get_string(ctx, "server_config", "setup_successful")
+            string = await self.bot.strings.get_string(ctx, "server_config", "setup_successful_description")
+            embed.description = await self.bot.strings.insert_into_string(string, self.bot.app_info.name)
         else:
-            embed.title = "Could not save config!"
+            embed.title = await self.bot.strings.get_string(ctx, "server_config", "setup_error_save_config")
         return embed
 
     async def collect_setup_information(self, ctx, setup_prompt, setup_message):
@@ -121,7 +111,7 @@ class Config(commands.Cog):
                 collected_information[cat_key] = {}
                 # Iterate options in category
                 for opt_key, opt_val in self.bot.config["options"][cat_key]["list"].items():
-                    await self.prepare_prompt(setup_prompt, opt_val, 0)
+                    await self.prepare_prompt(ctx, setup_prompt, opt_val, 0)
                     obj = None
                     while obj is None:
                         result = await setup_prompt.show_prompt(ctx, 120, setup_message)
@@ -130,12 +120,12 @@ class Config(commands.Cog):
                             obj = await self.check_input(ctx, cat_key, result[1])
                             # if input invalid
                             if obj is None:
-                                await self.prepare_prompt(setup_prompt, opt_val, 1)
+                                await self.prepare_prompt(ctx, setup_prompt, opt_val, 1)
                             else:
                                 collected_information[cat_key].setdefault(opt_key, obj.id)
                         # If user has cancelled
                         else:
-                            await self.prepare_prompt(setup_prompt, None, 2)
+                            await self.prepare_prompt(ctx, setup_prompt, None, 2)
                             return None
         return collected_information
 
@@ -160,7 +150,8 @@ class Config(commands.Cog):
                 # Iterate options in category
                 for opt_key, opt_val in self.bot.config["options"][cat_key].items():
                     # Set option for server if not already set
-                    self.bot.config[str(ctx.guild.id)][cat_key].setdefault(opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
+                    self.bot.config[str(ctx.guild.id)][cat_key].setdefault(
+                        opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
 
     async def save_config(self, ctx):
         json_file = 'config/' + str(ctx.guild.id) + '.json'
