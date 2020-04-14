@@ -22,6 +22,7 @@ bot.ready = False
 bot.corrupt_configs = []
 
 bot.config = {}
+bot.values = {}
 with open("config/bot.json", 'r') as file:
     try:
         bot.config["bot"] = json.load(file)
@@ -145,9 +146,9 @@ async def on_ready():
         await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
         await init_message_extended.edit(embed=init_embed_extended)
 
-        # Load strings
-        strings_status = await bot.strings.load_strings()
-        await update_init_embed_extended("strings", init_embed_extended, strings_status)
+        # Load values
+        values_status = await load_values()
+        await update_init_embed_extended("values", init_embed_extended, values_status)
         await init_message_extended.edit(embed=init_embed_extended)
 
         # Load server configurations
@@ -303,13 +304,14 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
             value = ', '.join(value)
             init_embed_extended.set_field_at(0, name="Extensions", value="⚠ Failed")
             init_embed_extended.add_field(name="Extensions failed", value=value, inline="False")
-        init_embed_extended.set_field_at(1, name="Strings", value="⌛ Loading...")
+        init_embed_extended.set_field_at(1, name="Values", value="⌛ Loading...")
 
-    elif update_type == "strings":
-        if value:
-            init_embed_extended.set_field_at(1, name="Strings", value="✅ Loaded")
+    elif update_type == "values":
+        if len(value) > 0:
+            init_embed_extended.add_field(name="Values failed", value="\n".join(value), inline=False)
+            init_embed_extended.set_field_at(1, name="Values", value="⚠ Failed")
         else:
-            init_embed_extended.set_field_at(1, name="Strings", value="⚠ Failed")
+            init_embed_extended.set_field_at(1, name="Values", value="✅ Loaded")
         init_embed_extended.set_field_at(2, name="Configs", value="⌛ Loading...")
 
     elif update_type == "configs":
@@ -357,14 +359,32 @@ async def load_extensions():
     return failed
 
 
+async def load_values():
+    error_list = []
+    files = ["limits", "options"]
+
+    for filename in files:
+        try:
+            with open("values/" + filename + ".json", 'r') as json_file:
+                try:
+                    bot.config[filename] = json.load(json_file)
+                except ValueError:
+                    if filename not in bot.corrupt_configs:
+                        error_list(filename)
+        except FileNotFoundError:
+            error_list.append(filename)
+
+    if await bot.strings.load_strings() is None:
+        error_list.append("strings")
+
+    return error_list
+
+
 async def load_configs():
-    json_files = ["options"]
     error_filenotfound_list = []
 
     for guild in bot.guilds:
-        json_files.append(str(guild.id))
-
-    for filename in json_files:
+        filename = str(guild.id)
         try:
             with open("config/" + filename + ".json", 'r') as json_file:
                 try:

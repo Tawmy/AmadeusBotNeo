@@ -7,7 +7,7 @@ class Strings:
 
     async def load_strings(self):
         try:
-            with open("config/strings.json", 'r') as json_file:
+            with open("values/strings.json", 'r') as json_file:
                 try:
                     self.strings = json.load(json_file)
                 except ValueError:
