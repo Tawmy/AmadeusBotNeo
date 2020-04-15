@@ -231,7 +231,9 @@ async def prepare_command_error_embed_custom(ctx, message, error_config=None):
         if isinstance(message, ex.BotNotReady):
             embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name, "left")
         elif isinstance(message, ex.CorruptConfig):
-            embed.description = await bot.strings.insert_into_string(exc_strings[1], [bot.app_info.name, ctx.guild.name], "left")
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], [bot.app_info.name, ctx.guild.name, bot.app_info.name], "left")
+        elif isinstance(message, ex.DatabaseNotConnected):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name)
         elif isinstance(message, ex.NotGuildOwner):
             embed.description = await bot.strings.insert_into_string(exc_strings[1], ctx.guild.owner.mention)
         elif isinstance(message, ex.BotNotConfigured):
