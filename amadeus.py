@@ -17,7 +17,6 @@ def get_command_prefix(amadeus, message):
 
 
 bot = commands.Bot(command_prefix=get_command_prefix)
-bot.strings = strings.Strings()
 bot.ready = False
 bot.corrupt_configs = []
 
@@ -29,6 +28,7 @@ with open("config/bot.json", 'r') as file:
         print("Configuration file loaded successfully")
     except ValueError as e:
         raise SystemExit(e)
+bot.strings = strings.Strings(bot.config["bot"])
 
 
 @bot.check

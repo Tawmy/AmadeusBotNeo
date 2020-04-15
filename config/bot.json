@@ -1,4 +1,5 @@
 {
+    "default_language": "en",
     "extensions": ["base", "server_config"],
     "primary_server": {
         "id": 111111111111111111,

@@ -2,9 +2,10 @@ import json
 
 
 class Strings:
-    def __init__(self):
-        self.strings = []
-        self.exception_strings = []
+    def __init__(self, bot_config):
+        self.default_language = bot_config.get("default_language", "en")
+        self.strings = {}
+        self.exception_strings = {}
 
     async def load_strings(self):
         try:
@@ -24,14 +25,21 @@ class Strings:
 
     async def get_string(self, ctx, category, name):
         lang = await self.__get_language(ctx)
-        return self.strings.get(category, {}).get(name, {}).get(lang)
+        string = self.strings.get(category, {}).get(name, {}).get(lang)
+        if string is None and lang != self.default_language:
+            string = self.strings.get(category, {}).get(name, {}).get(self.default_language)
+        return string
 
     async def get_config_strings(self, ctx, category, command_title):
         lang = await self.__get_language(ctx)
         config_option = ctx.bot.options.get(category, {}).get(command_title)
         if config_option is not None:
             name = config_option.get("name", {}).get(lang)
+            if name is None and lang != self.default_language:
+                name = config_option.get("name", {}).get(self.default_language)
             description = config_option.get("description", {}).get(lang)
+            if description is None and lang != self.default_language:
+                description = config_option.get("description", {}).get(self.default_language)
             return [name, description]
         return None
 
@@ -40,7 +48,11 @@ class Strings:
         exception = self.exception_strings.get(exception_name)
         if exception is not None:
             message = exception.get("message", {}).get(lang)
+            if message is None and lang != self.default_language:
+                message = exception.get("message", {}).get(self.default_language)
             description = exception.get("description", {}).get(lang)
+            if description is None and lang != self.default_language:
+                description = exception.get("description", {}).get(self.default_language)
             return [message, description]
         return None
 
@@ -60,7 +72,7 @@ class Strings:
         if lang is not None:
             return lang
         else:
-            return "en"
+            return self.default_language
 
     async def insert_into_string(self, strings, values, position=None):
         if type(strings) is str:
