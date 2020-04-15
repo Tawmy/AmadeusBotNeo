@@ -182,7 +182,10 @@ async def on_command_error(ctx, message):
             if embed is not None:
                 await bot_channel.send(embed=embed)
     else:
-        error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
+        if ctx.guild is not None:
+            error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
+        else:
+            error_config = None
         if error_config is not None:
             if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
                 return
@@ -193,19 +196,12 @@ async def on_command_error(ctx, message):
                           (ex.CommandNotWhitelistedChannel, ex.CommandBlacklistedChannel)) and error_config.get(
                     "hide_channel_errors"):
                 return
-            if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
+            if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole, ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
                 if error_config.get("hide_role_errors"):
                     return
-                elif error_config.get("hide_whitelist_role"):
-                    message.description = message.description.split(":\n", 1)[0]
-                    message.description += "."
-            if isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
-                if error_config.get("hide_role_errors"):
-                    return
-                elif error_config.get("hide_blacklist_role"):
-                    message.description = message.description.split(":\n", 1)[0]
-                    message.description += "."
-        embed = await prepare_command_error_embed_custom(ctx, message)
+            embed = await prepare_command_error_embed_custom(ctx, message, error_config)
+        else:
+            embed = await prepare_command_error_embed_custom(ctx, message)
         await ctx.send(embed=embed)
 
 
@@ -224,11 +220,36 @@ async def prepare_command_error_embed(ctx, message):
     return embed
 
 
-async def prepare_command_error_embed_custom(ctx, message):
+async def prepare_command_error_embed_custom(ctx, message, error_config=None):
     embed = discord.Embed()
-    embed.title = str(message)
-    if hasattr(message, "description"):
-        embed.description = message.description
+    exc_strings = await bot.strings.get_exception_strings(ctx, type(message).__name__)
+    if exc_strings is None:
+        embed.title = str(message)
+    else:
+        embed.title = exc_strings[0]
+
+        if isinstance(message, ex.BotNotReady):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name, "left")
+        elif isinstance(message, ex.CorruptConfig):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], [bot.app_info.name, ctx.guild.name], "left")
+        elif isinstance(message, ex.NotGuildOwner):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], ctx.guild.owner.mention)
+        elif isinstance(message, ex.BotNotConfigured):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], [bot.app_info.name, ctx.guild.owner.mention], "left")
+        elif isinstance(message, ex.BotDisabled):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name, "left")
+        elif isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
+            if error_config.get("hide_whitelist_role") is not True:
+                embed.description = await bot.strings.append_roles(exc_strings[1], message.roles)
+            else:
+                embed.description = exc_strings[1]
+        elif isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
+            if error_config.get("hide_blacklist_role") is not True:
+                embed.description = await bot.strings.append_roles(exc_strings[1], message.role)
+            else:
+                embed.description = exc_strings[1]
+        else:
+            embed.description = exc_strings[1]
     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
     return embed
 

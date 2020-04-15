@@ -15,7 +15,7 @@
             "de": ["Bevor", "arbeiten kann, müssen einige Kanäle und Rollen konfiguriert werden.", "wird Dich Schritt für Schritt durch diesen Prozess führen.\n\n"]
         },
         "server_configured_before": {
-            "en": "Your server has been configured before. You can choose to either overwrite only the channels and roles set during setup, or reset the configuration **entirely** (❗).\n\n\"\uD83D\uDFE6 *Regular setup* **|** \uD83D\uDFE5 *Full reset*",
+            "en": "Your server has been configured before. You can choose to either overwrite only the channels and roles set during setup, or reset the configuration **entirely** (❗).\n\n\uD83D\uDFE6 *Regular setup* **|** \uD83D\uDFE5 *Full reset*",
             "de": "Dieser Server wurde bereits konfiguriert. Du kannst entweder nur die Optionen, die während des Setups konfiguriert werden, überschreiben, oder die Konfiguration **vollständig** (❗) zurücksetzen.\n\n\uD83D\uDFE6 *Normaler Setup* **|** \uD83D\uDFE5 *Vollständig zurücksetzen*"
         },
         "setup_confirm_ready": {
