@@ -395,8 +395,9 @@ async def load_values():
         except FileNotFoundError:
             error_list.append(filename)
 
-    if await bot.strings.load_strings() is None:
-        error_list.append("strings")
+    failed_strings = await bot.strings.load_strings()
+    if len(failed_strings) > 0:
+        error_list.append(", ".join(failed_strings))
 
     return error_list
 

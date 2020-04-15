@@ -8,20 +8,21 @@ class Strings:
         self.exception_strings = {}
 
     async def load_strings(self):
+        failed = []
         try:
             with open("values/strings.json", 'r') as json_file:
                 try:
                     self.strings = json.load(json_file)
                 except ValueError:
-                    return False
+                    failed.append("strings")
             with open("values/exceptions.json", 'r') as json_file:
                 try:
                     self.exception_strings = json.load(json_file)
                 except ValueError:
-                    return False
-        except FileNotFoundError:
-            return False
-        return True
+                    failed.append("strings")
+        except FileNotFoundError as exc:
+            failed.append(exc.filename)
+        return failed
 
     async def get_string(self, ctx, category, name):
         lang = await self.__get_language(ctx)
