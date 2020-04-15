@@ -19,7 +19,7 @@ class Strings:
                 try:
                     self.exception_strings = json.load(json_file)
                 except ValueError:
-                    failed.append("strings")
+                    failed.append("exceptions")
         except FileNotFoundError as exc:
             failed.append(exc.filename)
         return failed
