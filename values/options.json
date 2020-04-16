@@ -238,7 +238,7 @@
                     "en": "Role to have default control over the bot.",
                     "de": "Rolle, die standardmäßig Kontrolle über den Bot hat."
                 },
-                "data_type": "channel",
+                "data_type": "role",
                 "is_list": false
             }
         }
