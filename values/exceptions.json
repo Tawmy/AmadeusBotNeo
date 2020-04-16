@@ -144,7 +144,7 @@
         },
         "description": {
             "en": "You have a role that forbids you from using this command.",
-            "de": "Du hast eine Rolle, die Dich an der Ausführung dieses Beffehls hindert".
+            "de": "Du hast eine Rolle, die Dich an der Ausführung dieses Beffehls hindert."
         }
     }
 }
