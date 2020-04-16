@@ -1,6 +1,7 @@
 {
     "default_language": "en",
-    "extensions": ["base", "server_config"],
+    "extensions": ["base", "server_setup", "config"],
+    "no_global_check": ["setup"],
     "primary_server": {
         "id": 111111111111111111,
         "main_channel_id": 111111111111111111
