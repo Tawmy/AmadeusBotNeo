@@ -8,7 +8,7 @@ import platform
 import asyncpg
 import discord
 from discord.ext import commands
-from components import exceptions as ex, strings
+from components import exceptions as ex, strings, config
 
 
 def get_command_prefix(amadeus, message):
@@ -23,7 +23,6 @@ bot.ready = False
 bot.corrupt_configs = []
 
 bot.config = {}
-bot.values = {}
 with open("config/bot.json", 'r') as file:
     try:
         bot.config["bot"] = json.load(file)
@@ -31,6 +30,7 @@ with open("config/bot.json", 'r') as file:
     except ValueError as e:
         raise SystemExit(e)
 bot.strings = strings.Strings(bot.config["bot"])
+bot.values = config.Config(bot.config["bot"])
 
 
 @bot.check
@@ -149,7 +149,7 @@ async def on_ready():
         await init_message_extended.edit(embed=init_embed_extended)
 
         # Load values
-        values_status = await load_values()
+        values_status = await load_strings_and_values()
         await update_init_embed_extended("values", init_embed_extended, values_status)
         await init_message_extended.edit(embed=init_embed_extended)
 
@@ -383,26 +383,10 @@ async def load_extensions():
     return failed
 
 
-async def load_values():
-    error_list = []
-    files = ["limits", "options"]
-
-    for filename in files:
-        try:
-            with open("values/" + filename + ".json", 'r') as json_file:
-                try:
-                    bot.config[filename] = json.load(json_file)
-                except ValueError:
-                    if filename not in bot.corrupt_configs:
-                        error_list(filename)
-        except FileNotFoundError:
-            error_list.append(filename)
-
+async def load_strings_and_values():
     failed_strings = await bot.strings.load_strings()
-    if len(failed_strings) > 0:
-        error_list.append(", ".join(failed_strings))
-
-    return error_list
+    failed_strings.extend(await bot.values.load_values())
+    return failed_strings
 
 
 async def load_configs():
