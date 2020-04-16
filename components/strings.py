@@ -27,6 +27,7 @@ class Strings:
     async def get_string(self, ctx, category, name):
         lang = await self.__get_language(ctx)
         string = self.strings.get(category, {}).get(name, {}).get(lang)
+        # Get string in default language if nothing found for specified one
         if string is None and lang != self.default_language:
             string = self.strings.get(category, {}).get(name, {}).get(self.default_language)
         return string
@@ -36,9 +37,11 @@ class Strings:
         config_option = ctx.bot.options.get(category, {}).get(command_title)
         if config_option is not None:
             name = config_option.get("name", {}).get(lang)
+            # Get string in default language if nothing found for specified one
             if name is None and lang != self.default_language:
                 name = config_option.get("name", {}).get(self.default_language)
             description = config_option.get("description", {}).get(lang)
+            # Get string in default language if nothing found for specified one
             if description is None and lang != self.default_language:
                 description = config_option.get("description", {}).get(self.default_language)
             return [name, description]
@@ -49,9 +52,11 @@ class Strings:
         exception = self.exception_strings.get(exception_name)
         if exception is not None:
             message = exception.get("message", {}).get(lang)
+            # Get string in default language if nothing found for specified one
             if message is None and lang != self.default_language:
                 message = exception.get("message", {}).get(self.default_language)
             description = exception.get("description", {}).get(lang)
+            # Get string in default language if nothing found for specified one
             if description is None and lang != self.default_language:
                 description = exception.get("description", {}).get(self.default_language)
             return [message, description]
