@@ -64,8 +64,14 @@ class Strings:
 
     async def extract_config_strings(self, ctx, object):
         lang = await self.__get_language(ctx)
-        name = object["name"][lang]
-        description = object["description"][lang]
+        name = object.get("name", {}).get(lang)
+        # Get string in default language if nothing found for specified on
+        if name is None and lang != self.default_language:
+            name = object.get("name", {}).get(self.default_language)
+        description = object.get("description", {}).get(lang)
+        # Get string in default language if nothing found for specified on
+        if description is None and lang != self.default_language:
+            description = object.get("description", {}).get(self.default_language)
         if name is not None and description is not None:
             return [name, description]
         return None
