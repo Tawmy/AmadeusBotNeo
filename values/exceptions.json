@@ -1,0 +1,150 @@
+{
+    "BotNotReady": {
+        "message": {
+            "en": "Bot is not ready",
+            "de": "Bot ist nicht bereit"
+        },
+        "description": {
+            "en": "has not finished starting up yet. Please try again in a minute.",
+            "de": "hat den Startvorgang noch nicht beendet. Bitte versuche es in einer Minute nochmals."
+        }
+    },
+    "NoDirectMessages": {
+        "message": {
+            "en": "Not permitted in DMs",
+            "de": "Nicht in DMs erlaubt"
+        },
+        "description": {
+            "en": "This command cannot be run in direct messages. It needs to be run on a server.",
+            "de": "Dieser Befehl kann nicht in privaten Nachrichten ausgeführt werden. Er muss in einem Server ausgeführt werden."
+        }
+    },
+    "CorruptConfig": {
+        "message": {
+            "en": "Corrupt configuration"
+        },
+        "description": {
+            "en": ["was unable to load the configuration file of", ".", "cannot function on this server without it.\n\nThis can be fixed by running the `!setup` command again. Make sure to do a full reset."]
+        }
+    },
+    "DatabaseNotConnected": {
+        "message": {
+            "en": "Database not connected",
+            "de": "Datenbank nicht verbunden"
+        },
+        "description": {
+            "en": ["To execute this command,", "needs to be connected to its database. That connection has not been established yet."],
+            "de": ["Für die Ausführung dieses Befehls muss", "mit der Datenbank verbunden sein. Diese Verbindung wurde noch nicht hergestellt."]
+        }
+    },
+    "NotGuildOwner": {
+        "message": {
+            "en": "Not server owner",
+            "de": "Nicht Besitzer des Servers"
+        },
+        "description": {
+            "en": ["This command can only be run by the server owner. You will have to ask", "to run it for you."],
+            "de": ["Dieser Befehl kann nur durch den Besitzer des Servers ausgeführt werden. Du musst Dich dafür an", "wenden."]
+        }
+    },
+    "BotNotConfigured": {
+        "message": {
+            "en": "Bot not configured",
+            "de": "Bot nicht konfiguriert"
+        },
+        "description": {
+            "en": ["is not configured on this server. Please make sure the server owner (", ") runs the `!setup` command. They can optionally specify another user to run the setup for them."],
+            "de": ["ist auf diesem Server nicht konfiguriert. Bitte stelle sicher, dass der Besitzer des Servers (", ") den `!setup`-Befehl ausführt. Optional kann ein anderer Benutzer spezifiziert werden, welcher den Setup stattdessen durchführt."]
+        }
+    },
+    "BotDisabled": {
+        "message": {
+            "en": "Bot disabled",
+            "de": "Bot deaktiviert"
+        },
+        "description": {
+            "en": "is disabled on this server. There will be no responses to commands.",
+            "de": "ist auf diesem Server deaktiviert. Auf Befehle wird nicht reagiert."
+        }
+    },
+    "CategoryDisabled": {
+        "message": {
+            "en": "Category disabled",
+            "de": "Kategorie deaktiviert"
+        },
+        "description": {
+            "en": "This command category is disabled on this server.",
+            "de": "Diese Befehlskategorie ist auf diesem Server deaktiviert."
+        }
+    },
+    "CategoryNoWhitelistedRole": {
+        "message": {
+            "en": "Role restricted category",
+            "de": "Rollenbeschränkte Kategorie"
+        },
+        "description": {
+            "en": "You do not have any of the roles required to run commands from this category.",
+            "de": "Du hast keine der Rollen, die zur Ausführung von Befehlen dieser Kategorie benötigt werden."
+        }
+    },
+    "CategoryBlacklistedRole": {
+        "message": {
+            "en": "Role restricted category",
+            "de": "Rollenbeschränkte Kategorie"
+        },
+        "description": {
+            "en": "You have a role that forbids you from using commands from this category.",
+            "de": "Du hast eine Rolle, die Dich an der Ausführung von Befehlen dieser Kategorie hindert."
+        }
+    },
+    "CommandDisabled": {
+        "message": {
+            "en": "Command disabled",
+            "de": "Befehl deaktiviert"
+        },
+        "description": {
+            "en": "This command is disabled on this server.",
+            "de": "Dieser Befehl ist auf diesem Server deaktiviert."
+        }
+    },
+    "CommandNotWhitelistedChannel": {
+        "message": {
+            "en": "Channel restricted command",
+            "de": "Kanalbeschränkter Befehl"
+        },
+        "description": {
+            "en": "This command is not enabled in this channel.",
+            "de": "Dieser Befehl ist in diesem Kanal nicht aktiviert."
+        }
+    },
+    "CommandBlacklistedChannel": {
+        "message": {
+            "en": "Channel restricted command",
+            "de": "Kanalbeschränkter Befehl"
+        },
+        "description": {
+            "en": "This command is disabled in this channel.",
+            "de": "Dieser Befehl ist in diesem Kanal deaktiviert."
+        }
+    },
+    "CommandNoWhitelistedRole": {
+        "message": {
+            "en": "Role restricted command",
+            "de": "Rollenbeschränkter Befehl"
+        },
+        "description": {
+            "en": "You do not have any of the roles required to run this command.",
+            "de": "Du hast keine der Rollen, die zur Ausführung dieses Befehls benötigt werden."
+        }
+    },
+    "CommandBlacklistedRole": {
+        "message": {
+            "en": "Role restricted command",
+            "de": "Rollenbeschränkter Befehl"
+        },
+        "description": {
+            "en": "You have a role that forbids you from using this command.",
+            "de": "Du hast eine Rolle, die Dich an der Ausführung dieses Beffehls hindert".
+        }
+    }
+}

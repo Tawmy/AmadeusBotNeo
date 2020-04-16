@@ -1,3 +1,5 @@
+import sys
+
 import asyncio
 import copy
 import json
@@ -6,7 +8,7 @@ import platform
 import asyncpg
 import discord
 from discord.ext import commands
-from components import exceptions as ex
+from components import exceptions as ex, strings
 
 
 def get_command_prefix(amadeus, message):
@@ -21,12 +23,14 @@ bot.ready = False
 bot.corrupt_configs = []
 
 bot.config = {}
+bot.values = {}
 with open("config/bot.json", 'r') as file:
     try:
         bot.config["bot"] = json.load(file)
         print("Configuration file loaded successfully")
     except ValueError as e:
         raise SystemExit(e)
+bot.strings = strings.Strings(bot.config["bot"])
 
 
 @bot.check
@@ -144,6 +148,11 @@ async def on_ready():
         await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
         await init_message_extended.edit(embed=init_embed_extended)
 
+        # Load values
+        values_status = await load_values()
+        await update_init_embed_extended("values", init_embed_extended, values_status)
+        await init_message_extended.edit(embed=init_embed_extended)
+
         # Load server configurations
         configs = await load_configs()
         await update_init_embed_extended("configs", init_embed_extended, configs)
@@ -171,11 +180,14 @@ async def on_command_error(ctx, message):
         bot_channel_id = bot.config.get(str(ctx.guild.id), {}).get("essential_channels", {}).get("bot_channel")
         if bot_channel_id is not None:
             bot_channel = ctx.guild.get_channel(bot_channel_id)
-            embed = await prepare_command_error_embed(ctx, message.original)
+            embed = await prepare_command_error_embed(ctx, message)
             if embed is not None:
                 await bot_channel.send(embed=embed)
     else:
-        error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
+        if ctx.guild is not None:
+            error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
+        else:
+            error_config = None
         if error_config is not None:
             if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
                 return
@@ -186,42 +198,61 @@ async def on_command_error(ctx, message):
                           (ex.CommandNotWhitelistedChannel, ex.CommandBlacklistedChannel)) and error_config.get(
                     "hide_channel_errors"):
                 return
-            if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
+            if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole, ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
                 if error_config.get("hide_role_errors"):
                     return
-                elif error_config.get("hide_whitelist_role"):
-                    message.description = message.description.split(":\n", 1)[0]
-                    message.description += "."
-            if isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
-                if error_config.get("hide_role_errors"):
-                    return
-                elif error_config.get("hide_blacklist_role"):
-                    message.description = message.description.split(":\n", 1)[0]
-                    message.description += "."
-        embed = await prepare_command_error_embed_custom(ctx, message)
+            embed = await prepare_command_error_embed_custom(ctx, message, error_config)
+        else:
+            embed = await prepare_command_error_embed_custom(ctx, message)
         await ctx.send(embed=embed)
 
 
 async def prepare_command_error_embed(ctx, message):
     embed = discord.Embed()
-    if hasattr(message, "text"):
-        embed.title = message.text
+    if hasattr(message.original, "text"):
+        embed.title = message.original.text
     else:
-        # TODO do this properly
-        print(message)
+        print(message, file=sys.stderr)
         return None
-    if hasattr(message, "code") and message.code == 50013:
-        embed.description = "Cannot reply in " + ctx.channel.mention + " due to missing permissions.\n\n"
-        embed.description += "This was caused by " + ctx.author.mention
-        embed.description += " running the `" + ctx.command.name + "` command."
+    if hasattr(message.original, "code") and message.original.code == 50013:
+        string_list = await bot.strings.get_string(ctx, "amadeus", "exception_forbidden")
+        values = [ctx.channel.mention, ctx.author.mention, ctx.command.name]
+        embed.description = await bot.strings.insert_into_string(string_list, values)
     return embed
 
 
-async def prepare_command_error_embed_custom(ctx, message):
+async def prepare_command_error_embed_custom(ctx, message, error_config=None):
     embed = discord.Embed()
-    embed.title = str(message)
-    if hasattr(message, "description"):
-        embed.description = message.description
+    exc_strings = await bot.strings.get_exception_strings(ctx, type(message).__name__)
+    if exc_strings is None:
+        embed.title = str(message)
+    else:
+        embed.title = exc_strings[0]
+
+        if isinstance(message, ex.BotNotReady):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name, "left")
+        elif isinstance(message, ex.CorruptConfig):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], [bot.app_info.name, ctx.guild.name, bot.app_info.name], "left")
+        elif isinstance(message, ex.DatabaseNotConnected):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name)
+        elif isinstance(message, ex.NotGuildOwner):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], ctx.guild.owner.mention)
+        elif isinstance(message, ex.BotNotConfigured):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], [bot.app_info.name, ctx.guild.owner.mention], "left")
+        elif isinstance(message, ex.BotDisabled):
+            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name, "left")
+        elif isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
+            if error_config.get("hide_whitelist_role") is not True:
+                embed.description = await bot.strings.append_roles(exc_strings[1], message.roles)
+            else:
+                embed.description = exc_strings[1]
+        elif isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
+            if error_config.get("hide_blacklist_role") is not True:
+                embed.description = await bot.strings.append_roles(exc_strings[1], message.role)
+            else:
+                embed.description = exc_strings[1]
+        else:
+            embed.description = exc_strings[1]
     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
     return embed
 
@@ -269,6 +300,7 @@ async def prepare_init_embeds():
 
     init_embed_extended = copy.deepcopy(init_embed)
     init_embed_extended.add_field(name="Extensions", value="⌛ Loading...")
+    init_embed_extended.add_field(name="Strings", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Configs", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Database", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Discord.py", value=discord.__version__)
@@ -296,7 +328,15 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
             value = ', '.join(value)
             init_embed_extended.set_field_at(0, name="Extensions", value="⚠ Failed")
             init_embed_extended.add_field(name="Extensions failed", value=value, inline="False")
-        init_embed_extended.set_field_at(1, name="Configs", value="⌛ Loading...")
+        init_embed_extended.set_field_at(1, name="Values", value="⌛ Loading...")
+
+    elif update_type == "values":
+        if len(value) > 0:
+            init_embed_extended.add_field(name="Values failed", value="\n".join(value), inline=False)
+            init_embed_extended.set_field_at(1, name="Values", value="⚠ Failed")
+        else:
+            init_embed_extended.set_field_at(1, name="Values", value="✅ Loaded")
+        init_embed_extended.set_field_at(2, name="Configs", value="⌛ Loading...")
 
     elif update_type == "configs":
         successful_load = True
@@ -307,19 +347,19 @@ async def update_init_embed_extended(update_type, init_embed_extended, value):
             init_embed_extended.add_field(name="Configs not found", value="\n".join(value), inline=False)
 
         if successful_load:
-            init_embed_extended.set_field_at(1, name="Configs", value="✅ Loaded")
+            init_embed_extended.set_field_at(2, name="Configs", value="✅ Loaded")
         else:
-            init_embed_extended.set_field_at(1, name="Configs", value="⚠ Failed")
-        init_embed_extended.set_field_at(2, name="Database", value="⌛ Connecting...")
+            init_embed_extended.set_field_at(2, name="Configs", value="⚠ Failed")
+        init_embed_extended.set_field_at(3, name="Database", value="⌛ Connecting...")
 
     elif update_type == "database":
         if value == 0:
-            init_embed_extended.set_field_at(2, name="Database", value="⌛ Connecting...")
+            init_embed_extended.set_field_at(3, name="Database", value="⌛ Connecting...")
             init_embed_extended.set_footer(text="")
         elif value == 1:
-            init_embed_extended.set_field_at(2, name="Database", value="✅ Connected")
+            init_embed_extended.set_field_at(3, name="Database", value="✅ Connected")
         elif value == 2:
-            init_embed_extended.set_field_at(2, name="Database", value="⚠ Failed")
+            init_embed_extended.set_field_at(3, name="Database", value="⚠ Failed")
             reconnect_msg = "Retrying database connection in "
             reconnect_msg += str(bot.config["bot"]["database"]["retry_timeout"])
             reconnect_msg += " seconds..."
@@ -343,14 +383,33 @@ async def load_extensions():
     return failed
 
 
+async def load_values():
+    error_list = []
+    files = ["limits", "options"]
+
+    for filename in files:
+        try:
+            with open("values/" + filename + ".json", 'r') as json_file:
+                try:
+                    bot.config[filename] = json.load(json_file)
+                except ValueError:
+                    if filename not in bot.corrupt_configs:
+                        error_list(filename)
+        except FileNotFoundError:
+            error_list.append(filename)
+
+    failed_strings = await bot.strings.load_strings()
+    if len(failed_strings) > 0:
+        error_list.append(", ".join(failed_strings))
+
+    return error_list
+
+
 async def load_configs():
-    json_files = ["options"]
     error_filenotfound_list = []
 
     for guild in bot.guilds:
-        json_files.append(str(guild.id))
-
-    for filename in json_files:
+        filename = str(guild.id)
         try:
             with open("config/" + filename + ".json", 'r') as json_file:
                 try:

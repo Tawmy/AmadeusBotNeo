@@ -1,0 +1,50 @@
+{
+    "amadeus": {
+        "exception_forbidden": {
+            "en": ["Cannot reply in", "due to missing permissions.\n\nThis was caused by", "running the `", "` command."],
+            "de": ["Kann in", "aufgrund von fehlenden Berechtigungen nicht antworten.\n\nDies wurde durch", "und den Befehl `", "` verursacht."]
+        }
+    },
+    "server_config": {
+        "setup_title": {
+            "en": "Setup",
+            "de": "Setup"
+        },
+        "setup_introduction": {
+            "en": ["Before", "can do its job, some channels and roles need to be configured.", "will walk you through this process step by step.\n\n"],
+            "de": ["Bevor", "arbeiten kann, müssen einige Kanäle und Rollen konfiguriert werden.", "wird Dich Schritt für Schritt durch diesen Prozess führen.\n\n"]
+        },
+        "server_configured_before": {
+            "en": "Your server has been configured before. You can choose to either overwrite only the channels and roles set during setup, or reset the configuration **entirely** (❗).\n\n\uD83D\uDFE6 *Regular setup* **|** \uD83D\uDFE5 *Full reset*",
+            "de": "Dieser Server wurde bereits konfiguriert. Du kannst entweder nur die Optionen, die während des Setups konfiguriert werden, überschreiben, oder die Konfiguration **vollständig** (❗) zurücksetzen.\n\n\uD83D\uDFE6 *Normaler Setup* **|** \uD83D\uDFE5 *Vollständig zurücksetzen*"
+        },
+        "setup_confirm_ready": {
+            "en": "Once you are ready, click the ✅ reaction under this message.",
+            "de": "Betätige mit einem Kick auf ✅ unter dieser Nachricht, dass Du bereit bist."
+        },
+        "prompt_please_enter": {
+            "en": "Please enter:",
+            "de": "Bitte eingeben:"
+        },
+        "prompt_error_not_found": {
+            "en": "\n\n⚠ Not found. Please try again.",
+            "de": "\n\n⚠ Nicht gefunden. Bitte nochmal versuchen."
+        },
+        "setup_cancelled": {
+            "en": "Setup cancelled",
+            "de": "Setup abgebrochen"
+        },
+        "setup_successful": {
+            "en": "Setup successful!",
+            "de": "Setup erfolgreich!"
+        },
+        "setup_successful_description": {
+            "en": ["You can now use", "!\n\nBelow are all the permissions the bot needs in the channels just set up. Please make sure to grant it access to all of these."],
+            "de": ["Du kannst", "jetzt benutzen!\n\nUnten sind alle Berechtigungen gelistet, die der Bot in den jeweiligen Kanälen braucht. Bitte stelle sicher, dass der Bot Zugriff auf alle von diesen hat."]
+        },
+        "setup_error_save_config": {
+            "en": "Could not save config!",
+            "de": "Konfiguration konnte nicht gespeichert werden!"
+        }
+    }
+}
