@@ -49,7 +49,7 @@ class ServerSetup(commands.Cog):
         if await self.save_config(ctx):
             if str(ctx.guild.id) in self.bot.corrupt_configs:
                 self.bot.corrupt_configs.remove(str(ctx.guild.id))
-            embed = await self.__prepare_status_embed(True)
+            embed = await self.prepare_status_embed(ctx, True)
             permissions_embed = await self.__check_bot_permissions(ctx)
             for field in permissions_embed.fields:
                 embed.add_field(name=field.name, value=field.value, inline=field.inline)
@@ -128,13 +128,13 @@ class ServerSetup(commands.Cog):
     async def __collect_setup_information(self, ctx, setup_prompt, setup_message):
         collected_information = {}
         # Iterate categories
-        for cat_key, cat_val in self.bot.config["options"].items():
+        for cat_key, cat_val in self.bot.values.options.items():
             # Only iterate essential categories
             if cat_key.startswith("essential_"):
                 collected_information[cat_key] = {}
                 # Iterate options in category
-                for opt_key, opt_val in self.bot.config["options"][cat_key]["list"].items():
-                    await self.__prepare_prompt(setup_prompt, opt_val, 0)
+                for opt_key, opt_val in self.bot.values.options[cat_key]["list"].items():
+                    await self.prepare_prompt(ctx, setup_prompt, opt_val, 0)
                     obj = None
                     while obj is None:
                         result = await setup_prompt.show_prompt(ctx, 120, setup_message)
@@ -166,22 +166,22 @@ class ServerSetup(commands.Cog):
 
     async def __copy_default_values(self, ctx):
         # Iterate categories
-        for cat_key, cat_val in self.bot.config["options"].items():
+        for cat_key, cat_val in self.bot.values.options.items():
             # Only iterate non-essential categories
             if not cat_key.startswith("essential_"):
                 self.bot.config[str(ctx.guild.id)].setdefault(cat_key, {})
                 # Iterate options in category
-                for opt_key, opt_val in self.bot.config["options"][cat_key].items():
+                for opt_key, opt_val in self.bot.values.options[cat_key]["list"].items():
                     # Set option for server if not already set
                     self.bot.config[str(ctx.guild.id)][cat_key].setdefault(
-                        opt_key, self.bot.config["options"][cat_key][opt_key]["default"])
+                        opt_key, self.bot.values.options[cat_key]["list"][opt_key]["default"])
 
     async def __check_bot_permissions(self, ctx):
         embed = discord.Embed()
         for ch_key, ch_val in self.bot.config[str(ctx.guild.id)]["essential_channels"].items():
             channel = ctx.guild.get_channel(ch_val)
             permissions_have = channel.permissions_for(ctx.guild.me)
-            permissions_need = self.bot.config["options"]["essential_channels"]["list"][ch_key]["permissions"]
+            permissions_need = self.bot.values.options["essential_channels"]["list"][ch_key]["permissions"]
             permissions_embed = ""
             for permission in permissions_need:
                 if getattr(permissions_have, permission) is True:

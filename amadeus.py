@@ -491,8 +491,8 @@ async def update_guilds_table():
 async def send_startup_message(init_embed):
     if bot.config["bot"]["debug"] is False:
         for guild_id in bot.config:
-            if guild_id not in ["bot", "options"]:
-                await asyncio.sleep(2e-1)
+            if guild_id != "bot":
+                await asyncio.sleep(1)
                 guild = bot.get_guild(int(guild_id))
                 channel = guild.get_channel(bot.config[guild_id]["essential_channels"]["bot_channel"])
                 await channel.send(embed=init_embed)

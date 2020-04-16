@@ -1,105 +1,156 @@
 {
     "general": {
-        "enabled": {
-            "name": {
-                "en": "Bot enabled",
-                "de": "Bot aktiviert"
-            },
-            "description": {
-                "en": "Enables the bot on this server.",
-                "de": "Aktiviert den Bot auf diesem Server."
-            },
-            "default": true
+        "name": {
+            "en": "General",
+            "de": "Allgemein"
         },
-        "command_prefix": {
-            "name": {
-                "en": "Command Prefix",
-                "de": "Befehlspräfix"
-            },
-            "description": {
-                "en": "The bot processes messages starting with this prefix as commands.",
-                "de": "Der Bot verarbeitet Nachrichten, die mit diesem Präfix starten, als Befehl."
-            },
-            "default": "!"
+        "description": {
+            "en": "General bot configuration",
+            "de": "Allgemeine Bot-Konfiguration"
         },
-        "mods_override_limits": {
-            "name": {
-                "en": "Moderators Override Limits",
-                "de": "Moderatoren Überschreiben Limits"
+        "list": {
+            "enabled": {
+                "name": {
+                    "en": "Bot enabled",
+                    "de": "Bot aktiviert"
+                },
+                "description": {
+                    "en": "Enables the bot on this server.",
+                    "de": "Aktiviert den Bot auf diesem Server."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false
             },
-            "description": {
-                "en": "Defines whether users with the moderator role override all category-, and command limits.",
-                "de": "Legt fest, ob Benutzer mit der Moderator-Rolle alle Limits von Kategorien und Befehlen überschreiben sollen."
+            "language": {
+                "name": {
+                    "en": "Language",
+                    "de": "Sprache"
+                },
+                "description": {
+                    "en": "Language to be used for responses to all commands.",
+                    "de": "Sprache, die für alle Antworten auf Befehle genutzt wird."
+                },
+                "default": "en",
+                "data_type": "string",
+                "is_list": false
             },
-            "default": true
+            "command_prefix": {
+                "name": {
+                    "en": "Command Prefix",
+                    "de": "Befehlspräfix"
+                },
+                "description": {
+                    "en": "The bot processes messages starting with this prefix as commands.",
+                    "de": "Der Bot verarbeitet Nachrichten, die mit diesem Präfix starten, als Befehl."
+                },
+                "default": "!",
+                "data_type": "string",
+                "is_list": false
+            },
+            "mods_override_limits": {
+                "name": {
+                    "en": "Moderators Override Limits",
+                    "de": "Moderatoren Überschreiben Limits"
+                },
+                "description": {
+                    "en": "Defines whether users with the moderator role override all category-, and command limits.",
+                    "de": "Legt fest, ob Benutzer mit der Moderator-Rolle alle Limits von Kategorien und Befehlen überschreiben sollen."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false
+            }
         }
     },
     "errors": {
-        "hide_invalid_errors": {
-            "name": {
-                "en": "Hide Invalid Command errors",
-                "de": "Verstecke Ungültiger Befehl-Fehlermeldungen"
-            },
-            "description": {
-                "en": "Hides error when a user runs a command that does not exist.",
-                "de": "Versteckt Fehlermeldungen, wenn ein Benutzer einen nicht existierenden Befehl aufruft."
-            },
-            "default": false
+        "name": {
+            "en": "Error Settings",
+            "de": "Fehler-Einstellungen"
         },
-        "hide_disabled_errors": {
-            "name": {
-                "en": "Hide Disabled Errors",
-                "de": "Verstecke Deaktiviert-Fehlermeldungen"
-            },
-            "description": {
-                "en": "Hides errors about the bot, category, or command being disabled.",
-                "de": "Versteckt Fehlermeldungen, wenn der Bot, die Kategorie, oder der Befehl deaktiviert ist."
-            },
-            "default": false
+        "description": {
+            "en": "Configuration regarding error message output",
+            "de": "Konfiguration bezüglich Ausgabe von Fehlermeldungen"
         },
-        "hide_role_errors": {
-            "name": {
-                "en": "Hide Role Errors",
-                "de": "Verstecke Rollen-Fehlermeldungen"
+        "list": {
+            "hide_invalid_errors": {
+                "name": {
+                    "en": "Hide Invalid Command errors",
+                    "de": "Verstecke Ungültiger Befehl-Fehlermeldungen"
+                },
+                "description": {
+                    "en": "Hides error when a user runs a command that does not exist.",
+                    "de": "Versteckt Fehlermeldungen, wenn ein Benutzer einen nicht existierenden Befehl aufruft."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false
             },
-            "description": {
-                "en": "Hides errors about the user missing a role from the whitelist or having a role from the blacklist for categories or commands.",
-                "de": "Versteckt Fehlermeldung, wenn der User keine Rolle der Whitelist oder eine Rolle der Blacklist für Kategorien oder Commands hat."
+            "hide_disabled_errors": {
+                "name": {
+                    "en": "Hide Disabled Errors",
+                    "de": "Verstecke Deaktiviert-Fehlermeldungen"
+                },
+                "description": {
+                    "en": "Hides errors about the bot, category, or command being disabled.",
+                    "de": "Versteckt Fehlermeldungen, wenn der Bot, die Kategorie, oder der Befehl deaktiviert ist."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false
             },
-            "default": false
-        },
-        "hide_channel_errors": {
-            "name": {
-                "en": "Hide Channel Errors",
-                "de": "Verstecke Kanal-Fehlermeldungen"
+            "hide_role_errors": {
+                "name": {
+                    "en": "Hide Role Errors",
+                    "de": "Verstecke Rollen-Fehlermeldungen"
+                },
+                "description": {
+                    "en": "Hides errors about the user missing a role from the whitelist or having a role from the blacklist for categories or commands.",
+                    "de": "Versteckt Fehlermeldung, wenn der User keine Rolle der Whitelist oder eine Rolle der Blacklist für Kategorien oder Commands hat."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false
             },
-            "description": {
-                "en": "Hides errors about the command not being enabled or being disabled in this channel.",
-                "de": "Versteckt Fehlermeldungen, wenn ein Befehl in diesem Kanal nicht aktiviert oder deaktiviert ist."
+            "hide_channel_errors": {
+                "name": {
+                    "en": "Hide Channel Errors",
+                    "de": "Verstecke Kanal-Fehlermeldungen"
+                },
+                "description": {
+                    "en": "Hides errors about the command not being enabled or being disabled in this channel.",
+                    "de": "Versteckt Fehlermeldungen, wenn ein Befehl in diesem Kanal nicht aktiviert oder deaktiviert ist."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false
             },
-            "default": false
-        },
-        "hide_whitelist_role": {
-            "name": {
-                "en": "Hide Whitelisted Roles",
-                "de": "Verstecke Rollen (Whitelist)"
+            "hide_whitelist_role": {
+                "name": {
+                    "en": "Hide Whitelisted Roles",
+                    "de": "Verstecke Rollen (Whitelist)"
+                },
+                "description": {
+                    "en": "When role errors are shown and user has none of the whitelisted roles, hide them from the user.",
+                    "de": "Wenn Rollen-Fehlermeldungen aktiviert sind und der Benutzer keine der Rollen der Whitelist hat, verstecke diese."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false
             },
-            "description": {
-                "en": "When role errors are shown and user has none of the whitelisted roles, hide them from the user.",
-                "de": "Wenn Rollen-Fehlermeldungen aktiviert sind und der Benutzer keine der Rollen der Whitelist hat, verstecke diese."
-            },
-            "default": false
-        },
-        "hide_blacklist_role": {
-            "name": {
-                "en": "Hide Blacklisted Role",
-                "de": "Verstecke Rolle (Blacklist)"
-            },
-            "description": {
-                "en": "When role errors are shown and user has a blacklisted role, hide it from the user.",
-                "de": "Wenn Rollen-Fehlermeldungen aktiviert sind und der Benutzer eine Rolle der Blacklist hat, verstekcke diese."
-            },
-            "default": false
+            "hide_blacklist_role": {
+                "name": {
+                    "en": "Hide Blacklisted Role",
+                    "de": "Verstecke Rolle (Blacklist)"
+                },
+                "description": {
+                    "en": "When role errors are shown and user has a blacklisted role, hide it from the user.",
+                    "de": "Wenn Rollen-Fehlermeldungen aktiviert sind und der Benutzer eine Rolle der Blacklist hat, verstekcke diese."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false
+            }
         }
     },
     "essential_channels": {
@@ -121,7 +172,14 @@
                     "en": "The channel the bot posts its status messages in (eg updates).",
                     "de": "Der Kanal, in dem der Bot Statusmeldungen postet (zB Updates)."
                 },
-                "permissions": ["add_reactions", "embed_links", "read_messages", "view_channel"]
+                "permissions": [
+                    "add_reactions",
+                    "embed_links",
+                    "read_messages",
+                    "view_channel"
+                ],
+                "data_type": "channel",
+                "is_list": false
             },
             "mod_channel": {
                 "name": {
@@ -132,7 +190,14 @@
                     "en": "Moderation related messages are posted in this channel (eg user joins).",
                     "de": "Alle Nachrichten bezüglich Moderation werden in diesem Kanal gepostet (zB. wenn ein Benutzer dem Server beitritt)"
                 },
-                "permissions": ["add_reactions", "embed_links", "read_messages", "view_channel"]
+                "permissions": [
+                    "add_reactions",
+                    "embed_links",
+                    "read_messages",
+                    "view_channel"
+                ],
+                "data_type": "channel",
+                "is_list": false
             },
             "log_channel": {
                 "name": {
@@ -143,7 +208,14 @@
                     "en": "Logs are posted in this channel (eg deleted messages)",
                     "de": "Logs werden in diesem Channel gepostet (zB gelöschte Nachrichten)"
                 },
-                "permissions": ["add_reactions", "embed_links", "read_messages", "view_channel"]
+                "permissions": [
+                    "add_reactions",
+                    "embed_links",
+                    "read_messages",
+                    "view_channel"
+                ],
+                "data_type": "channel",
+                "is_list": false
             }
         }
     },
@@ -165,7 +237,9 @@
                 "description": {
                     "en": "Role to have default control over the bot.",
                     "de": "Rolle, die standardmäßig Kontrolle über den Bot hat."
-                }
+                },
+                "data_type": "channel",
+                "is_list": false
             }
         }
     }
