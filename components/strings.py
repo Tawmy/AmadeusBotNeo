@@ -25,6 +25,18 @@ class Strings:
         return failed
 
     async def get_string(self, ctx, category, name):
+        """Gets string.
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            Invocation context, needed to determine guild.
+        category: :class:`str`
+            Category of string.
+        name: :class:`str`
+            Name of string.
+        """
+
         lang = await self.__get_language(ctx)
         string = self.strings.get(category, {}).get(name, {}).get(lang)
         # Get string in default language if nothing found for specified one
@@ -32,22 +44,17 @@ class Strings:
             string = self.strings.get(category, {}).get(name, {}).get(self.default_language)
         return string
 
-    async def get_config_strings(self, ctx, category, command_title):
-        lang = await self.__get_language(ctx)
-        config_option = ctx.bot.options.get(category, {}).get(command_title)
-        if config_option is not None:
-            name = config_option.get("name", {}).get(lang)
-            # Get string in default language if nothing found for specified one
-            if name is None and lang != self.default_language:
-                name = config_option.get("name", {}).get(self.default_language)
-            description = config_option.get("description", {}).get(lang)
-            # Get string in default language if nothing found for specified one
-            if description is None and lang != self.default_language:
-                description = config_option.get("description", {}).get(self.default_language)
-            return [name, description]
-        return None
-
     async def get_exception_strings(self, ctx, exception_name):
+        """Gets strings for exception.
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            Invocation context, needed to determine guild.
+        exception_name: :class:`str`
+            Name of exception.
+        """
+
         lang = await self.__get_language(ctx)
         exception = self.exception_strings.get(exception_name)
         if exception is not None:
@@ -63,6 +70,16 @@ class Strings:
         return None
 
     async def extract_config_strings(self, ctx, object):
+        """Extracts config strings from submitted configuration option dictionary.
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            Invocation context, needed to determine guild.
+        category: :class:`dict`
+            Dictionary to extract strings from.
+        """
+
         lang = await self.__get_language(ctx)
         name = object.get("name", {}).get(lang)
         # Get string in default language if nothing found for specified on
@@ -87,6 +104,20 @@ class Strings:
             return self.default_language
 
     async def insert_into_string(self, strings, values, position=None):
+        """Inserts values into string. Length of values must be one shorter than strings.
+        If same length, position must be speficied. If insertion successful, string is returned, otherwise None.
+
+        Parameters
+        -----------
+        strings: :class:`list`
+            List of strings to insert between.
+        values: :class:`list`
+            List of strings to insert into strings.
+        position: :class:`str`
+            If strings and values are same length,
+            defines whether values should be inserted on the left or right side of strings.
+        """
+
         if type(strings) is str:
             strings = [strings]
         if type(values) is str:
@@ -118,6 +149,15 @@ class Strings:
         return None
 
     async def append_roles(self, string, roles):
+        """Adds newlines and appends roles to string.
+
+        Parameters
+        -----------
+        string: :class:`str`
+            String to append to.
+        roles: :class:`list`
+            List of strings to append to string.
+        """
         roles_string = string + "\n\n**"
         if type(roles) is list:
             roles_string += '**, **'.join(roles)

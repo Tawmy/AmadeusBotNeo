@@ -28,6 +28,18 @@ class Config:
         return failed
 
     async def get_config(self, ctx, category, name):
+        """Returns value of config item specified. Returns default value if not set.
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            The invocation context.
+        category: :class:`str`
+            Category of the config option.
+        name: :class:`str`
+            Name of the config option.
+        """
+
         config_value = ctx.bot.config.get(str(ctx.guild.id), {}).get(category, {}).get(name)
         if config_value is None:
             return self.__get_default_config_value(category, name)
@@ -36,6 +48,20 @@ class Config:
         return self.options.get(category, {}).get(name, {}).get("default")
 
     async def set_config(self, ctx, category, name, value):
+        """Sets config value. First checks if it exists at all, then sets it and saves to config file.
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            The invocation context.
+        category: :class:`str`
+            Category of the config option.
+        name: :class:`str`
+            Name of the config option.
+        value: :class:`str`
+            Value to set
+        """
+
         if self.options.get(category, {}).get("list", {}).get(name) is not None:
             ctx.bot.config[str(ctx.guild.id)].setdefault(category, {})[name] = value
             if await self.save_config(ctx) is True:
@@ -43,6 +69,24 @@ class Config:
         return False
 
     async def check_input(self, category, name, user_input, ctx=None):
+        """Checks if input matches type specified in options list. Runs input converter when ctx specified.
+        Returns False if input does not match type.
+        Returns True if input matches type.
+        Returns converted input if input matches type and conversion was successful.
+        Returns None if input matches type, but conversion failed.
+
+        Parameters
+        -----------
+        category: :class:`str`
+            Category of the config option.
+        name: :class:`str`
+            Name of the config option.
+        user_input: :class:`str`
+            Input the user provided.
+        ctx: :class:`discord.ext.commands.Context`
+            Optional invocation context, triggers input conversion when set.
+        """
+
         option = self.options.get(category, {}).get("list", {}).get(name, {})
         if option is not None:
             data_type = option.get("data_type")
@@ -75,16 +119,24 @@ class Config:
         return True
 
     async def save_config(self, ctx):
-        json_file = 'config/' + str(ctx.guild.id) + '.json'
-        save_status = False
-        retries = 4
-        while save_status is False and retries > 0:
-            with open(json_file, 'w+') as file:
-                try:
-                    json.dump(ctx.bot.config[str(ctx.guild.id)], file)
-                    return True
-                except Exception as e:
-                    print(e)
-            retries -= 1
-            await asyncio.sleep(25e-2)
+        """Saves config of guild from ctx to json file
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            Invocation context, needed to determine guild.
+        """
+        if ctx.guild is not None:
+            json_file = 'config/' + str(ctx.guild.id) + '.json'
+            save_status = False
+            retries = 4
+            while save_status is False and retries > 0:
+                with open(json_file, 'w+') as file:
+                    try:
+                        json.dump(ctx.bot.config[str(ctx.guild.id)], file)
+                        return True
+                    except Exception as e:
+                        print(e)
+                retries -= 1
+                await asyncio.sleep(25e-2)
         return False

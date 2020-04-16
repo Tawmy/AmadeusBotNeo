@@ -13,6 +13,18 @@ class AmadeusPrompt:
         self.__embed.title = title
 
     async def set_author(self, name, url="", icon_url=""):
+        """Sets the author of the amadeusPrompt.
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the author.
+        url: :class:`str`
+            An optional url.
+        icon_url: :class:`str`
+            An optional icon url
+        """
+
         self.__embed.set_author(name=name, url=url, icon_url=icon_url)
 
     async def set_title(self, title):
@@ -22,12 +34,31 @@ class AmadeusPrompt:
         self.__embed.description = description
 
     async def append_description(self, description):
+        """Appends to description.
+
+        Parameters
+        -----------
+        description: :class:`str`
+            The string to append to the description.
+        """
+
         if self.__embed.description is not None and len(self.__embed.description) > 0:
             self.__embed.description += description
         else:
             await self.set_description(description)
 
     async def set_user_specific(self, is_user_specific, user=None):
+        """Sets if the prompt should be usable by one speficic user only.
+        Defaults to context author if user is not speficied.
+
+        Parameters
+        -----------
+        is_user_specific: :class:`bool`
+            Should prompt be user specific?.
+        user: :class:`discord.User`
+            Optional user the prompt should be accessible by.
+        """
+
         self.__is_user_specific = is_user_specific
         if user is not None:
             self.__specified_user = user
@@ -36,6 +67,18 @@ class AmadeusPrompt:
         self.__cancel_string = cancel_string
 
     async def show_prompt(self, ctx, timeout_seconds, message=None):
+        """Displays the amadeusPrompt and waits for user input. Edits message if specified.
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            The invocation context.
+        timeout_seconds: :class:`int`
+            Timeout in seconds.
+        message: :class:`discord.Message`
+            Optional message. This will be edited if specified.
+        """
+
         await self.__prepare_footer(ctx)
         if message is None:
             message = await ctx.send(embed=self.__embed)

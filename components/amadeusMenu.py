@@ -14,6 +14,16 @@ class AmadeusMenu:
         self.__reaction_emoji = []
 
     async def set_options(self, names, descriptions=None):
+        """Sets the options of the amadeusMenu.
+
+        Parameters
+        -----------
+        names: :class:`list`
+            A list of strings with options.
+        descriptions: :class:`list`
+            An optional list of descriptions for the menu options. Must be same length as names.
+        """
+
         self.__embed.clear_fields()
         self.__reaction_emoji = []
         for i, name in enumerate(names):
@@ -26,6 +36,18 @@ class AmadeusMenu:
             self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][i])
 
     async def set_author(self, name, url="", icon_url=""):
+        """Sets the author of the amadeusMenu.
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the author.
+        url: :class:`str`
+            An optional url.
+        icon_url: :class:`str`
+            An optional icon url
+        """
+
         self.__embed.set_author(name=name, url=url, icon_url=icon_url)
 
     async def set_title(self, title):
@@ -35,12 +57,31 @@ class AmadeusMenu:
         self.__embed.description = description
 
     async def append_description(self, description):
+        """Appends to description.
+
+        Parameters
+        -----------
+        description: :class:`str`
+            The string to append to the description.
+        """
+
         if self.__embed.description is not None and len(self.__embed.description) > 0:
             self.__embed.description += description
         else:
             await self.set_description(description)
 
     async def set_user_specific(self, is_user_specific, user=None):
+        """Sets if the menu should be usable by one speficic user only.
+        Defaults to context author if user is not speficied.
+
+        Parameters
+        -----------
+        is_user_specific: :class:`bool`
+            Should menu be user specific?.
+        user: :class:`discord.User`
+            Optional user the menu should be accessible by.
+        """
+
         self.__is_user_specific = is_user_specific
         if user is not None:
             self.__specified_user = user
@@ -50,6 +91,18 @@ class AmadeusMenu:
             self.__reaction_emoji.append(emoji)
 
     async def show_menu(self, ctx, timeout_seconds, message=None):
+        """Displays the amadeusMenu and waits for user input. Edits message if specified.
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            The invocation context.
+        timeout_seconds: :class:`int`
+            Timeout in seconds.
+        message: :class:`discord.Message`
+            Optional message. This will be edited if specified.
+        """
+
         await self.__prepare_footer(ctx)
         if len(self.__embed.fields) == 0 and len(self.__reaction_emoji) == 0:
             return None
