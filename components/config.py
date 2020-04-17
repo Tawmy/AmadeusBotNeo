@@ -71,12 +71,11 @@ class Config:
                 return True
         return False
 
-    async def check_input(self, category, name, user_input, ctx=None):
+    async def prepare_input(self, category, name, user_input, ctx=None):
         """Checks if input matches type specified in options list. Runs input converter when ctx specified.
-        Returns False if input does not match type.
-        Returns True if input matches type.
-        Returns converted input if input matches type and conversion was successful.
-        Returns None if input matches type, but conversion failed.
+        Returns converted input if data type (and input) conversion was/were successful.
+        Returns False if data type conversion failed.
+        Returns None if data type conversion was successful, but input conversion failed.
 
         Parameters
         -----------
@@ -90,26 +89,29 @@ class Config:
             Optional invocation context, triggers input conversion when set.
         """
 
-        # TODO input is always string, maybe try to convert to other type
-        # TODO check against is_list
-
         option = self.options.get(category, {}).get("list", {}).get(name, {})
         if option is not None:
             data_type = option.get("data_type")
             is_list = option.get("is_list")
             if data_type is not None and is_list is not None:
-                if type(user_input) == await self.__convert_data_type(data_type):
+                user_input = await self.__convert_data_type(data_type, is_list, user_input)
+                if user_input is not None:
                     if ctx is not None:
                         return await self.__convert_input(ctx, data_type, user_input)
                     else:
-                        return True
+                        return user_input
         return False
 
-    async def __convert_data_type(self, data_type):
+    async def __convert_data_type(self, data_type, is_list, user_input):
+        # TODO check against is_list
         if data_type == "boolean":
-            return bool
+            if user_input.lower() in ["true", "yes", "1"]:
+                return True
+            elif user_input.lower() in ["false", "no", "0"]:
+                return False
         elif data_type in ["string", "channel", "role"]:
-            return str
+            return user_input
+        return None
 
     async def __convert_input(self, ctx, data_type, user_input):
         if data_type == "channel":
