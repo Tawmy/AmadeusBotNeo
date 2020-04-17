@@ -1,6 +1,5 @@
 import json
 import asyncio
-import discord
 from discord.ext import commands
 
 
@@ -42,10 +41,14 @@ class Config:
 
         config_value = ctx.bot.config.get(str(ctx.guild.id), {}).get(category, {}).get(name)
         if config_value is None:
-            return self.__get_default_config_value(category, name)
+            default_value = await self.__get_default_config_value(category, name)
+            # Save default value to config
+            loop = asyncio.get_event_loop()
+            loop.create_task(self.set_config(ctx, category, name, default_value))
+            return default_value
 
     async def __get_default_config_value(self, category, name):
-        return self.options.get(category, {}).get(name, {}).get("default")
+        return self.options.get(category, {}).get("list", {}).get(name, {}).get("default")
 
     async def set_config(self, ctx, category, name, value):
         """Sets config value. First checks if it exists at all, then sets it and saves to config file.
@@ -86,6 +89,9 @@ class Config:
         ctx: :class:`discord.ext.commands.Context`
             Optional invocation context, triggers input conversion when set.
         """
+
+        # TODO input is always string, maybe try to convert to other type
+        # TODO check against is_list
 
         option = self.options.get(category, {}).get("list", {}).get(name, {})
         if option is not None:
