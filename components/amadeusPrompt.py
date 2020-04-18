@@ -68,6 +68,8 @@ class AmadeusPrompt:
 
     async def show_prompt(self, ctx, timeout_seconds, message=None):
         """Displays the amadeusPrompt and waits for user input. Edits message if specified.
+        Returns list with message and user input.
+        Returns None on timeout or when user enters cancel string.
 
         Parameters
         -----------

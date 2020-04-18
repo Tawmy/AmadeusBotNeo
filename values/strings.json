@@ -5,7 +5,17 @@
             "de": ["Kann in", "aufgrund von fehlenden Berechtigungen nicht antworten.\n\nDies wurde durch", "und den Befehl `", "` verursacht."]
         }
     },
-    "server_config": {
+    "prompt": {
+        "please_enter": {
+            "en": "Please enter:",
+            "de": "Bitte eingeben:"
+        },
+        "error_not_found": {
+            "en": "\n\n⚠ Not found. Please try again.",
+            "de": "\n\n⚠ Nicht gefunden. Bitte nochmal versuchen."
+        }
+    },
+    "server_setup": {
         "setup_title": {
             "en": "Setup",
             "de": "Setup"
@@ -22,14 +32,6 @@
             "en": "Once you are ready, click the ✅ reaction under this message.",
             "de": "Betätige mit einem Kick auf ✅ unter dieser Nachricht, dass Du bereit bist."
         },
-        "prompt_please_enter": {
-            "en": "Please enter:",
-            "de": "Bitte eingeben:"
-        },
-        "prompt_error_not_found": {
-            "en": "\n\n⚠ Not found. Please try again.",
-            "de": "\n\n⚠ Nicht gefunden. Bitte nochmal versuchen."
-        },
         "setup_cancelled": {
             "en": "Setup cancelled",
             "de": "Setup abgebrochen"
@@ -45,6 +47,11 @@
         "setup_error_save_config": {
             "en": "Could not save config!",
             "de": "Konfiguration konnte nicht gespeichert werden!"
+        }
+    },
+    "config": {
+        "select_category": {
+            "en": "Please select a category"
         }
     }
 }

@@ -35,6 +35,15 @@ class AmadeusMenu:
             self.__embed.add_field(name=name, value=value)
             self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][i])
 
+    async def add_option(self, name, description=None):
+        name = self.bot.config["bot"]["menu_emoji"][len(self.__embed.fields)] + " " + name
+        if description is not None:
+            value = description
+        else:
+            value = "\u200b"
+        self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][len(self.__embed.fields)])
+        self.__embed.add_field(name=name, value=value)
+
     async def set_author(self, name, url="", icon_url=""):
         """Sets the author of the amadeusMenu.
 
@@ -92,6 +101,8 @@ class AmadeusMenu:
 
     async def show_menu(self, ctx, timeout_seconds, message=None):
         """Displays the amadeusMenu and waits for user input. Edits message if specified.
+        Returns list of message, index of reaction, and reaction emoji.
+        Returns None on timeout.
 
         Parameters
         -----------
