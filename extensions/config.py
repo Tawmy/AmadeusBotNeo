@@ -28,12 +28,12 @@ class Config(commands.Cog):
         while True:
             if config_step == 0:
                 if arg_length > 0:
-                    category = await self.get_category(args[0])
+                    category = await self.get_category(ctx, args[0])
                     if category is not None:
                         config_step = 1
                     else:
                         # if value submitted by user is not a category, check if it's an option in any category
-                        option_data = await self.get_option(args[0])
+                        option_data = await self.get_option(ctx, args[0])
                         if option_data is None:
                             # if value submitted by user is not an option either, ask user for a category
                             input_still_valid = False
@@ -67,9 +67,9 @@ class Config(commands.Cog):
                 # If there's another argument and previous input was valid, check if option
                 if arg_length > 1 and input_still_valid:
                     if category_skipped:
-                        option_data = await self.get_option(args[0], category)
+                        option_data = await self.get_option(ctx, args[0], category)
                     else:
-                        option_data = await self.get_option(args[1], category)
+                        option_data = await self.get_option(ctx, args[1], category)
                     # If input was indeed an option
                     if option_data is not None:
                         category = option_data[0]
@@ -120,32 +120,38 @@ class Config(commands.Cog):
             return [menu_data[0], category_names[menu_data[1]]]
         return None
 
-    async def get_category(self, user_input):
+    async def get_category(self, ctx, user_input):
         user_input = user_input.lower()
         if self.bot.values.options.get(user_input) is not None:
             return user_input
         else:
-            for key, category in self.bot.values.options.items():
-                for category_name in category.get("name").values():
-                    if user_input == category_name.lower():
-                        return key
+            for category_key, category_val in self.bot.values.options.items():
+                if await self.check_value(ctx, category_val, user_input) is True:
+                    return category_key
         return None
 
-    async def get_option(self, user_input, category=None):
+    async def get_option(self, ctx, user_input, category=None):
         user_input = user_input.lower()
         if category is not None and self.bot.values.options.get(category, {}).get("list", {}).get(user_input) is not None:
             return category, user_input
 
         for category_key, category_val in self.bot.values.options.items():
             for option_key, option_val in category_val.get("list").items():
-                # if user has entered exact name of option
-                if user_input == option_key:
-                    return user_input
-                else:
-                    # check if user has entered the name of the option in any language
-                    for option_name in option_val.get("name").values():
-                        if user_input == option_name.lower():
-                            return category_key, option_key
+                if await self.check_value(ctx, option_val, user_input) is True:
+                    return category_key, option_key
+        return None
+
+    async def check_value(self, ctx, value, user_input):
+        # check for value name in server language
+        lang = await self.bot.strings.get_language(ctx)
+        option = value.get("name", {}).get(lang)
+        if option is not None and user_input == option.lower():
+            return True
+        elif lang != self.bot.strings.default_language:
+            # if value does not have a name in specified language, check against default language
+            option = value.get("name", {}).get(self.bot.strings.default_language)
+            if option is not None and user_input == option.lower():
+                return True
         return None
 
     async def ask_for_option(self, ctx, category, message):

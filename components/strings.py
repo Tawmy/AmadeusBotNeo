@@ -37,7 +37,7 @@ class Strings:
             Name of string.
         """
 
-        lang = await self.__get_language(ctx)
+        lang = await self.get_language(ctx)
         string = self.strings.get(category, {}).get(name, {}).get(lang)
         # Get string in default language if nothing found for specified one
         if string is None and lang != self.default_language:
@@ -55,7 +55,7 @@ class Strings:
             Name of exception.
         """
 
-        lang = await self.__get_language(ctx)
+        lang = await self.get_language(ctx)
         exception = self.exception_strings.get(exception_name)
         if exception is not None:
             message = exception.get("message", {}).get(lang)
@@ -80,7 +80,7 @@ class Strings:
             Dictionary to extract strings from.
         """
 
-        lang = await self.__get_language(ctx)
+        lang = await self.get_language(ctx)
         name = object.get("name", {}).get(lang)
         # Get string in default language if nothing found for specified on
         if name is None and lang != self.default_language:
@@ -93,7 +93,7 @@ class Strings:
             return [name, description]
         return None
 
-    async def __get_language(self, ctx):
+    async def get_language(self, ctx):
         if ctx.guild is not None:
             lang = ctx.bot.config.get(str(ctx.guild.id), {}).get("general", {}).get("language")
         else:
