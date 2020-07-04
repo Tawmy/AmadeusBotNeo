@@ -51,7 +51,16 @@
     },
     "config": {
         "select_category": {
-            "en": "Please select a category"
+            "en": "Please select a category",
+            "de": "Bitte eine Kategorie wählen"
+        },
+        "current_value": {
+            "en": "Current value",
+            "de": "Aktueller Wert"
+        },
+        "default_value": {
+            "en": "Default value",
+            "de": "Standardwert"
         }
     }
 }

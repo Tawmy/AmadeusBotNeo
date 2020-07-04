@@ -98,7 +98,7 @@ class Config:
                 user_input = await self.__prepare_data_type_conversion(data_type, is_list, user_input)
                 if user_input is not None:
                     if ctx is not None:
-                        return await self.convert_input(ctx, data_type, user_input)
+                        return await self.__convert_input(ctx, data_type, user_input)
                     else:
                         return user_input
         return False
@@ -123,7 +123,7 @@ class Config:
             return user_input
         return None
 
-    async def convert_input(self, ctx, data_type, user_input):
+    async def __convert_input(self, ctx, data_type, user_input):
         if data_type == "channel":
             try:
                 return await commands.TextChannelConverter().convert(ctx, user_input)
@@ -134,7 +134,7 @@ class Config:
                 return await commands.RoleConverter().convert(ctx, user_input)
             except commands.CommandError:
                 return None
-        return True
+        return user_input
 
     async def save_config(self, ctx):
         """Saves config of guild from ctx to json file
