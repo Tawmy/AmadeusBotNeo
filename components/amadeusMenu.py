@@ -6,6 +6,7 @@ class AmadeusMenu:
     def __init__(self, bot, prompt):
         self.bot = bot
         self.__is_user_specific = False
+        self.__clear_on_timeout = True
         self.__specified_user = None
 
         self.__embed = discord.Embed()
@@ -95,6 +96,17 @@ class AmadeusMenu:
         if user is not None:
             self.__specified_user = user
 
+    async def set_clear_on_timeout(self, clear_on_timeout):
+        """Sets if reactions should be removed on timeout.
+
+        Parameters
+        -----------
+        clear_on_timeout: :class:`bool`
+            Should reactions be cleared on timeout?
+        """
+
+        self.__clear_on_timeout = clear_on_timeout
+
     async def append_emoji(self, emoji_list):
         for emoji in emoji_list:
             self.__reaction_emoji.append(emoji)
@@ -157,6 +169,8 @@ class AmadeusMenu:
             try:
                 reaction, user = await self.bot.wait_for('reaction_add', timeout=timeout_seconds, check=check)
             except asyncio.TimeoutError:
+                if self.__clear_on_timeout:
+                    await message.clear_reactions()
                 return None
             else:
                 if reaction.emoji in self.__reaction_emoji:
