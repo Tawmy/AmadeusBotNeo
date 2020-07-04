@@ -69,26 +69,26 @@ class Strings:
             return [message, description]
         return None
 
-    async def extract_config_strings(self, ctx, object):
+    async def extract_config_strings(self, ctx, config_object):
         """Extracts config strings from submitted configuration option dictionary.
 
         Parameters
         -----------
         ctx: :class:`discord.ext.commands.Context`
             Invocation context, needed to determine guild.
-        category: :class:`dict`
+        config_object: :class:`dict`
             Dictionary to extract strings from.
         """
 
         lang = await self.get_language(ctx)
-        name = object.get("name", {}).get(lang)
+        name = config_object.get("name", {}).get(lang)
         # Get string in default language if nothing found for specified on
         if name is None and lang != self.default_language:
-            name = object.get("name", {}).get(self.default_language)
-        description = object.get("description", {}).get(lang)
+            name = config_object.get("name", {}).get(self.default_language)
+        description = config_object.get("description", {}).get(lang)
         # Get string in default language if nothing found for specified on
         if description is None and lang != self.default_language:
-            description = object.get("description", {}).get(self.default_language)
+            description = config_object.get("description", {}).get(self.default_language)
         if name is not None and description is not None:
             return [name, description]
         return None

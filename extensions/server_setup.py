@@ -27,6 +27,8 @@ class ServerSetup(commands.Cog):
         await self.__prepare_setup_menu(ctx, setup_menu)
         await setup_menu.set_user_specific(True, setup_user)
         result = await setup_menu.show_menu(ctx, 120)
+        if result is None:
+            return
 
         # Overwrite config entirely?
         if result[2] == "🟥":
@@ -131,7 +133,7 @@ class ServerSetup(commands.Cog):
                     while obj is None:
                         result = await setup_prompt.show_prompt(ctx, 120, setup_message)
                         # If user has not cancelled
-                        if result[1] not in ["cancel", "\"cancel\""]:
+                        if result[1] is not None:
                             obj = await self.__check_input(ctx, cat_key, result[1])
                             # if input invalid
                             if obj is None:

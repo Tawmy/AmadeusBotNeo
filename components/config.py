@@ -46,6 +46,7 @@ class Config:
             loop = asyncio.get_event_loop()
             loop.create_task(self.set_config(ctx, category, name, default_value))
             return default_value
+        return config_value
 
     async def __get_default_config_value(self, category, name):
         return self.options.get(category, {}).get("list", {}).get(name, {}).get("default")
@@ -97,7 +98,7 @@ class Config:
                 user_input = await self.__prepare_data_type_conversion(data_type, is_list, user_input)
                 if user_input is not None:
                     if ctx is not None:
-                        return await self.__convert_input(ctx, data_type, user_input)
+                        return await self.convert_input(ctx, data_type, user_input)
                     else:
                         return user_input
         return False
@@ -110,7 +111,7 @@ class Config:
                 converted_list.append(await self.__convert_data_type(data_type, entry))
             return converted_list
         else:
-            return self.__convert_data_type(data_type, user_input)
+            return await self.__convert_data_type(data_type, user_input)
 
     async def __convert_data_type(self, data_type, user_input):
         if data_type == "boolean":
@@ -122,7 +123,7 @@ class Config:
             return user_input
         return None
 
-    async def __convert_input(self, ctx, data_type, user_input):
+    async def convert_input(self, ctx, data_type, user_input):
         if data_type == "channel":
             try:
                 return await commands.TextChannelConverter().convert(ctx, user_input)
