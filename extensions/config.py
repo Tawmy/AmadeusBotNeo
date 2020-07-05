@@ -104,31 +104,31 @@ class Config(commands.Cog):
                     if not category_skipped:
                         if arg_length > 2:
                             # TODO submit list of 2-end, not just 2 -> also applies for the occurrence a few lines below
-                            await self.check_value_data(ctx, category, option, [message, args[2]])
+                            await self.__check_value_data(ctx, category, option, [message, args[2]])
                         else:
                             input_still_valid = False
-                            value_data = await self.ask_for_value(ctx, category, option, message)
+                            value_data = await self.show_info_and_ask_for_value(ctx, category, option, message)
                             message = value_data[0]
                             if value_data[1] is not None:
-                                await self.check_value_data(ctx, category, option, value_data)
+                                await self.__check_value_data(ctx, category, option, value_data)
                             else:
                                 await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
                     else:
                         if arg_length > 1:
-                            await self.check_value_data(ctx, category, option, [message, args[1]])
+                            await self.__check_value_data(ctx, category, option, [message, args[1]])
                         else:
                             input_still_valid = False
-                            value_data = await self.ask_for_value(ctx, category, option, message)
+                            value_data = await self.show_info_and_ask_for_value(ctx, category, option, message)
                             message = value_data[0]
                             if value_data[1] is not None:
-                                await self.check_value_data(ctx, category, option, value_data)
+                                await self.__check_value_data(ctx, category, option, value_data)
                             else:
                                 await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
                 else:
-                    value_data = await self.ask_for_value(ctx, category, option, message)
+                    value_data = await self.show_info_and_ask_for_value(ctx, category, option, message)
                     message = value_data[0]
                     if value_data[1] is not None:
-                        await self.check_value_data(ctx, category, option, value_data)
+                        await self.__check_value_data(ctx, category, option, value_data)
                     else:
                         await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
                 return
@@ -202,7 +202,7 @@ class Config(commands.Cog):
             return [menu_data[0], option_names[menu_data[1]]]
         return None
 
-    async def ask_for_value(self, ctx, category, option, message):
+    async def show_info_and_ask_for_value(self, ctx, category, option, message):
 
         # prepare prompt
         option_full = self.bot.values.options.get(category).get("list").get(option)
@@ -261,7 +261,7 @@ class Config(commands.Cog):
         await prompt.add_field(field_title, field_value, False)
         return prompt
 
-    async def check_value_data(self, ctx, category, option, value_data):
+    async def __check_value_data(self, ctx, category, option, value_data):
         if value_data is None:
             return
         prepared_input = await self.bot.values.prepare_input(category, option, value_data[1], ctx)
