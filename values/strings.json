@@ -45,8 +45,8 @@
             "de": ["Du kannst", "jetzt benutzen!\n\nUnten sind alle Berechtigungen gelistet, die der Bot in den jeweiligen Kanälen braucht. Bitte stelle sicher, dass der Bot Zugriff auf alle von diesen hat."]
         },
         "setup_error_save_config": {
-            "en": "Could not save config!",
-            "de": "Konfiguration konnte nicht gespeichert werden!"
+            "en": "Could not save config.",
+            "de": "Konfiguration konnte nicht gespeichert werden."
         }
     },
     "config": {
@@ -61,6 +61,32 @@
         "default_value": {
             "en": "Default value",
             "de": "Standardwert"
+        }
+    },
+    "config_status": {
+        "success": {
+            "en": "Configuration saved!",
+            "de": "Konfiguration gespeichert!"
+        },
+        "wrong_type": {
+            "en": "Wrong data type",
+            "de": "Falscher Datentyp"
+        },
+        "wrong_type_description": {
+            "en": "Your input is not matching the type this configuration option accepts.",
+            "de": "Der Input stimmt nicht mit den Vorgaben der Konfigurationsoption überein."
+        },
+        "conversion_failed": {
+            "en": "Conversion failed",
+            "de": "Umwandlung fehlgeschlagen0"
+        },
+        "conversion_failed_description": {
+            "en": "I could not find what you gave me. For example, if you give me a role, it needs to actually exist.",
+            "de": "Ich konnte den Input nicht finden. Beispielsweise muss eine gegebene Rolle existieren."
+        },
+        "save_error": {
+            "en": "Could not save config.",
+            "de": "Konfiguration konnte nicht gespeichert werden."
         }
     }
 }

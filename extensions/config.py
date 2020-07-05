@@ -1,3 +1,6 @@
+from enum import Enum
+
+import discord
 from discord.ext import commands
 from components import checks, amadeusPrompt, amadeusMenu
 
@@ -121,7 +124,8 @@ class Config(commands.Cog):
                             await self.ask_for_value(ctx, category, option, message)
                 else:
                     # TODO ask for input
-                    await self.ask_for_value(ctx, category, option, message)
+                    value_data = await self.ask_for_value(ctx, category, option, message)
+                    return await self.check_value_data(ctx, category, option, value_data)
 
                 # TODO print success message
                 print("Message: " + str(message))
@@ -199,6 +203,7 @@ class Config(commands.Cog):
         menu_data = await menu.show_menu(ctx, 120, message)
         if menu_data is not None:
             return [menu_data[0], option_names[menu_data[1]]]
+        return None
 
     async def ask_for_value(self, ctx, category, option, message):
 
@@ -224,11 +229,7 @@ class Config(commands.Cog):
 
         # TODO add field about is_list
 
-        user_input = await prompt.show_prompt(ctx, 120, message)
-        # TODO handle false and None separately and properly
-        if user_input is not False or None:
-            prepared_input = await self.bot.values.prepare_input(category, option, user_input[1], ctx)
-            await self.bot.values.set_config(ctx, category, option, prepared_input)
+        return await prompt.show_prompt(ctx, 120, message)
 
     async def __convert_current_value(self, ctx, category, option):
         current_value = await self.bot.values.get_config(ctx, category, option)
@@ -238,6 +239,46 @@ class Config(commands.Cog):
         if converted_input is not None or True:
             return converted_input
         return current_value
+
+    async def check_value_data(self, ctx, category, option, value_data):
+        if value_data is None:
+            return
+        prepared_input = await self.bot.values.prepare_input(category, option, value_data[1], ctx)
+        if prepared_input is None:
+            await self.__show_config_status(ctx, value_data[0], ConfigStatus.CONVERSION_FAILED)
+            return
+        if prepared_input is False:
+            await self.__show_config_status(ctx, value_data[0], ConfigStatus.WRONG_TYPE)
+            return
+        status = await self.bot.values.set_config(ctx, category, option, prepared_input)
+        if status is False:
+            await self.__show_config_status(ctx, value_data[0], ConfigStatus.SAVE_ERROR)
+            return
+        await self.__show_config_status(ctx, value_data[0], ConfigStatus.SUCCESS)
+
+    async def __show_config_status(self, ctx, message, error):
+        embed = discord.Embed()
+        if error == ConfigStatus.SUCCESS:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "success")
+        elif error == ConfigStatus.WRONG_TYPE:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "wrong_type")
+            embed.description = await self.bot.strings.get_string(ctx, "config_errors", "wrong_type_description")
+        elif error == ConfigStatus.CONVERSION_FAILED:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "conversion_failed")
+            embed.description = await self.bot.strings.get_string(ctx, "config_errors", "conversion_failed_description")
+        elif error == ConfigStatus.SAVE_ERROR:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "save_error")
+        name = ctx.author.display_name
+        avatar = ctx.author.avatar_url_as(static_format="png")
+        embed.set_footer(text=name, icon_url=avatar)
+        await message.edit(embed=embed)
+
+
+class ConfigStatus(Enum):
+    SUCCESS = 0
+    WRONG_TYPE = 1
+    CONVERSION_FAILED = 2
+    SAVE_ERROR = 3
 
 
 def setup(bot):
