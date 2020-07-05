@@ -133,7 +133,7 @@ class ServerSetup(commands.Cog):
                     while obj is None:
                         result = await setup_prompt.show_prompt(ctx, 120, setup_message)
                         # If user has not cancelled
-                        if result[1] is not None:
+                        if result is not None:
                             obj = await self.__check_input(ctx, cat_key, result[1])
                             # if input invalid
                             if obj is None:

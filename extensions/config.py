@@ -104,36 +104,33 @@ class Config(commands.Cog):
                     if not category_skipped:
                         if arg_length > 2:
                             # TODO submit list of 2-end, not just 2 -> also applies for the occurrence a few lines below
-                            prepared_input = await self.bot.values.prepare_input(category, option, args[2])
-                            while prepared_input is False or None:
-                                # TODO
-                                await self.show_input_error()
+                            await self.check_value_data(ctx, category, option, [message, args[2]])
                         else:
                             input_still_valid = False
-                            # TODO ask for input
-                            await self.ask_for_value(ctx, category, option, message)
+                            value_data = await self.ask_for_value(ctx, category, option, message)
+                            message = value_data[0]
+                            if value_data[1] is not None:
+                                await self.check_value_data(ctx, category, option, value_data)
+                            else:
+                                await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
                     else:
                         if arg_length > 1:
-                            prepared_input = await self.bot.values.prepare_input(category, option, args[1])
-                            while prepared_input is False or None:
-                                # TODO
-                                await self.show_input_error()
+                            await self.check_value_data(ctx, category, option, [message, args[1]])
                         else:
                             input_still_valid = False
-                            # TODO ask for input
-                            await self.ask_for_value(ctx, category, option, message)
+                            value_data = await self.ask_for_value(ctx, category, option, message)
+                            message = value_data[0]
+                            if value_data[1] is not None:
+                                await self.check_value_data(ctx, category, option, value_data)
+                            else:
+                                await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
                 else:
-                    # TODO ask for input
                     value_data = await self.ask_for_value(ctx, category, option, message)
-                    return await self.check_value_data(ctx, category, option, value_data)
-
-                # TODO print success message
-                print("Message: " + str(message))
-                print("Category: " + str(category))
-                print("Option: " + str(option))
-                print("Value: " + str(value))
-                print("still valid: " + str(input_still_valid))
-                await message.delete()
+                    message = value_data[0]
+                    if value_data[1] is not None:
+                        await self.check_value_data(ctx, category, option, value_data)
+                    else:
+                        await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
                 return
 
     async def ask_for_category(self, ctx):
@@ -229,6 +226,11 @@ class Config(commands.Cog):
 
         # TODO add field about is_list
 
+        prompt = await self.__add_valid_field(ctx, prompt, category, option)
+
+        field_title = await self.bot.strings.get_string(ctx, "config", "internal_name")
+        await prompt.add_field(field_title, option)
+
         return await prompt.show_prompt(ctx, 120, message)
 
     async def __convert_current_value(self, ctx, category, option):
@@ -239,6 +241,25 @@ class Config(commands.Cog):
         if converted_input is not None or True:
             return converted_input
         return current_value
+
+    async def __add_valid_field(self, ctx, prompt, category, option):
+        field_value = await self.bot.values.get_valid_input(category, option)
+        if field_value is None:
+            return prompt
+
+        field_title = await self.bot.strings.get_string(ctx, "config", "valid_entries")
+        if field_value == "boolean":
+            field_value = ["True", "False"]
+            field_value = '\n'.join(field_value)
+        elif field_value == "channel":
+            field_value = await self.bot.strings.get_string(ctx, "config", "channel_type")
+        elif field_value == "role":
+            field_value = await self.bot.strings.get_string(ctx, "config", "role_type")
+        else:
+            field_value = '\n'.join(field_value)
+
+        await prompt.add_field(field_title, field_value, False)
+        return prompt
 
     async def check_value_data(self, ctx, category, option, value_data):
         if value_data is None:
@@ -262,16 +283,21 @@ class Config(commands.Cog):
             embed.title = await self.bot.strings.get_string(ctx, "config_status", "success")
         elif error == ConfigStatus.WRONG_TYPE:
             embed.title = await self.bot.strings.get_string(ctx, "config_status", "wrong_type")
-            embed.description = await self.bot.strings.get_string(ctx, "config_errors", "wrong_type_description")
+            embed.description = await self.bot.strings.get_string(ctx, "config_status", "wrong_type_description")
         elif error == ConfigStatus.CONVERSION_FAILED:
             embed.title = await self.bot.strings.get_string(ctx, "config_status", "conversion_failed")
-            embed.description = await self.bot.strings.get_string(ctx, "config_errors", "conversion_failed_description")
+            embed.description = await self.bot.strings.get_string(ctx, "config_status", "conversion_failed_description")
         elif error == ConfigStatus.SAVE_ERROR:
             embed.title = await self.bot.strings.get_string(ctx, "config_status", "save_error")
+        elif error == ConfigStatus.OTHER:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "other")
         name = ctx.author.display_name
         avatar = ctx.author.avatar_url_as(static_format="png")
         embed.set_footer(text=name, icon_url=avatar)
-        await message.edit(embed=embed)
+        if message is not None:
+            await message.edit(embed=embed)
+        else:
+            await ctx.send(embed=embed)
 
 
 class ConfigStatus(Enum):
@@ -279,6 +305,7 @@ class ConfigStatus(Enum):
     WRONG_TYPE = 1
     CONVERSION_FAILED = 2
     SAVE_ERROR = 3
+    OTHER = 4
 
 
 def setup(bot):

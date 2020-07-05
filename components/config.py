@@ -51,8 +51,32 @@ class Config:
     async def __get_default_config_value(self, category, name):
         return self.options.get(category, {}).get("list", {}).get(name, {}).get("default")
 
+    async def get_valid_input(self, category, name):
+        """Returns valid input for given config option.
+        Returns None if input can by any string.
+
+        Parameters
+        -----------
+        category: :class:`str`
+            Category of the config option.
+        name: :class:`str`
+            Name of the config option.
+        """
+
+        option = self.options.get(category, {}).get("list", {}).get(name, {})
+        valid_list = option.get("valid")
+        if valid_list is not None:
+            return valid_list
+        data_type = option.get("data_type")
+
+        if data_type in ["boolean", "channel", "role"]:
+            return data_type
+        return None
+
     async def set_config(self, ctx, category, name, value):
         """Sets config value. First checks if it exists at all, then sets it and saves to config file.
+        Please run the input through prepare_input first.
+        Returns True if set, false if not.
 
         Parameters
         -----------
@@ -94,7 +118,10 @@ class Config:
         if option is not None:
             data_type = option.get("data_type")
             is_list = option.get("is_list")
+            valid_list = option.get("valid")
             if data_type is not None and is_list is not None:
+                if valid_list is not None and user_input not in valid_list:
+                    return False
                 user_input = await self.__prepare_data_type_conversion(data_type, is_list, user_input)
                 if user_input is not None:
                     if ctx is not None:

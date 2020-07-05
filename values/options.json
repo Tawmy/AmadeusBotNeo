@@ -33,7 +33,8 @@
                 },
                 "default": "en",
                 "data_type": "string",
-                "is_list": false
+                "is_list": false,
+                "valid": ["en", "de"]
             },
             "command_prefix": {
                 "name": {

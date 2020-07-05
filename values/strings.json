@@ -61,6 +61,22 @@
         "default_value": {
             "en": "Default value",
             "de": "Standardwert"
+        },
+        "valid_entries": {
+            "en": "Valid entries",
+            "de": "Zulässige Werte"
+        },
+        "internal_name": {
+            "en": "Internal name",
+            "de": "Interner Name"
+        },
+        "role_type": {
+            "en": "Role (Name, ID, or mention)",
+            "de": "Rolle (Name, ID, oder Ping)"
+        },
+        "channel_type": {
+            "en": "Text Channel (Name, ID, or mention)",
+            "de": "Textkanal (Name, ID, oder Ping)"
         }
     },
     "config_status": {
@@ -69,8 +85,8 @@
             "de": "Konfiguration gespeichert!"
         },
         "wrong_type": {
-            "en": "Wrong data type",
-            "de": "Falscher Datentyp"
+            "en": "Wrong format",
+            "de": "Falsches Format"
         },
         "wrong_type_description": {
             "en": "Your input is not matching the type this configuration option accepts.",
@@ -87,6 +103,10 @@
         "save_error": {
             "en": "Could not save config.",
             "de": "Konfiguration konnte nicht gespeichert werden."
+        },
+        "other": {
+            "en": "Configuration closed",
+            "de": "Konfiguration geschlossen"
         }
     }
 }

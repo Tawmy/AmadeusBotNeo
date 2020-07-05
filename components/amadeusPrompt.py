@@ -47,9 +47,9 @@ class AmadeusPrompt:
         else:
             await self.set_description(description)
 
-    async def add_field(self, name, description):
+    async def add_field(self, name, description, inline=True):
         if name is not None and description is not None:
-            self.__embed.add_field(name=name, value=description)
+            self.__embed.add_field(name=name, value=description, inline=inline)
 
     async def set_user_specific(self, is_user_specific, user=None):
         """Sets if the prompt should be usable by one speficic user only.
