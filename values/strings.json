@@ -80,31 +80,59 @@
         }
     },
     "config_status": {
-        "success": {
+        "OPTION_DOES_NOT_EXIST": {
+            "en": "Configuration option does not exist",
+            "de": "Konfigurationsoption existiert nicht"
+        },
+        "CONVERSION_FAILED": {
+            "en": "",
+            "de": ""
+        },
+        "NOT_IN_VALID_LIST": {
+            "en": "Invalid input",
+            "de": "Ungültige Eingabe"
+        },
+        "NOT_IN_VALID_LIST_DESC": {
+            "en": "Your input is not matching the type this configuration option accepts. All allowed values are listed when you check on the configuration option.",
+            "de": "Der Input stimmt nicht mit den Vorgaben der Konfigurationsoption überein. Alle erlaubten Werte werden beim Aufruf der Konfigurationsoption gelistet."
+        },
+        "UNKNOWN_DATA_TYPE": {
+            "en": "",
+            "de": ""
+        },
+        "NOT_VALID_FOR_DATA_TYPE": {
+            "en": "Invalid input",
+            "de": "Ungültige Eingabe"
+        },
+        "NOT_VALID_FOR_DATA_TYPE_DESC": {
+            "en": "This data type only accepts specific values. All allowed values are listed when you check on the configuration option.",
+            "de": "Dieser Datentyp akzeptiert nur bestimmte Werde. Alle erlaubten Werte werden beim Aufruf der Konfigurationsoption gelistet."
+        },
+        "TEXT_CHANNEL_NOT_FOUND": {
+            "en": "Channel not found",
+            "de": "Kanal nicht gefunden"
+        },
+        "TEXT_CHANNEL_NOT_FOUND_DESC": {
+            "en": "At least one of the given channels was not found. Please check if all of them exist and are spelt correctly.",
+            "de": "Mindestens einer der gegebenen Kanäle wurde nicht gefunden. Bitte überprüfe, ob alle existieren und korrekt geschrieben sind."
+        },
+        "ROLE_NOT_FOUND": {
+            "en": "Role not found",
+            "de": "Rolle nicht gefunden"
+        },
+        "ROLE_NOT_FOUND_DESC": {
+            "en": "At least one of the given roles was not found. Please check if all of them exist and are spelt correctly.",
+            "de": "Mindestens einer der gegebenen Rollen wurde nicht gefunden. Bitte überprüfe, ob alle existieren und korrekt geschrieben sind."
+        },
+        "SAVE_SUCCESS": {
             "en": "Configuration saved!",
             "de": "Konfiguration gespeichert!"
         },
-        "wrong_type": {
-            "en": "Wrong format",
-            "de": "Falsches Format"
-        },
-        "wrong_type_description": {
-            "en": "Your input is not matching the type this configuration option accepts.",
-            "de": "Der Input stimmt nicht mit den Vorgaben der Konfigurationsoption überein."
-        },
-        "conversion_failed": {
-            "en": "Conversion failed",
-            "de": "Umwandlung fehlgeschlagen0"
-        },
-        "conversion_failed_description": {
-            "en": "I could not find what you gave me. For example, if you give me a role, it needs to actually exist.",
-            "de": "Ich konnte den Input nicht finden. Beispielsweise muss eine gegebene Rolle existieren."
-        },
-        "save_error": {
+        "SAVE_FAIL": {
             "en": "Could not save config.",
             "de": "Konfiguration konnte nicht gespeichert werden."
         },
-        "other": {
+        "OTHER": {
             "en": "Configuration closed",
             "de": "Konfiguration geschlossen"
         }

@@ -3,6 +3,7 @@ from enum import Enum
 import discord
 from discord.ext import commands
 from components import checks, amadeusPrompt, amadeusMenu
+from components.enums import ConfigStatus
 
 
 class Config(commands.Cog):
@@ -102,10 +103,11 @@ class Config(commands.Cog):
             if config_step == 2:
                 if input_still_valid:
                     if not category_skipped:
+                        # check all remaining arguments in args (whether option is actually a list does not matter here)
                         if arg_length > 2:
-                            # TODO submit list of 2-end, not just 2 -> also applies for the occurrence a few lines below
-                            await self.__check_value_data(ctx, category, option, [message, args[2]])
+                            await self.__check_value_data(ctx, category, option, [message, args[2:]])
                         else:
+                            # set to False in case this will be needed when making changes down the road
                             input_still_valid = False
                             value_data = await self.show_info_and_ask_for_value(ctx, category, option, message)
                             message = value_data[0]
@@ -114,9 +116,11 @@ class Config(commands.Cog):
                             else:
                                 await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
                     else:
+                        # check all remaining arguments in args (whether option is actually a list does not matter here)
                         if arg_length > 1:
-                            await self.__check_value_data(ctx, category, option, [message, args[1]])
+                            await self.__check_value_data(ctx, category, option, [message, args[1:]])
                         else:
+                            # set to False in case this will be needed when making changes down the road
                             input_still_valid = False
                             value_data = await self.show_info_and_ask_for_value(ctx, category, option, message)
                             message = value_data[0]
@@ -265,32 +269,39 @@ class Config(commands.Cog):
         if value_data is None:
             return
         prepared_input = await self.bot.values.prepare_input(category, option, value_data[1], ctx)
-        if prepared_input is None:
-            await self.__show_config_status(ctx, value_data[0], ConfigStatus.CONVERSION_FAILED)
-            return
-        if prepared_input is False:
-            await self.__show_config_status(ctx, value_data[0], ConfigStatus.WRONG_TYPE)
+        if isinstance(prepared_input, ConfigStatus):
+            await self.__show_config_status(ctx, value_data[0], prepared_input)
             return
         status = await self.bot.values.set_config(ctx, category, option, prepared_input)
-        if status is False:
-            await self.__show_config_status(ctx, value_data[0], ConfigStatus.SAVE_ERROR)
-            return
-        await self.__show_config_status(ctx, value_data[0], ConfigStatus.SUCCESS)
+        await self.__show_config_status(ctx, value_data[0], status)
 
     async def __show_config_status(self, ctx, message, error):
         embed = discord.Embed()
-        if error == ConfigStatus.SUCCESS:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "success")
-        elif error == ConfigStatus.WRONG_TYPE:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "wrong_type")
-            embed.description = await self.bot.strings.get_string(ctx, "config_status", "wrong_type_description")
+
+        if error == ConfigStatus.OPTION_DOES_NOT_EXIST:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "OPTION_DOES_NOT_EXIST")
         elif error == ConfigStatus.CONVERSION_FAILED:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "conversion_failed")
-            embed.description = await self.bot.strings.get_string(ctx, "config_status", "conversion_failed_description")
-        elif error == ConfigStatus.SAVE_ERROR:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "save_error")
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "CONVERSION_FAILED")
+        elif error == ConfigStatus.NOT_IN_VALID_LIST:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "NOT_IN_VALID_LIST")
+            embed.description = await self.bot.strings.get_string(ctx, "config_status", "NOT_IN_VALID_LIST_DESC")
+        elif error == ConfigStatus.UNKNOWN_DATA_TYPE:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "UNKNOWN_DATA_TYPE")
+        elif error == ConfigStatus.NOT_VALID_FOR_DATA_TYPE:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "NOT_VALID_FOR_DATA_TYPE")
+            embed.description = await self.bot.strings.get_string(ctx, "config_status", "NOT_VALID_FOR_DATA_TYPE_DESC")
+        elif error == ConfigStatus.TEXT_CHANNEL_NOT_FOUND:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND")
+            embed.description = await self.bot.strings.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND_DESC")
+        elif error == ConfigStatus.ROLE_NOT_FOUND:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "ROLE_NOT_FOUND")
+            embed.description = await self.bot.strings.get_string(ctx, "config_status", "ROLE_NOT_FOUND_DESC")
+        elif error == ConfigStatus.SAVE_SUCCESS:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "SAVE_SUCCESS")
+        elif error == ConfigStatus.SAVE_FAIL:
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "SAVE_FAIL")
         elif error == ConfigStatus.OTHER:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "other")
+            embed.title = await self.bot.strings.get_string(ctx, "config_status", "OTHER")
         name = ctx.author.display_name
         avatar = ctx.author.avatar_url_as(static_format="png")
         embed.set_footer(text=name, icon_url=avatar)
@@ -298,14 +309,6 @@ class Config(commands.Cog):
             await message.edit(embed=embed)
         else:
             await ctx.send(embed=embed)
-
-
-class ConfigStatus(Enum):
-    SUCCESS = 0
-    WRONG_TYPE = 1
-    CONVERSION_FAILED = 2
-    SAVE_ERROR = 3
-    OTHER = 4
 
 
 def setup(bot):

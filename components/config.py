@@ -1,6 +1,10 @@
 import json
 import asyncio
+import shlex
+
 from discord.ext import commands
+
+from components.enums import ConfigStatus
 
 
 class Config:
@@ -41,6 +45,7 @@ class Config:
 
         config_value = ctx.bot.config.get(str(ctx.guild.id), {}).get(category, {}).get(name)
         if config_value is None:
+            # TODO what if no default value
             default_value = await self.__get_default_config_value(category, name)
             # Save default value to config
             loop = asyncio.get_event_loop()
@@ -92,15 +97,12 @@ class Config:
 
         if self.options.get(category, {}).get("list", {}).get(name) is not None:
             ctx.bot.config[str(ctx.guild.id)].setdefault(category, {})[name] = value
-            if await self.save_config(ctx) is True:
-                return True
-        return False
+            return await self.save_config(ctx)
+        return ConfigStatus.OPTION_DOES_NOT_EXIST
 
     async def prepare_input(self, category, name, user_input, ctx=None):
         """Checks if input matches type specified in options list. Runs input converter when ctx specified.
         Returns converted input if data type (and input) conversion was/were successful.
-        Returns False if data type conversion failed.
-        Returns None if data type conversion was successful, but input conversion failed.
 
         Parameters
         -----------
@@ -115,30 +117,37 @@ class Config:
         """
 
         option = self.options.get(category, {}).get("list", {}).get(name, {})
-        if option is not None:
-            data_type = option.get("data_type")
-            is_list = option.get("is_list")
-            valid_list = option.get("valid")
-            if data_type is not None and is_list is not None:
-                if valid_list is not None and user_input not in valid_list:
-                    return False
-                user_input = await self.__prepare_data_type_conversion(data_type, is_list, user_input)
-                if user_input is not None:
-                    if ctx is not None:
-                        return await self.__convert_input(ctx, data_type, user_input)
-                    else:
-                        return user_input
-        return False
 
-    async def __prepare_data_type_conversion(self, data_type, is_list, user_input):
-        # TODO check against is_list
-        if is_list:
-            converted_list = []
-            for entry in user_input:
-                converted_list.append(await self.__convert_data_type(data_type, entry))
-            return converted_list
+        # shlex to split string into multiple elements while keeping bracket terms intact
+        if isinstance(user_input, str):
+            user_input = shlex.split(user_input)
+        elif isinstance(user_input, tuple):
+            user_input = list(user_input)
+
+        if option is not None:
+            if option.get("is_list"):
+                for i, item in enumerate(user_input):
+                    checked_input = await self.__check_and_convert_input(option, item, ctx)
+                    if isinstance(checked_input, ConfigStatus):
+                        return checked_input
+                    else:
+                        user_input[i] = checked_input
+                return user_input
+            else:
+                return await self.__check_and_convert_input(option, user_input[0], ctx)
+        return ConfigStatus.OPTION_DOES_NOT_EXIST
+
+    async def __check_and_convert_input(self, option, user_input, ctx):
+        data_type = option.get("data_type")
+        valid_list = option.get("valid")
+        if valid_list is not None and user_input not in valid_list:
+            return ConfigStatus.NOT_IN_VALID_LIST
+        user_input_dt = await self.__convert_data_type(data_type, user_input)
+        if ctx is not None and not isinstance(user_input_dt, ConfigStatus):
+            converted_input = await self.__convert_input(ctx, data_type, user_input_dt)
+            return converted_input
         else:
-            return await self.__convert_data_type(data_type, user_input)
+            return user_input_dt
 
     async def __convert_data_type(self, data_type, user_input):
         if data_type == "boolean":
@@ -146,21 +155,20 @@ class Config:
                 return True
             elif user_input.lower() in ["false", "no", "0"]:
                 return False
-        elif data_type in ["string", "channel", "role"]:
-            return user_input
-        return None
+            return ConfigStatus.NOT_VALID_FOR_DATA_TYPE
+        return user_input
 
     async def __convert_input(self, ctx, data_type, user_input):
         if data_type == "channel":
             try:
                 return await commands.TextChannelConverter().convert(ctx, user_input)
             except commands.CommandError:
-                return None
+                return ConfigStatus.TEXT_CHANNEL_NOT_FOUND
         elif data_type == "role":
             try:
                 return await commands.RoleConverter().convert(ctx, user_input)
             except commands.CommandError:
-                return None
+                return ConfigStatus.ROLE_NOT_FOUND
         return user_input
 
     async def save_config(self, ctx):
@@ -176,12 +184,12 @@ class Config:
             save_status = False
             retries = 4
             while save_status is False and retries > 0:
-                with open(json_file, 'w+') as file:
+                with open(json_file, 'w') as file:
                     try:
-                        json.dump(ctx.bot.config[str(ctx.guild.id)], file)
-                        return True
+                        json.dump(ctx.bot.config[str(ctx.guild.id)], file, indent=4)
+                        return ConfigStatus.SAVE_SUCCESS
                     except Exception as e:
                         print(e)
                 retries -= 1
-                await asyncio.sleep(25e-2)
-        return False
+                await asyncio.sleep(1)
+        return ConfigStatus.SAVE_FAIL
