@@ -12,3 +12,11 @@ class ConfigStatus(Enum):
     ROLE_NOT_FOUND = 7
     SAVE_SUCCESS = 10
     SAVE_FAIL = 11
+
+
+class AmadeusMenuStatus(Enum):
+    NEW = 0
+    SHOWN = 1
+    CANCELLED = 2
+    TIMEOUT = 3
+    SELECTED = 4

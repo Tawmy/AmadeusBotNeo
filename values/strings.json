@@ -136,5 +136,27 @@
             "en": "Configuration closed",
             "de": "Konfiguration geschlossen"
         }
+    },
+    "amadeusMenuStatus": {
+        "NEW": {
+            "en": "Menu was created",
+            "de": "Menü wurde erstellt"
+        },
+        "SHOWN": {
+            "en": "Menu was shown",
+            "de": "Menü wurde angezeigt"
+        },
+        "CANCELLED": {
+            "en": "Cancelled by user",
+            "de": "Vom Nutzer abgebrochen"
+        },
+        "TIMEOUT": {
+            "en": "Menu closed due to timeout",
+            "de": "Menü wegen Zeitüberschreitung geschlossen"
+        },
+        "SELECTED": {
+            "en": "Option selected",
+            "de": "Option ausgewählt"
+        }
     }
 }

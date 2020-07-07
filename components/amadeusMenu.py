@@ -1,6 +1,17 @@
 import asyncio
 import discord
 
+from dataclasses import dataclass
+from components.enums import AmadeusMenuStatus
+
+
+@dataclass
+class AmadeusMenuResult:
+    status: AmadeusMenuStatus = AmadeusMenuStatus.NEW
+    message: discord.message = None
+    reaction_index: int = None
+    reaction_emoji: str = None
+
 
 class AmadeusMenu:
     def __init__(self, bot, prompt):
@@ -13,6 +24,8 @@ class AmadeusMenu:
         self.__embed.title = prompt
 
         self.__reaction_emoji = []
+
+        self.__result = AmadeusMenuResult()
 
     async def set_options(self, names, descriptions=None):
         """Sets the options of the amadeusMenu.
@@ -113,8 +126,7 @@ class AmadeusMenu:
 
     async def show_menu(self, ctx, timeout_seconds, message=None):
         """Displays the amadeusMenu and waits for user input. Edits message if specified.
-        Returns list of message, index of reaction, and reaction emoji.
-        Returns None on timeout.
+        Returns AmadeusMenuResult object.
 
         Parameters
         -----------
@@ -134,8 +146,14 @@ class AmadeusMenu:
                 message = await ctx.send(embed=self.__embed)
             else:
                 await message.edit(embed=self.__embed)
+            self.__result.status = AmadeusMenuStatus.SHOWN
             await self.__add_reactions(message)
-            return await self.__await_user_reaction(ctx, message, timeout_seconds)
+            await self.__await_user_reaction(ctx, message, timeout_seconds)
+            return self.__result
+
+    async def show_result(self, timeout_seconds=None):
+        embed = discord.embed()
+
 
     async def __prepare_footer(self, ctx):
         if self.__is_user_specific:
@@ -171,10 +189,16 @@ class AmadeusMenu:
             except asyncio.TimeoutError:
                 if self.__clear_on_timeout:
                     await message.clear_reactions()
-                return None
+                self.__result.message = message
+                self.__result.status = AmadeusMenuStatus.TIMEOUT
+                return
             else:
                 if reaction.emoji in self.__reaction_emoji:
                     await message.clear_reactions()
-                    return [message, self.__reaction_emoji.index(reaction.emoji), reaction.emoji]
+                    self.__result.status = AmadeusMenuStatus.SELECTED
+                    self.__result.message = message
+                    self.__result.reaction_index = self.__reaction_emoji.index(reaction.emoji)
+                    self.__result.reaction_emoji = reaction.emoji
+                    return
                 else:
                     await message.remove_reaction(reaction.emoji, user)
