@@ -1,6 +1,16 @@
 import asyncio
 import discord
 
+from dataclasses import dataclass
+from components.enums import AmadeusPromptStatus
+
+
+@dataclass
+class AmadeusPromptResult:
+    status: AmadeusPromptStatus = AmadeusPromptStatus.NEW
+    message: discord.message = None
+    input: str = None
+
 
 class AmadeusPrompt:
     def __init__(self, bot, title):
@@ -11,6 +21,8 @@ class AmadeusPrompt:
 
         self.__embed = discord.Embed()
         self.__embed.title = title
+
+        self.__result = AmadeusPromptResult()
 
     async def set_author(self, name, url="", icon_url=""):
         """Sets the author of the amadeusPrompt.
@@ -72,8 +84,7 @@ class AmadeusPrompt:
 
     async def show_prompt(self, ctx, timeout_seconds, message=None):
         """Displays the amadeusPrompt and waits for user input. Edits message if specified.
-        Returns list with message and user input.
-        Returns None on timeout or when user enters cancel string.
+        Returns AmadeusPromptResult object.
 
         Parameters
         -----------
@@ -87,11 +98,34 @@ class AmadeusPrompt:
 
         await self.__prepare_footer(ctx)
         if message is None:
-            message = await ctx.send(embed=self.__embed)
+            self.__result.message = await ctx.send(embed=self.__embed)
         else:
             await message.edit(embed=self.__embed)
-        user_input = await self.__await_user_input(ctx, timeout_seconds)
-        return [message, user_input]
+        self.__result.status = AmadeusPromptStatus.SHOWN
+        await self.__await_user_input(ctx, timeout_seconds)
+        return self.__result
+
+    async def show_result(self, ctx):
+        """Edits menu to show result.
+
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            The invocation context.
+        """
+        self.__embed = discord.Embed()
+        if self.__result.status == AmadeusPromptStatus.SELECTED:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "INPUT_GIVEN")
+        elif self.__result.status == AmadeusPromptStatus.TIMEOUT:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "TIMEOUT")
+        elif self.__result.status == AmadeusPromptStatus.CANCELLED:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "CANCELLED")
+        elif self.__result.status == AmadeusPromptStatus.SHOWN:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "SHOWN")
+        elif self.__result.status == AmadeusPromptStatus.NEW:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "NEW")
+        await self.__prepare_footer(ctx)
+        self.__result.message = await self.__result.message.edit(embed=self.__embed)
 
     async def __prepare_footer(self, ctx):
         text = ""
@@ -124,10 +158,11 @@ class AmadeusPrompt:
         try:
             user_message = await self.bot.wait_for('message', timeout=timeout_seconds, check=check)
         except asyncio.TimeoutError:
-            return None
+            self.__result.status = AmadeusPromptStatus.TIMEOUT
         else:
             await user_message.delete()
             if user_message.content in [self.__cancel_string, "\"" + self.__cancel_string + "\""]:
-                return None
+                self.__result.status = AmadeusPromptStatus.CANCELLED
             else:
-                return user_message.content
+                self.__result.status = AmadeusPromptStatus.INPUT_GIVEN
+                self.__result.input = user_message.content
