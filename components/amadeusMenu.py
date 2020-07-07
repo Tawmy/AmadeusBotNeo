@@ -151,9 +151,27 @@ class AmadeusMenu:
             await self.__await_user_reaction(ctx, message, timeout_seconds)
             return self.__result
 
-    async def show_result(self, timeout_seconds=None):
-        embed = discord.embed()
+    async def show_result(self, ctx):
+        """Edits menu to show result.
 
+        Parameters
+        -----------
+        ctx: :class:`discord.ext.commands.Context`
+            The invocation context.
+        """
+        self.__embed = discord.Embed()
+        if self.__result.status == AmadeusMenuStatus.SELECTED:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "SELECTED")
+        elif self.__result.status == AmadeusMenuStatus.TIMEOUT:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "TIMEOUT")
+        elif self.__result.status == AmadeusMenuStatus.CANCELLED:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "CANCELLED")
+        elif self.__result.status == AmadeusMenuStatus.SHOWN:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "SHOWN")
+        elif self.__result.status == AmadeusMenuStatus.NEW:
+            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "NEW")
+        await self.__prepare_footer(ctx)
+        self.__result.message = await self.__result.message.edit(embed=self.__embed)
 
     async def __prepare_footer(self, ctx):
         if self.__is_user_specific:
