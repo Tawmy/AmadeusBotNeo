@@ -29,12 +29,6 @@ class Config(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='ü')
-    @commands.check(checks.block_dms)
-    async def ü(self, ctx, *args):
-        list = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        print(list[2:])
-
     @commands.command(name='config')
     @commands.check(checks.block_dms)
     async def config(self, ctx, *args):
@@ -49,14 +43,17 @@ class Config(commands.Cog):
         category = await self.get_category(ctx, args[0])
         if category is not None:
             input_data.category = category
-            category, option = await self.get_option(ctx, args[1], category)
-            if option is not None:
-                input_data.option = option
-                if len(args) > 2:
-                    input_data.values = args[2:]
-                    input_data.configStep = ConfigStep.CATEGORY_OPTION_VALUE
+            if len(args) > 1:
+                category, option = await self.get_option(ctx, args[1], category)
+                if option is not None:
+                    input_data.option = option
+                    if len(args) > 2:
+                        input_data.values = args[2:]
+                        input_data.configStep = ConfigStep.CATEGORY_OPTION_VALUE
+                    else:
+                        input_data.configStep = ConfigStep.CATEGORY_OPTION
                 else:
-                    input_data.configStep = ConfigStep.CATEGORY_OPTION
+                    input_data.configStep = ConfigStep.CATEGORY
             else:
                 input_data.configStep = ConfigStep.CATEGORY
         else:
@@ -119,7 +116,7 @@ class Config(commands.Cog):
             for option_key, option_val in category_val.get("list").items():
                 if await self.check_value(ctx, option_val, user_input) is True:
                     return category_key, option_key
-        return None
+        return None, None
 
     async def check_value(self, ctx, value, user_input):
         # check for value name in server language
@@ -260,11 +257,13 @@ class Config(commands.Cog):
             embed.title = await self.bot.strings.get_string(ctx, "config_status", "SAVE_FAIL")
         elif error == ConfigStatus.OTHER:
             embed.title = await self.bot.strings.get_string(ctx, "config_status", "OTHER")
-        name = ctx.author.display_name
-        avatar = ctx.author.avatar_url_as(static_format="png")
 
         # TODO this needs to be more dynamic, like set_footer in amadeusMenu
+        # it works for now because config is always user specific
+        name = ctx.author.display_name
+        avatar = ctx.author.avatar_url_as(static_format="png")
         embed.set_footer(text=name, icon_url=avatar)
+
         if message is not None:
             await message.edit(embed=embed)
         else:
