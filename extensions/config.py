@@ -1,143 +1,88 @@
+from dataclasses import dataclass
 from enum import Enum
 
 import discord
 from discord.ext import commands
 from components import checks, amadeusPrompt, amadeusMenu
-from components.enums import ConfigStatus
+from components.enums import ConfigStatus, AmadeusMenuStatus, AmadeusPromptStatus
+
+
+class ConfigStep(Enum):
+    NO_INFO = 0
+    CATEGORY = 1
+    OPTION = 2
+    CATEGORY_OPTION = 3
+    CATEGORY_OPTION_VALUE = 4
+    FINISHED = 10
+
+
+@dataclass
+class InputData:
+    configStep: ConfigStep = ConfigStep.NO_INFO
+    message: discord.message = None
+    category: str = None
+    option: str = None
+    values: list = None
 
 
 class Config(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(name='ü')
+    @commands.check(checks.block_dms)
+    async def ü(self, ctx, *args):
+        list = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        print(list[2:])
+
     @commands.command(name='config')
     @commands.check(checks.block_dms)
     async def config(self, ctx, *args):
-        config_step = 0
+        input_data = InputData()
+        if len(args) > 0:
+            await self.check_input(ctx, args, input_data)
+        await self.collect_config_data(ctx, input_data)
+        if input_data.configStep == ConfigStep.CATEGORY_OPTION_VALUE:
+            await self.__check_value_data(ctx, input_data)
 
-        # gets set to false once a parameter the user submitted is invalid -> will ask for values from that point on
-        input_still_valid = True
-
-        # True if the first parameter submitted was an option instead of a category
-        category_skipped = False
-
-        # Length of args solely so we do not need to use len() over and over
-        arg_length = len(args)
-
-        message = None
-        category = None
-        option = None
-        value = None
-
-        while True:
-            if config_step == 0:
-                if arg_length > 0:
-                    category = await self.get_category(ctx, args[0])
-                    if category is not None:
-                        config_step = 1
-                    else:
-                        # if value submitted by user is not a category, check if it's an option in any category
-                        option_data = await self.get_option(ctx, args[0])
-                        if option_data is None:
-                            # if value submitted by user is not an option either, ask user for a category
-                            input_still_valid = False
-                            category_data = await self.ask_for_category(ctx)
-                            if category_data is not None:
-                                message = category_data[0]
-                                category = category_data[1]
-                                config_step = 1
-                            else:
-                                # stop config if user does not select a category
-                                return
-                        else:
-                            # if value user submitted *was* an option, skip to step 2 with cat and opt from get_option
-                            category_skipped = True
-                            category = option_data[0]
-                            option = option_data[1]
-                            config_step = 2
+    async def check_input(self, ctx, args, input_data):
+        category = await self.get_category(ctx, args[0])
+        if category is not None:
+            input_data.category = category
+            category, option = await self.get_option(ctx, args[1], category)
+            if option is not None:
+                input_data.option = option
+                if len(args) > 2:
+                    input_data.values = args[2:]
+                    input_data.configStep = ConfigStep.CATEGORY_OPTION_VALUE
                 else:
-                    # if user did not submit any parameters, ask for category
-                    input_still_valid = False
-                    category_data = await self.ask_for_category(ctx)
-                    if category_data is not None:
-                        message = category_data[0]
-                        category = category_data[1]
-                        config_step = 1
-                    else:
-                        # stop config if user does not select a category
-                        return
-
-            if config_step == 1:
-                # If there's another argument and previous input was valid, check if option
-                if arg_length > 1 and input_still_valid:
-                    if category_skipped:
-                        option_data = await self.get_option(ctx, args[0], category)
-                    else:
-                        option_data = await self.get_option(ctx, args[1], category)
-                    # If input was indeed an option
-                    if option_data is not None:
-                        category = option_data[0]
-                        option = option_data[1]
-                        config_step = 2
-                    else:
-                        input_still_valid = False
-                        option_data = await self.ask_for_option(ctx, category, message)
-                        if option_data is not None:
-                            message = option_data[0]
-                            option = option_data[1]
-                            config_step = 2
-                        else:
-                            # stop config if user does not select an option
-                            return
+                    input_data.configStep = ConfigStep.CATEGORY_OPTION
+            else:
+                input_data.configStep = ConfigStep.CATEGORY
+        else:
+            category, option = await self.get_option(ctx, args[0], category)
+            if option is not None:
+                input_data.category = category
+                input_data.option = option
+                if len(args) > 1:
+                    input_data.values = args[1:]
+                    input_data.configStep = ConfigStep.CATEGORY_OPTION_VALUE
                 else:
-                    input_still_valid = False
-                    option_data = await self.ask_for_option(ctx, category, message)
-                    if option_data is not None:
-                        message = option_data[0]
-                        option = option_data[1]
-                        config_step = 2
-                    else:
-                        # stop config if user does not select an option
-                        return
+                    input_data.configStep = ConfigStep.OPTION
+        return input_data
 
-            if config_step == 2:
-                if input_still_valid:
-                    if not category_skipped:
-                        # check all remaining arguments in args (whether option is actually a list does not matter here)
-                        if arg_length > 2:
-                            await self.__check_value_data(ctx, category, option, [message, args[2:]])
-                        else:
-                            # set to False in case this will be needed when making changes down the road
-                            input_still_valid = False
-                            value_data = await self.show_info_and_ask_for_value(ctx, category, option, message)
-                            message = value_data[0]
-                            if value_data[1] is not None:
-                                await self.__check_value_data(ctx, category, option, value_data)
-                            else:
-                                await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
-                    else:
-                        # check all remaining arguments in args (whether option is actually a list does not matter here)
-                        if arg_length > 1:
-                            await self.__check_value_data(ctx, category, option, [message, args[1:]])
-                        else:
-                            # set to False in case this will be needed when making changes down the road
-                            input_still_valid = False
-                            value_data = await self.show_info_and_ask_for_value(ctx, category, option, message)
-                            message = value_data[0]
-                            if value_data[1] is not None:
-                                await self.__check_value_data(ctx, category, option, value_data)
-                            else:
-                                await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
-                else:
-                    value_data = await self.show_info_and_ask_for_value(ctx, category, option, message)
-                    message = value_data[0]
-                    if value_data[1] is not None:
-                        await self.__check_value_data(ctx, category, option, value_data)
-                    else:
-                        await self.__show_config_status(ctx, message, ConfigStatus.OTHER)
+    async def collect_config_data(self, ctx, input_data):
+        while input_data.configStep is not ConfigStep.FINISHED:
+            if input_data.configStep == ConfigStep.NO_INFO:
+                await self.ask_for_category(ctx, input_data)
+            elif input_data.configStep == ConfigStep.CATEGORY:
+                await self.ask_for_option(ctx, input_data)
+            elif input_data.configStep in [ConfigStep.OPTION, ConfigStep.CATEGORY_OPTION]:
+                await self.show_info_and_ask_for_value(ctx, input_data)
+            elif input_data.configStep == ConfigStep.CATEGORY_OPTION_VALUE:
                 return
 
-    async def ask_for_category(self, ctx):
+    async def ask_for_category(self, ctx, input_data):
         title = await self.bot.strings.get_string(ctx, "config", "select_category")
         menu = amadeusMenu.AmadeusMenu(self.bot, title)
         await menu.set_user_specific(True)
@@ -147,9 +92,13 @@ class Config(commands.Cog):
             strings = await self.bot.strings.extract_config_strings(ctx, category_val)
             await menu.add_option(strings[0], strings[1])
         menu_data = await menu.show_menu(ctx, 120)
-        if menu_data is not None:
-            return [menu_data[0], category_names[menu_data[1]]]
-        return None
+        if menu_data.status is not AmadeusMenuStatus.SELECTED:
+            input_data.configStep = ConfigStep.FINISHED
+            await menu.show_result(ctx)
+        else:
+            input_data.configStep = ConfigStep.CATEGORY
+            input_data.message = menu_data.message
+            input_data.category = category_names[menu_data.reaction_index]
 
     async def get_category(self, ctx, user_input):
         user_input = user_input.lower()
@@ -185,9 +134,9 @@ class Config(commands.Cog):
                 return True
         return None
 
-    async def ask_for_option(self, ctx, category, message):
+    async def ask_for_option(self, ctx, input_data):
         # prepare menu
-        category = self.bot.values.options.get(category)
+        category = self.bot.values.options.get(input_data.category)
         category_values = await self.bot.strings.extract_config_strings(ctx, category)
         title = category_values[0]
         menu = amadeusMenu.AmadeusMenu(self.bot, title)
@@ -201,15 +150,19 @@ class Config(commands.Cog):
             strings = await self.bot.strings.extract_config_strings(ctx, option_val)
             await menu.add_option(strings[0], strings[1])
 
-        menu_data = await menu.show_menu(ctx, 120, message)
-        if menu_data is not None:
-            return [menu_data[0], option_names[menu_data[1]]]
-        return None
+        menu_data = await menu.show_menu(ctx, 120, input_data.message)
+        if menu_data.status is not AmadeusMenuStatus.SELECTED:
+            input_data.configStep = ConfigStep.FINISHED
+            await menu.show_result(ctx)
+        else:
+            input_data.configStep = ConfigStep.CATEGORY_OPTION
+            input_data.message = menu_data.message
+            input_data.option = option_names[menu_data.reaction_index]
 
-    async def show_info_and_ask_for_value(self, ctx, category, option, message):
+    async def show_info_and_ask_for_value(self, ctx, input_data):
 
         # prepare prompt
-        option_full = self.bot.values.options.get(category).get("list").get(option)
+        option_full = self.bot.values.options.get(input_data.category).get("list").get(input_data.option)
         option_values = await self.bot.strings.extract_config_strings(ctx, option_full)
         title = option_values[0]
         prompt = amadeusPrompt.AmadeusPrompt(self.bot, title)
@@ -218,7 +171,7 @@ class Config(commands.Cog):
 
         # add fields to prompt
 
-        current_value = await self.__convert_current_value(ctx, category, option)
+        current_value = await self.__convert_current_value(ctx, input_data.category, input_data.option)
 
         field_title = await self.bot.strings.get_string(ctx, "config", "current_value")
         await prompt.add_field(field_title, current_value)
@@ -230,12 +183,19 @@ class Config(commands.Cog):
 
         # TODO add field about is_list
 
-        prompt = await self.__add_valid_field(ctx, prompt, category, option)
+        prompt = await self.__add_valid_field(ctx, prompt, input_data.category, input_data.option)
 
         field_title = await self.bot.strings.get_string(ctx, "config", "internal_name")
-        await prompt.add_field(field_title, option)
+        await prompt.add_field(field_title, input_data.option)
 
-        return await prompt.show_prompt(ctx, 120, message)
+        prompt_data = await prompt.show_prompt(ctx, 120, input_data.message)
+        if prompt_data.status != AmadeusPromptStatus.INPUT_GIVEN:
+            input_data.configStep = ConfigStep.FINISHED
+            await prompt.show_result(ctx)
+        else:
+            input_data.configStep = ConfigStep.CATEGORY_OPTION_VALUE
+            input_data.message = prompt_data.message
+            input_data.values = prompt_data.input
 
     async def __convert_current_value(self, ctx, category, option):
         current_value = await self.bot.values.get_config(ctx, category, option)
@@ -265,15 +225,13 @@ class Config(commands.Cog):
         await prompt.add_field(field_title, field_value, False)
         return prompt
 
-    async def __check_value_data(self, ctx, category, option, value_data):
-        if value_data is None:
-            return
-        prepared_input = await self.bot.values.prepare_input(category, option, value_data[1], ctx)
+    async def __check_value_data(self, ctx, input_data):
+        prepared_input = await self.bot.values.prepare_input(input_data.category, input_data.option, input_data.values, ctx)
         if isinstance(prepared_input, ConfigStatus):
-            await self.__show_config_status(ctx, value_data[0], prepared_input)
+            await self.__show_config_status(ctx, input_data.message, prepared_input)
             return
-        status = await self.bot.values.set_config(ctx, category, option, prepared_input)
-        await self.__show_config_status(ctx, value_data[0], status)
+        status = await self.bot.values.set_config(ctx, input_data.category, input_data.option, prepared_input)
+        await self.__show_config_status(ctx, input_data.message, status)
 
     async def __show_config_status(self, ctx, message, error):
         embed = discord.Embed()
@@ -304,6 +262,8 @@ class Config(commands.Cog):
             embed.title = await self.bot.strings.get_string(ctx, "config_status", "OTHER")
         name = ctx.author.display_name
         avatar = ctx.author.avatar_url_as(static_format="png")
+
+        # TODO this needs to be more dynamic, like set_footer in amadeusMenu
         embed.set_footer(text=name, icon_url=avatar)
         if message is not None:
             await message.edit(embed=embed)

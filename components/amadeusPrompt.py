@@ -101,6 +101,7 @@ class AmadeusPrompt:
             self.__result.message = await ctx.send(embed=self.__embed)
         else:
             await message.edit(embed=self.__embed)
+            self.__result.message = message
         self.__result.status = AmadeusPromptStatus.SHOWN
         await self.__await_user_input(ctx, timeout_seconds)
         return self.__result
