@@ -9,6 +9,11 @@ class ReturnType(Enum):
     SERVER_LANGUAGE = 1
 
 
+class InsertionPosition(Enum):
+    LEFT = 0
+    RIGHT = 1
+
+
 @dataclass
 class String:
     category: str
@@ -30,6 +35,15 @@ class OptionStrings:
     successful: bool = False
     name: str = None
     description: str = None
+
+
+@dataclass
+class StringCombination:
+    strings_source: list
+    strings_target: list
+    successful: bool = False
+    position: InsertionPosition = None
+    string_combined: str = None
 
 
 async def load_strings(bot):
@@ -145,3 +159,59 @@ async def extract_config_option_strings(ctx: Context, option_dict: dict) -> Opti
     if option_strings.name is not None and option_strings.description is not None:
         option_strings.successful = True
     return option_strings
+
+
+async def insert_into_string(string_combination: StringCombination) -> StringCombination:
+    """Inserts values into string. Length of values must be one shorter than strings.
+    If same length, position must be speficied.
+
+    Parameters
+    -----------
+    string_combination: :class:`StringCombination`
+        StringCombination object.
+    """
+
+    # TODO allow for insertion without automatic space between combined elements
+    if len(string_combination.strings_target) == len(string_combination.strings_source) + 1:
+        string_combination.string_combined = string_combination.strings_target[0]
+        for i, value in enumerate(string_combination.strings_source):
+            string_combination.string_combined += " "
+            string_combination.string_combined += value
+            string_combination.string_combined += " "
+            string_combination.string_combined += string_combination.strings_target[i + 1]
+    elif len(string_combination.strings_target) == len(string_combination.strings_source):
+        string_combination.string_combined = ""
+        if string_combination.position == InsertionPosition.LEFT:
+            for i, value in enumerate(string_combination.strings_source):
+                string_combination.string_combined += value
+                string_combination.string_combined += " "
+                string_combination.string_combined += string_combination.strings_target[i]
+                string_combination.string_combined += " "
+        elif string_combination.position == InsertionPosition.RIGHT:
+            for i, string in enumerate(string_combination.strings_target):
+                string_combination.string_combined += string
+                string_combination.string_combined += " "
+                string_combination.string_combined += string_combination.strings_source[i]
+                string_combination.string_combined += " "
+    return string_combination
+
+
+async def append_roles(string: str, roles: list) -> str:
+    """Adds newlines and appends roles to string.
+    I actually hate this.
+
+    Parameters
+    -----------
+    string: :class:`str`
+        String to append to.
+    roles: :class:`list`
+        List of strings to append to string.
+    """
+
+    roles_string = string + "\n\n**"
+    if type(roles) is list:
+        roles_string += '**, **'.join(roles)
+    else:
+        roles_string += roles
+    roles_string += "**"
+    return roles_string
