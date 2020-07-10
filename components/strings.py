@@ -17,6 +17,14 @@ class String:
     value: str = None
 
 
+@dataclass
+class ExceptionString:
+    name: str
+    return_type: ReturnType = None
+    message: str = None
+    description: str = None
+
+
 async def load_strings(bot):
     bot.default_language = bot.config["bot"].get("default_language", "en")
     failed = []
@@ -44,7 +52,7 @@ async def get_string(ctx: Context, string: String) -> String:
     ctx: :class:`Context`
         Context
     string: :class:`String`
-        String dataclass
+        String dataclass. Category and name must be provided.
     """
 
     lang = await get_language(ctx, string)
@@ -55,14 +63,52 @@ async def get_string(ctx: Context, string: String) -> String:
     return string
 
 
-async def get_language(ctx: Context, string: String) -> str:
+async def get_language(ctx: Context, string: String = None) -> str:
+    """Gets language for guild.
+    Returns default language if run outside of a guild or if guild has no language set.
+
+    Parameters
+    -----------
+    ctx: :class:`discord.ext.commands.Context`
+        Invocation context, needed to determine guild.
+    string: :class:`String`
+        Optional String dataclass. If provided, return type is set.
+    """
+
     if ctx.guild is not None:
         lang = ctx.bot.config.get(str(ctx.guild.id), {}).get("general", {}).get("language")
     else:
         lang = None
     if lang is not None:
-        string.return_type = ReturnType.SERVER_LANGUAGE
+        if string is not None:
+            string.return_type = ReturnType.SERVER_LANGUAGE
         return lang
     else:
-        string.return_type = ReturnType.DEFAULT_LANGUAGE
+        if string is not None:
+            string.return_type = ReturnType.DEFAULT_LANGUAGE
         return ctx.bot.default_language
+
+
+async def get_exception_strings(ctx: Context, ex_string: ExceptionString) -> ExceptionString:
+    """Gets strings for exception.
+
+    Parameters
+    -----------
+    ctx: :class:`discord.ext.commands.Context`
+        Invocation context, needed to determine guild.
+    ex_string: :class:`ExceptionString`
+        ExceptionString dataclass. Name must be provided.
+    """
+
+    lang = await get_language(ctx)
+    exception = ctx.bot.exception_strings.get(ex_string.name)
+    if exception is not None:
+        ex_string.message = exception.get("message", {}).get(lang)
+        # Get string in default language if nothing found for specified one
+        if ex_string.message is None and lang != ctx.bot.default_language:
+            ex_string.message = exception.get("message", {}).get(ctx.bot.default_language)
+        ex_string.description = exception.get("description", {}).get(lang)
+        # Get string in default language if nothing found for specified one
+        if ex_string.description is None and lang != ctx.bot.default_language:
+            ex_string.description = exception.get("description", {}).get(ctx.bot.default_language)
+    return ex_string
