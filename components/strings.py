@@ -1,167 +1,68 @@
 import json
+from dataclasses import dataclass
+from enum import Enum
+from discord.ext.commands import Context
 
 
-class Strings:
-    def __init__(self, bot_config):
-        self.default_language = bot_config.get("default_language", "en")
-        self.strings = {}
-        self.exception_strings = {}
+class ReturnType(Enum):
+    DEFAULT_LANGUAGE = 0
+    SERVER_LANGUAGE = 1
 
-    async def load_strings(self):
-        failed = []
-        try:
-            with open("values/strings.json", 'r') as json_file:
-                try:
-                    self.strings = json.load(json_file)
-                except ValueError:
-                    failed.append("strings")
-            with open("values/exceptions.json", 'r') as json_file:
-                try:
-                    self.exception_strings = json.load(json_file)
-                except ValueError:
-                    failed.append("exceptions")
-        except FileNotFoundError as exc:
-            failed.append(exc.filename)
-        return failed
 
-    async def get_string(self, ctx, category, name):
-        """Gets string.
+@dataclass
+class String:
+    category: str
+    name: str
+    return_type: ReturnType = None
+    value: str = None
 
-        Parameters
-        -----------
-        ctx: :class:`discord.ext.commands.Context`
-            Invocation context, needed to determine guild.
-        category: :class:`str`
-            Category of string.
-        name: :class:`str`
-            Name of string.
-        """
 
-        lang = await self.get_language(ctx)
-        string = self.strings.get(category, {}).get(name, {}).get(lang)
-        # Get string in default language if nothing found for specified one
-        if string is None and lang != self.default_language:
-            string = self.strings.get(category, {}).get(name, {}).get(self.default_language)
-        return string
+async def load_strings(bot):
+    bot.default_language = bot.config["bot"].get("default_language", "en")
+    failed = []
+    try:
+        with open("values/strings.json", 'r') as json_file:
+            try:
+                bot.strings = json.load(json_file)
+            except ValueError:
+                failed.append("strings")
+        with open("values/exceptions.json", 'r') as json_file:
+            try:
+                bot.exception_strings = json.load(json_file)
+            except ValueError:
+                failed.append("exceptions")
+    except FileNotFoundError as exc:
+        failed.append(exc.filename)
+    return failed
 
-    async def get_exception_strings(self, ctx, exception_name):
-        """Gets strings for exception.
 
-        Parameters
-        -----------
-        ctx: :class:`discord.ext.commands.Context`
-            Invocation context, needed to determine guild.
-        exception_name: :class:`str`
-            Name of exception.
-        """
+async def get_string(ctx: Context, string: String) -> String:
+    """Gets string.
 
-        lang = await self.get_language(ctx)
-        exception = self.exception_strings.get(exception_name)
-        if exception is not None:
-            message = exception.get("message", {}).get(lang)
-            # Get string in default language if nothing found for specified one
-            if message is None and lang != self.default_language:
-                message = exception.get("message", {}).get(self.default_language)
-            description = exception.get("description", {}).get(lang)
-            # Get string in default language if nothing found for specified one
-            if description is None and lang != self.default_language:
-                description = exception.get("description", {}).get(self.default_language)
-            return [message, description]
-        return None
+    Parameters
+    -----------
+    ctx: :class:`Context`
+        Context
+    string: :class:`String`
+        String dataclass
+    """
 
-    async def extract_config_strings(self, ctx, config_object):
-        """Extracts config strings from submitted configuration option dictionary.
+    lang = await get_language(ctx, string)
+    string.value = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang)
+    # Get string in default language if nothing found for specified one
+    if string.value is None and lang != ctx.bot.default_language:
+        string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(ctx.bot.default_language)
+    return string
 
-        Parameters
-        -----------
-        ctx: :class:`discord.ext.commands.Context`
-            Invocation context, needed to determine guild.
-        config_object: :class:`dict`
-            Dictionary to extract strings from.
-        """
 
-        lang = await self.get_language(ctx)
-        name = config_object.get("name", {}).get(lang)
-        # Get string in default language if nothing found for specified on
-        if name is None and lang != self.default_language:
-            name = config_object.get("name", {}).get(self.default_language)
-        description = config_object.get("description", {}).get(lang)
-        # Get string in default language if nothing found for specified on
-        if description is None and lang != self.default_language:
-            description = config_object.get("description", {}).get(self.default_language)
-        if name is not None and description is not None:
-            return [name, description]
-        return None
-
-    async def get_language(self, ctx):
-        if ctx.guild is not None:
-            lang = ctx.bot.config.get(str(ctx.guild.id), {}).get("general", {}).get("language")
-        else:
-            lang = None
-        if lang is not None:
-            return lang
-        else:
-            return self.default_language
-
-    async def insert_into_string(self, strings, values, position=None):
-        """Inserts values into string. Length of values must be one shorter than strings.
-        If same length, position must be speficied. If insertion successful, string is returned, otherwise None.
-
-        Parameters
-        -----------
-        strings: :class:`list`
-            List of strings to insert between.
-        values: :class:`list`
-            List of strings to insert into strings.
-        position: :class:`str`
-            If strings and values are same length,
-            defines whether values should be inserted on the left or right side of strings.
-        """
-
-        if type(strings) is str:
-            strings = [strings]
-        if type(values) is str:
-            values = [values]
-        if len(strings) == len(values) + 1:
-            string_with_values = strings[0]
-            for i, value in enumerate(values):
-                string_with_values += " "
-                string_with_values += value
-                string_with_values += " "
-                string_with_values += strings[i + 1]
-            return string_with_values
-        elif len(strings) == len(values):
-            string_with_values = ""
-            if position == "left":
-                for i, value in enumerate(values):
-                    string_with_values += value
-                    string_with_values += " "
-                    string_with_values += strings[i]
-                    string_with_values += " "
-                return string_with_values
-            elif position == "right":
-                for i, string in enumerate(strings):
-                    string_with_values += string
-                    string_with_values += " "
-                    string_with_values += values[i]
-                    string_with_values += " "
-                return string_with_values
-        return None
-
-    async def append_roles(self, string, roles):
-        """Adds newlines and appends roles to string.
-
-        Parameters
-        -----------
-        string: :class:`str`
-            String to append to.
-        roles: :class:`list`
-            List of strings to append to string.
-        """
-        roles_string = string + "\n\n**"
-        if type(roles) is list:
-            roles_string += '**, **'.join(roles)
-        else:
-            roles_string += roles
-        roles_string += "**"
-        return roles_string
+async def get_language(ctx: Context, string: String) -> str:
+    if ctx.guild is not None:
+        lang = ctx.bot.config.get(str(ctx.guild.id), {}).get("general", {}).get("language")
+    else:
+        lang = None
+    if lang is not None:
+        string.return_type = ReturnType.SERVER_LANGUAGE
+        return lang
+    else:
+        string.return_type = ReturnType.DEFAULT_LANGUAGE
+        return ctx.bot.default_language
