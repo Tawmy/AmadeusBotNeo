@@ -18,6 +18,7 @@ class InsertionPosition(Enum):
 class String:
     category: str
     name: str
+    successful: bool = False
     return_type: ReturnType = None
     string: str = None
     list: list = None
@@ -26,6 +27,7 @@ class String:
 @dataclass
 class ExceptionString:
     name: str
+    successful: bool = False
     return_type: ReturnType = None
     message: str = None
     description: str = None
@@ -90,6 +92,8 @@ async def get_string(ctx: Context, string: String) -> String:
             string.list = returned_string
         else:
             string.string = returned_string
+    if string.list is not None or string.string is not None:
+        string.successful = True
     return string
 
 
@@ -133,6 +137,7 @@ async def get_exception_strings(ctx: Context, ex_string: ExceptionString) -> Exc
     lang = await get_language(ctx)
     exception = ctx.bot.exception_strings.get(ex_string.name)
     if exception is not None:
+        ex_string.successful = True
         ex_string.message = exception.get("message", {}).get(lang)
         # Get string in default language if nothing found for specified one
         if ex_string.message is None and lang != ctx.bot.default_language:
@@ -181,7 +186,9 @@ async def insert_into_string(string_combination: StringCombination) -> StringCom
     """
 
     # TODO allow for insertion without automatic space between combined elements
+
     if len(string_combination.strings_target) == len(string_combination.strings_source) + 1:
+        string_combination.successful = True
         string_combination.string_combined = string_combination.strings_target[0]
         for i, value in enumerate(string_combination.strings_source):
             string_combination.string_combined += " "
@@ -191,12 +198,14 @@ async def insert_into_string(string_combination: StringCombination) -> StringCom
     elif len(string_combination.strings_target) == len(string_combination.strings_source):
         string_combination.string_combined = ""
         if string_combination.position == InsertionPosition.LEFT:
+            string_combination.successful = True
             for i, value in enumerate(string_combination.strings_source):
                 string_combination.string_combined += value
                 string_combination.string_combined += " "
                 string_combination.string_combined += string_combination.strings_target[i]
                 string_combination.string_combined += " "
         elif string_combination.position == InsertionPosition.RIGHT:
+            string_combination.successful = True
             for i, string in enumerate(string_combination.strings_target):
                 string_combination.string_combined += string
                 string_combination.string_combined += " "
