@@ -25,6 +25,13 @@ class ExceptionString:
     description: str = None
 
 
+@dataclass
+class OptionStrings:
+    successful: bool = False
+    name: str = None
+    description: str = None
+
+
 async def load_strings(bot):
     bot.default_language = bot.config["bot"].get("default_language", "en")
     failed = []
@@ -112,3 +119,29 @@ async def get_exception_strings(ctx: Context, ex_string: ExceptionString) -> Exc
         if ex_string.description is None and lang != ctx.bot.default_language:
             ex_string.description = exception.get("description", {}).get(ctx.bot.default_language)
     return ex_string
+
+
+async def extract_config_option_strings(ctx: Context, option_dict: dict) -> OptionStrings:
+    """Extracts config strings from submitted configuration option dictionary.
+
+    Parameters
+    -----------
+    ctx: :class:`discord.ext.commands.Context`
+        Invocation context, needed to determine guild.
+    option_dict: :class:`dict`
+        Dictionary to extract strings from.
+    """
+
+    option_strings = OptionStrings()
+    lang = await get_language(ctx)
+    option_strings.name = option_dict.get("name", {}).get(lang)
+    # Get string in default language if nothing found for specified on
+    if option_strings.name is None and lang != ctx.bot.default_language:
+        option_strings.name = option_dict.get("name", {}).get(ctx.bot.default_language)
+    option_strings.description = option_dict.get("description", {}).get(lang)
+    # Get string in default language if nothing found for specified on
+    if option_strings.description is None and lang != ctx.bot.default_language:
+        option_strings.description = option_dict.get("description", {}).get(ctx.bot.default_language)
+    if option_strings.name is not None and option_strings.description is not None:
+        option_strings.successful = True
+    return option_strings
