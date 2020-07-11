@@ -3,8 +3,9 @@ from enum import Enum
 
 import discord
 from discord.ext import commands
-from components import amadeusMenu, amadeusPrompt, checks, strings as s
-from components.enums import ConfigStatus, AmadeusMenuStatus, AmadeusPromptStatus
+from components import amadeusMenu, amadeusPrompt, checks, strings as s, config
+from components.config import ConfigStatus
+from components.enums import AmadeusMenuStatus, AmadeusPromptStatus
 
 
 class ConfigStep(Enum):
@@ -85,7 +86,7 @@ class Config(commands.Cog):
         menu = amadeusMenu.AmadeusMenu(self.bot, string.string)
         await menu.set_user_specific(True)
         category_names = []
-        for category_key, category_val in self.bot.values.options.items():
+        for category_key, category_val in self.bot.options.items():
             category_names.append(category_key)
             strings = await s.extract_config_option_strings(ctx, category_val)
             await menu.add_option(strings.name, strings.description)
@@ -100,20 +101,20 @@ class Config(commands.Cog):
 
     async def get_category(self, ctx, user_input):
         user_input = user_input.lower()
-        if self.bot.values.options.get(user_input) is not None:
+        if self.bot.options.get(user_input) is not None:
             return user_input
         else:
-            for category_key, category_val in self.bot.values.options.items():
+            for category_key, category_val in self.bot.options.items():
                 if await self.check_value(ctx, category_val, user_input) is True:
                     return category_key
         return None
 
     async def get_option(self, ctx, user_input, category=None):
         user_input = user_input.lower()
-        if category is not None and self.bot.values.options.get(category, {}).get("list", {}).get(user_input) is not None:
+        if category is not None and self.bot.options.get(category, {}).get("list", {}).get(user_input) is not None:
             return category, user_input
 
-        for category_key, category_val in self.bot.values.options.items():
+        for category_key, category_val in self.bot.options.items():
             for option_key, option_val in category_val.get("list").items():
                 if await self.check_value(ctx, option_val, user_input) is True:
                     return category_key, option_key
@@ -134,7 +135,7 @@ class Config(commands.Cog):
 
     async def ask_for_option(self, ctx, input_data):
         # prepare menu
-        category = self.bot.values.options.get(input_data.category)
+        category = self.bot.options.get(input_data.category)
         category_values = await s.extract_config_option_strings(ctx, category)
         menu = amadeusMenu.AmadeusMenu(self.bot, category_values.name)
         await menu.set_description(category_values.description)
@@ -159,7 +160,7 @@ class Config(commands.Cog):
     async def show_info_and_ask_for_value(self, ctx, input_data):
 
         # prepare prompt
-        option_full = self.bot.values.options.get(input_data.category).get("list").get(input_data.option)
+        option_full = self.bot.options.get(input_data.category).get("list").get(input_data.option)
         option_values = await s.extract_config_option_strings(ctx, option_full)
         prompt = amadeusPrompt.AmadeusPrompt(self.bot, option_values.name)
         await prompt.set_description(option_values.description)
@@ -194,16 +195,16 @@ class Config(commands.Cog):
             input_data.values = prompt_data.input
 
     async def __convert_current_value(self, ctx, category, option):
-        current_value = await self.bot.values.get_config(ctx, category, option)
+        current_value = await config.get_config(ctx, category, option)
 
-        converted_input = await self.bot.values.prepare_input(category, option, str(current_value), ctx)
+        converted_input = await config.prepare_input(ctx, category, option, str(current_value))
 
         if converted_input is not None or True:
             return converted_input
         return current_value
 
     async def __add_valid_field(self, ctx, prompt, category, option):
-        field_value = await self.bot.values.get_valid_input(category, option)
+        field_value = await config.get_valid_input(ctx, category, option)
         if field_value is None:
             return prompt
 
@@ -224,11 +225,11 @@ class Config(commands.Cog):
         return prompt
 
     async def __check_value_data(self, ctx, input_data):
-        prepared_input = await self.bot.values.prepare_input(input_data.category, input_data.option, input_data.values, ctx)
+        prepared_input = await config.prepare_input(ctx, input_data.category, input_data.option, input_data.values)
         if isinstance(prepared_input, ConfigStatus):
             await self.__show_config_status(ctx, input_data.message, prepared_input)
             return
-        status = await self.bot.values.set_config(ctx, input_data.category, input_data.option, prepared_input)
+        status = await config.set_config(ctx, input_data.category, input_data.option, prepared_input)
         await self.__show_config_status(ctx, input_data.message, status)
 
     async def __show_config_status(self, ctx, message, error):
