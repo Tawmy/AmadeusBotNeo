@@ -3,7 +3,7 @@ from enum import Enum
 
 import discord
 from discord.ext import commands
-from components import checks, amadeusPrompt, amadeusMenu
+from components import amadeusMenu, amadeusPrompt, checks, strings as s
 from components.enums import ConfigStatus, AmadeusMenuStatus, AmadeusPromptStatus
 
 
@@ -80,14 +80,15 @@ class Config(commands.Cog):
                 return
 
     async def ask_for_category(self, ctx, input_data):
-        title = await self.bot.strings.get_string(ctx, "config", "select_category")
-        menu = amadeusMenu.AmadeusMenu(self.bot, title)
+        string = s.String("config", "select_category")
+        await s.get_string(ctx, string)
+        menu = amadeusMenu.AmadeusMenu(self.bot, string.string)
         await menu.set_user_specific(True)
         category_names = []
         for category_key, category_val in self.bot.values.options.items():
             category_names.append(category_key)
-            strings = await self.bot.strings.extract_config_strings(ctx, category_val)
-            await menu.add_option(strings[0], strings[1])
+            strings = await s.extract_config_option_strings(ctx, category_val)
+            await menu.add_option(strings.name, strings.description)
         menu_data = await menu.show_menu(ctx, 120)
         if menu_data.status is not AmadeusMenuStatus.SELECTED:
             input_data.configStep = ConfigStep.FINISHED
@@ -120,13 +121,13 @@ class Config(commands.Cog):
 
     async def check_value(self, ctx, value, user_input):
         # check for value name in server language
-        lang = await self.bot.strings.get_language(ctx)
+        lang = await s.get_language(ctx)
         option = value.get("name", {}).get(lang)
         if option is not None and user_input == option.lower():
             return True
-        elif lang != self.bot.strings.default_language:
+        elif lang != self.bot.default_language:
             # if value does not have a name in specified language, check against default language
-            option = value.get("name", {}).get(self.bot.strings.default_language)
+            option = value.get("name", {}).get(self.bot.default_language)
             if option is not None and user_input == option.lower():
                 return True
         return None
@@ -134,18 +135,17 @@ class Config(commands.Cog):
     async def ask_for_option(self, ctx, input_data):
         # prepare menu
         category = self.bot.values.options.get(input_data.category)
-        category_values = await self.bot.strings.extract_config_strings(ctx, category)
-        title = category_values[0]
-        menu = amadeusMenu.AmadeusMenu(self.bot, title)
-        await menu.set_description(category_values[1])
+        category_values = await s.extract_config_option_strings(ctx, category)
+        menu = amadeusMenu.AmadeusMenu(self.bot, category_values.name)
+        await menu.set_description(category_values.description)
         await menu.set_user_specific(True)
 
         # add options to menu
         option_names = []
         for option_key, option_val in category["list"].items():
             option_names.append(option_key)
-            strings = await self.bot.strings.extract_config_strings(ctx, option_val)
-            await menu.add_option(strings[0], strings[1])
+            strings = await s.extract_config_option_strings(ctx, option_val)
+            await menu.add_option(strings.name, strings.description)
 
         menu_data = await menu.show_menu(ctx, 120, input_data.message)
         if menu_data.status is not AmadeusMenuStatus.SELECTED:
@@ -160,30 +160,29 @@ class Config(commands.Cog):
 
         # prepare prompt
         option_full = self.bot.values.options.get(input_data.category).get("list").get(input_data.option)
-        option_values = await self.bot.strings.extract_config_strings(ctx, option_full)
-        title = option_values[0]
-        prompt = amadeusPrompt.AmadeusPrompt(self.bot, title)
-        await prompt.set_description(option_values[1])
+        option_values = await s.extract_config_option_strings(ctx, option_full)
+        prompt = amadeusPrompt.AmadeusPrompt(self.bot, option_values.name)
+        await prompt.set_description(option_values.description)
         await prompt.set_user_specific(True)
 
         # add fields to prompt
 
         current_value = await self.__convert_current_value(ctx, input_data.category, input_data.option)
 
-        field_title = await self.bot.strings.get_string(ctx, "config", "current_value")
-        await prompt.add_field(field_title, current_value)
+        string = await s.get_string(ctx, s.String("config", "current_value"))
+        await prompt.add_field(string.string, current_value)
 
-        field_title = await self.bot.strings.get_string(ctx, "config", "default_value")
+        string = await s.get_string(ctx, s.String("config", "default_value"))
         default_value = option_full.get("default")
         if default_value is not None:
-            await prompt.add_field(field_title, default_value)
+            await prompt.add_field(string.string, default_value)
 
         # TODO add field about is_list
 
         prompt = await self.__add_valid_field(ctx, prompt, input_data.category, input_data.option)
 
-        field_title = await self.bot.strings.get_string(ctx, "config", "internal_name")
-        await prompt.add_field(field_title, input_data.option)
+        string = await s.get_string(ctx, s.String("config", "internal_name"))
+        await prompt.add_field(string.string, input_data.option)
 
         prompt_data = await prompt.show_prompt(ctx, 120, input_data.message)
         if prompt_data.status != AmadeusPromptStatus.INPUT_GIVEN:
@@ -208,18 +207,20 @@ class Config(commands.Cog):
         if field_value is None:
             return prompt
 
-        field_title = await self.bot.strings.get_string(ctx, "config", "valid_entries")
+        string = await s.get_string(ctx, s.String("config", "valid_entries"))
         if field_value == "boolean":
             field_value = ["True", "False"]
             field_value = '\n'.join(field_value)
         elif field_value == "channel":
-            field_value = await self.bot.strings.get_string(ctx, "config", "channel_type")
+            string = await s.get_string(ctx, s.String("config", "channel_type"))
+            field_value = string.string
         elif field_value == "role":
-            field_value = await self.bot.strings.get_string(ctx, "config", "role_type")
+            string = await s.get_string(ctx, s.String("config", "role_type"))
+            field_value = string.string
         else:
             field_value = '\n'.join(field_value)
 
-        await prompt.add_field(field_title, field_value, False)
+        await prompt.add_field(string.string, field_value, False)
         return prompt
 
     async def __check_value_data(self, ctx, input_data):
@@ -233,30 +234,35 @@ class Config(commands.Cog):
     async def __show_config_status(self, ctx, message, error):
         embed = discord.Embed()
 
+        string_desc = None
         if error == ConfigStatus.OPTION_DOES_NOT_EXIST:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "OPTION_DOES_NOT_EXIST")
+            string = await s.get_string(ctx, s.String("config_status", "OPTION_DOES_NOT_EXIST"))
         elif error == ConfigStatus.CONVERSION_FAILED:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "CONVERSION_FAILED")
+            string = await s.get_string(ctx, s.String("config_status", "CONVERSION_FAILED"))
         elif error == ConfigStatus.NOT_IN_VALID_LIST:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "NOT_IN_VALID_LIST")
-            embed.description = await self.bot.strings.get_string(ctx, "config_status", "NOT_IN_VALID_LIST_DESC")
+            string = await s.get_string(ctx, s.String("config_status", "NOT_IN_VALID_LIST"))
+            string_desc = await s.get_string(ctx, s.String("config_status", "NOT_IN_VALID_LIST_DESC"))
         elif error == ConfigStatus.UNKNOWN_DATA_TYPE:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "UNKNOWN_DATA_TYPE")
+            string = await s.get_string(ctx, s.String("config_status", "UNKNOWN_DATA_TYPE"))
         elif error == ConfigStatus.NOT_VALID_FOR_DATA_TYPE:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "NOT_VALID_FOR_DATA_TYPE")
-            embed.description = await self.bot.strings.get_string(ctx, "config_status", "NOT_VALID_FOR_DATA_TYPE_DESC")
+            string = await s.get_string(ctx, s.String("config_status", "NOT_VALID_FOR_DATA_TYPE"))
+            string_desc = await s.get_string(ctx, s.String("config_status", "NOT_VALID_FOR_DATA_TYPE_DESC"))
         elif error == ConfigStatus.TEXT_CHANNEL_NOT_FOUND:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND")
-            embed.description = await self.bot.strings.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND_DESC")
+            string = await s.get_string(ctx, s.String("config_status", "TEXT_CHANNEL_NOT_FOUND"))
+            string_desc = await s.get_string(ctx, s.String("config_status", "TEXT_CHANNEL_NOT_FOUND_DESC"))
         elif error == ConfigStatus.ROLE_NOT_FOUND:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "ROLE_NOT_FOUND")
-            embed.description = await self.bot.strings.get_string(ctx, "config_status", "ROLE_NOT_FOUND_DESC")
+            string = await s.get_string(ctx, s.String("config_status", "ROLE_NOT_FOUND"))
+            string_desc = await s.get_string(ctx, s.String("config_status", "ROLE_NOT_FOUND_DESC"))
         elif error == ConfigStatus.SAVE_SUCCESS:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "SAVE_SUCCESS")
+            string = await s.get_string(ctx, s.String("config_status", "SAVE_SUCCESS"))
         elif error == ConfigStatus.SAVE_FAIL:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "SAVE_FAIL")
-        elif error == ConfigStatus.OTHER:
-            embed.title = await self.bot.strings.get_string(ctx, "config_status", "OTHER")
+            string = await s.get_string(ctx, s.String("config_status", "SAVE_FAIL"))
+        else:
+            string = await s.get_string(ctx, s.String("config_status", "OTHER"))
+
+        embed.title = string.string
+        if string_desc is not None and string_desc.successful:
+            embed.description = string_desc.string
 
         # TODO this needs to be more dynamic, like set_footer in amadeusMenu
         # it works for now because config is always user specific
