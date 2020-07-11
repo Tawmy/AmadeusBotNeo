@@ -9,6 +9,7 @@ import asyncpg
 import discord
 from discord.ext import commands
 from components import exceptions as ex, strings, config
+from components.strings import String, StringCombination, ExceptionString, InsertPosition
 
 
 def get_command_prefix(amadeus, message):
@@ -214,44 +215,60 @@ async def prepare_command_error_embed(ctx, message):
         print(message, file=sys.stderr)
         return None
     if hasattr(message.original, "code") and message.original.code == 50013:
-        string_list = await bot.strings.get_string(ctx, "amadeus", "exception_forbidden")
+        string = await strings.get_string(ctx, String("amadeus", "exception_forbidden"))
         values = [ctx.channel.mention, ctx.author.mention, ctx.command.name]
-        embed.description = await bot.strings.insert_into_string(string_list, values)
+        embed.description = await strings.insert_into_string(StringCombination(values, string.list))
     return embed
 
 
 async def prepare_command_error_embed_custom(ctx, message, error_config=None):
     embed = discord.Embed()
-    exc_strings = await bot.strings.get_exception_strings(ctx, type(message).__name__)
-    if exc_strings is None:
+    ex_string = await strings.get_exception_strings(ctx, ExceptionString(type(message).__name__))
+
+    # if exception in strings, use that, otherwise show exception itself
+    if not ex_string.successful:
         embed.title = str(message)
     else:
-        embed.title = exc_strings[0]
+        embed.title = ex_string.message
 
+        # TODO test these after the changes
+        # TODO separate lines for stringcombination
         if isinstance(message, ex.BotNotReady):
-            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name, "left")
+            string_combination = StringCombination([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
+            string_combination = await strings.insert_into_string(string_combination)
+            embed.description = string_combination.string_combined
         elif isinstance(message, ex.CorruptConfig):
-            embed.description = await bot.strings.insert_into_string(exc_strings[1], [bot.app_info.name, ctx.guild.name, bot.app_info.name], "left")
+            string_combination = StringCombination([bot.app_info.name, ctx.guild.name, bot.app_info.name], ex_string.description, InsertPosition.LEFT)
+            string_combination = await strings.insert_into_string(string_combination)
+            embed.description = string_combination.string_combined
         elif isinstance(message, ex.DatabaseNotConnected):
-            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name)
+            string_combination = StringCombination([bot.app_info.name], ex_string.description)
+            string_combination = await strings.insert_into_string(string_combination)
+            embed.description = string_combination.string_combined
         elif isinstance(message, ex.NotGuildOwner):
-            embed.description = await bot.strings.insert_into_string(exc_strings[1], ctx.guild.owner.mention)
+            string_combination = StringCombination([ctx.guild.owner.mention], ex_string.description)
+            string_combination = await strings.insert_into_string(string_combination)
+            embed.description = string_combination.string_combined
         elif isinstance(message, ex.BotNotConfigured):
-            embed.description = await bot.strings.insert_into_string(exc_strings[1], [bot.app_info.name, ctx.guild.owner.mention], "left")
+            string_combination = StringCombination([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
+            string_combination = await strings.insert_into_string(string_combination)
+            embed.description = string_combination.string_combined
         elif isinstance(message, ex.BotDisabled):
-            embed.description = await bot.strings.insert_into_string(exc_strings[1], bot.app_info.name, "left")
+            string_combination = StringCombination([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
+            string_combination = await strings.insert_into_string(string_combination)
+            embed.description = string_combination.string_combined
         elif isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
             if error_config.get("hide_whitelist_role") is not True:
-                embed.description = await bot.strings.append_roles(exc_strings[1], message.roles)
+                embed.description = await strings.append_roles(ex_string.description[0], message.roles)
             else:
-                embed.description = exc_strings[1]
+                embed.description = ex_string.description[0]
         elif isinstance(message, (ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
             if error_config.get("hide_blacklist_role") is not True:
-                embed.description = await bot.strings.append_roles(exc_strings[1], message.role)
+                embed.description = await strings.append_roles(ex_string.description[0], message.role)
             else:
-                embed.description = exc_strings[1]
+                embed.description = ex_string.description[0]
         else:
-            embed.description = exc_strings[1]
+            embed.description = ex_string.description[0]
     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
     return embed
 
