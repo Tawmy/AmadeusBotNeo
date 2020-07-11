@@ -1,6 +1,8 @@
 import json
 from dataclasses import dataclass
 from enum import Enum
+
+from discord.ext import commands
 from discord.ext.commands import Context
 
 
@@ -49,7 +51,7 @@ class StringCombination:
     string_combined: str = None
 
 
-async def load_strings(bot):
+async def load_strings(bot: commands.bot) -> list:
     bot.default_language = bot.config["bot"].get("default_language", "en")
     failed = []
     try:
