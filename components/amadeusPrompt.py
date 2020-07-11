@@ -3,6 +3,7 @@ import discord
 
 from dataclasses import dataclass
 from components.enums import AmadeusPromptStatus
+from components import strings as s
 
 
 @dataclass
@@ -114,17 +115,22 @@ class AmadeusPrompt:
         ctx: :class:`discord.ext.commands.Context`
             The invocation context.
         """
+
         self.__embed = discord.Embed()
-        if self.__result.status == AmadeusPromptStatus.SELECTED:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "INPUT_GIVEN")
+        string = None
+
+        if self.__result.status == AmadeusPromptStatus.INPUT_GIVEN:
+            string = await s.get_string(ctx, s.String("amadeusPromptStatus", "INPUT_GIVEN"))
         elif self.__result.status == AmadeusPromptStatus.TIMEOUT:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "TIMEOUT")
+            string = await s.get_string(ctx, s.String("amadeusPromptStatus", "TIMEOUT"))
         elif self.__result.status == AmadeusPromptStatus.CANCELLED:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "CANCELLED")
+            string = await s.get_string(ctx, s.String("amadeusPromptStatus", "CANCELLED"))
         elif self.__result.status == AmadeusPromptStatus.SHOWN:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "SHOWN")
+            string = await s.get_string(ctx, s.String("amadeusPromptStatus", "SHOWN"))
         elif self.__result.status == AmadeusPromptStatus.NEW:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusPromptStatus", "NEW")
+            string = await s.get_string(ctx, s.String("amadeusPromptStatus", "NEW"))
+        if string is not None:
+            self.__embed.title = string.string
         await self.__prepare_footer(ctx)
         self.__result.message = await self.__result.message.edit(embed=self.__embed)
 

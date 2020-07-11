@@ -3,6 +3,7 @@ import discord
 
 from dataclasses import dataclass
 from components.enums import AmadeusMenuStatus
+from components import strings as s
 
 
 @dataclass
@@ -159,17 +160,22 @@ class AmadeusMenu:
         ctx: :class:`discord.ext.commands.Context`
             The invocation context.
         """
+
         self.__embed = discord.Embed()
+        string = None
+
         if self.__result.status == AmadeusMenuStatus.SELECTED:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "SELECTED")
+            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "SELECTED"))
         elif self.__result.status == AmadeusMenuStatus.TIMEOUT:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "TIMEOUT")
+            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "TIMEOUT"))
         elif self.__result.status == AmadeusMenuStatus.CANCELLED:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "CANCELLED")
+            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "CANCELLED"))
         elif self.__result.status == AmadeusMenuStatus.SHOWN:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "SHOWN")
+            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "SHOWN"))
         elif self.__result.status == AmadeusMenuStatus.NEW:
-            self.__embed.title = await self.bot.strings.get_string(ctx, "amadeusMenuStatus", "NEW")
+            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "NEW"))
+        if string is not None:
+            self.__embed.title = string.string
         await self.__prepare_footer(ctx)
         self.__result.message = await self.__result.message.edit(embed=self.__embed)
 
