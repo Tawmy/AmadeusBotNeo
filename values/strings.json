@@ -158,5 +158,27 @@
             "en": "Option selected",
             "de": "Option ausgewählt"
         }
+    },
+    "amadeusPromptStatus": {
+        "NEW": {
+            "en": "Prompt was created",
+            "de": "Prompt wurde erstellt"
+        },
+        "SHOWN": {
+            "en": "Prompt was shown",
+            "de": "Prompt wurde angezeigt"
+        },
+        "CANCELLED": {
+            "en": "Cancelled by user",
+            "de": "Vom Nutzer abgebrochen"
+        },
+        "TIMEOUT": {
+            "en": "Prompt closed due to timeout",
+            "de": "Prompt wegen Zeitüberschreitung geschlossen"
+        },
+        "INPUT_GIVEN": {
+            "en": "Input given",
+            "de": "Eingabe gegeben"
+        }
     }
 }
