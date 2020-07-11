@@ -9,7 +9,7 @@ class ReturnType(Enum):
     SERVER_LANGUAGE = 1
 
 
-class InsertionPosition(Enum):
+class InsertPosition(Enum):
     LEFT = 0
     RIGHT = 1
 
@@ -30,7 +30,7 @@ class ExceptionString:
     successful: bool = False
     return_type: ReturnType = None
     message: str = None
-    description: str = None
+    description: list = None
 
 
 @dataclass
@@ -44,8 +44,8 @@ class OptionStrings:
 class StringCombination:
     strings_source: list
     strings_target: list
+    position: InsertPosition = None
     successful: bool = False
-    position: InsertionPosition = None
     string_combined: str = None
 
 
@@ -81,17 +81,13 @@ async def get_string(ctx: Context, string: String) -> String:
 
     lang = await get_language(ctx, string)
     returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang)
+    # Get string in default language if nothing found for specified one
+    if string.list is None and string.string is None and lang != ctx.bot.default_language:
+        returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(ctx.bot.default_language)
     if isinstance(returned_string, list):
         string.list = returned_string
     else:
         string.string = returned_string
-    # Get string in default language if nothing found for specified one
-    if string.list is None and string.string is None and lang != ctx.bot.default_language:
-        returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(ctx.bot.default_language)
-        if isinstance(returned_string, list):
-            string.list = returned_string
-        else:
-            string.string = returned_string
     if string.list is not None or string.string is not None:
         string.successful = True
     return string
@@ -142,10 +138,11 @@ async def get_exception_strings(ctx: Context, ex_string: ExceptionString) -> Exc
         # Get string in default language if nothing found for specified one
         if ex_string.message is None and lang != ctx.bot.default_language:
             ex_string.message = exception.get("message", {}).get(ctx.bot.default_language)
-        ex_string.description = exception.get("description", {}).get(lang)
+        description = exception.get("description", {}).get(lang)
         # Get string in default language if nothing found for specified one
-        if ex_string.description is None and lang != ctx.bot.default_language:
-            ex_string.description = exception.get("description", {}).get(ctx.bot.default_language)
+        if description is None and lang != ctx.bot.default_language:
+            description = exception.get("description", {}).get(ctx.bot.default_language)
+        ex_string.description = [description] if isinstance(description, str) else description
     return ex_string
 
 
@@ -197,14 +194,14 @@ async def insert_into_string(string_combination: StringCombination) -> StringCom
             string_combination.string_combined += string_combination.strings_target[i + 1]
     elif len(string_combination.strings_target) == len(string_combination.strings_source):
         string_combination.string_combined = ""
-        if string_combination.position == InsertionPosition.LEFT:
+        if string_combination.position == InsertPosition.LEFT:
             string_combination.successful = True
             for i, value in enumerate(string_combination.strings_source):
                 string_combination.string_combined += value
                 string_combination.string_combined += " "
                 string_combination.string_combined += string_combination.strings_target[i]
                 string_combination.string_combined += " "
-        elif string_combination.position == InsertionPosition.RIGHT:
+        elif string_combination.position == InsertPosition.RIGHT:
             string_combination.successful = True
             for i, string in enumerate(string_combination.strings_target):
                 string_combination.string_combined += string
