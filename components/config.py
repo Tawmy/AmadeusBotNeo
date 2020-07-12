@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from distutils.util import strtobool
 from enum import Enum
 
+import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
@@ -197,6 +198,7 @@ async def set_config(ctx: Context, prepared_input: PreparedInput):
         Prepared input from prepare_input()
     """
 
+    await __convert_to_ids(prepared_input)
     if len(prepared_input.list) == 1:
         value = prepared_input.list[0]
     else:
@@ -206,6 +208,12 @@ async def set_config(ctx: Context, prepared_input: PreparedInput):
         await save_config(ctx, prepared_input)
     else:
         prepared_input.status = ConfigStatus.OPTION_DOES_NOT_EXIST
+
+
+async def __convert_to_ids(prepared_input: PreparedInput):
+    for i, item in enumerate(prepared_input.list):
+        if isinstance(item, (discord.TextChannel, discord.VoiceChannel, discord.Role)):
+            prepared_input.list[i] = item.id
 
 
 async def prepare_input(ctx: Context, category: str, name: str, user_input) -> PreparedInput:
