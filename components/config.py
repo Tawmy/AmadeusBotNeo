@@ -224,14 +224,13 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
     """
 
     prepared_input = PreparedInput(category, name)
-    option = ctx.bot.options.get(category, {}).get("list", {}).get(name, {})
 
     # shlex to split string into multiple elements while keeping bracket terms intact
     if isinstance(user_input, str):
         user_input = shlex.split(user_input)
     elif isinstance(user_input, tuple):
         user_input = list(user_input)
-    elif isinstance(user_input, bool):
+    elif isinstance(user_input, (bool, int)):
         user_input = [str(user_input)]
 
     valid_input = await get_valid_input(ctx, category, name)
@@ -245,18 +244,6 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
                 except ValueError:
                     prepared_input.status = ConfigStatus.NOT_VALID_FOR_DATA_TYPE
                     return prepared_input
-            elif valid_input.datatype == Datatype.ROLE:
-                try:
-                    prepared_input.list.append(await commands.RoleConverter().convert(ctx, user_input))
-                except commands.CommandError:
-                    prepared_input.status = ConfigStatus.ROLE_NOT_FOUND
-                    return prepared_input
-            elif valid_input.datatype == Datatype.TEXT_CHANNEL:
-                try:
-                    prepared_input.list.append(await commands.TextChannelConverter().convert(ctx, user_input))
-                except commands.CommandError:
-                    prepared_input.status = ConfigStatus.TEXT_CHANNEL_NOT_FOUND
-                    return prepared_input
         elif valid_input.input_type == InputType.ANY:
             if valid_input.datatype == Datatype.STRING:
                 # TODO check if this needs str converter
@@ -267,6 +254,19 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
             else:
                 prepared_input.status = ConfigStatus.NOT_IN_VALID_LIST
                 return prepared_input
+        elif valid_input.input_type == InputType.TO_BE_CONVERTED:
+            if valid_input.datatype == Datatype.ROLE:
+                try:
+                    prepared_input.list.append(await commands.RoleConverter().convert(ctx, user_input_item))
+                except commands.CommandError:
+                    prepared_input.status = ConfigStatus.ROLE_NOT_FOUND
+                    return prepared_input
+            elif valid_input.datatype == Datatype.TEXT_CHANNEL:
+                try:
+                    prepared_input.list.append(await commands.TextChannelConverter().convert(ctx, user_input_item))
+                except commands.CommandError:
+                    prepared_input.status = ConfigStatus.TEXT_CHANNEL_NOT_FOUND
+                    return prepared_input
     prepared_input.status = ConfigStatus.PREPARATION_SUCCESSFUL
     return prepared_input
 
