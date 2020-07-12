@@ -30,7 +30,6 @@ with open("config/bot.json", 'r') as file:
         print("Configuration file loaded successfully")
     except ValueError as e:
         raise SystemExit(e)
-bot.values = config.Config(bot.config["bot"])
 
 
 @bot.check
@@ -401,7 +400,7 @@ async def load_extensions():
 
 async def load_strings_and_values():
     failed_strings = await strings.load_strings(bot)
-    failed_strings.extend(await bot.values.load_values())
+    failed_strings.extend(await config.load_values(bot))
     return failed_strings
 
 

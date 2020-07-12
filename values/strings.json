@@ -69,14 +69,6 @@
         "internal_name": {
             "en": "Internal name",
             "de": "Interner Name"
-        },
-        "role_type": {
-            "en": "Role (Name, ID, or mention)",
-            "de": "Rolle (Name, ID, oder Ping)"
-        },
-        "channel_type": {
-            "en": "Text Channel (Name, ID, or mention)",
-            "de": "Textkanal (Name, ID, oder Ping)"
         }
     },
     "config_status": {
@@ -88,11 +80,11 @@
             "en": "",
             "de": ""
         },
-        "NOT_IN_VALID_LIST": {
+        "NOT_VALID_FOR_DATA_TYPE": {
             "en": "Invalid input",
             "de": "Ungültige Eingabe"
         },
-        "NOT_IN_VALID_LIST_DESC": {
+        "NOT_VALID_FOR_DATA_TYPE_DESC": {
             "en": "Your input is not matching the type this configuration option accepts. All allowed values are listed when you check on the configuration option.",
             "de": "Der Input stimmt nicht mit den Vorgaben der Konfigurationsoption überein. Alle erlaubten Werte werden beim Aufruf der Konfigurationsoption gelistet."
         },
@@ -100,11 +92,11 @@
             "en": "",
             "de": ""
         },
-        "NOT_VALID_FOR_DATA_TYPE": {
+        "NOT_IN_VALID_LIST": {
             "en": "Invalid input",
             "de": "Ungültige Eingabe"
         },
-        "NOT_VALID_FOR_DATA_TYPE_DESC": {
+        "NOT_IN_VALID_LIST_DESC": {
             "en": "This data type only accepts specific values. All allowed values are listed when you check on the configuration option.",
             "de": "Dieser Datentyp akzeptiert nur bestimmte Werde. Alle erlaubten Werte werden beim Aufruf der Konfigurationsoption gelistet."
         },

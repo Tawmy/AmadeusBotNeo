@@ -1,0 +1,54 @@
+{
+    "boolean": {
+        "name": {
+            "en": "Boolean",
+            "de": "Boolean"
+        },
+        "name_descriptive": {
+            "en": "Boolean",
+            "de": "Boolean"
+        },
+        "valid": [true, false]
+    },
+    "string": {
+        "name": {
+            "en": "String",
+            "de": "String"
+        },
+        "name_descriptive": {
+            "en": "String (text)",
+            "de": "String (Text)"
+        }
+    },
+    "integer": {
+        "name": {
+            "en": "Integer",
+            "de": "Integer"
+        },
+        "name_descriptive": {
+            "en": "Integer (whole number)",
+            "de": "Integer (Ganze Zahl)"
+        }
+    },
+    "role": {
+        "name": {
+            "en": "Role",
+            "de": "Rolle"
+        },
+        "name_descriptive": {
+            "en": "Role (Name, ID, or mention)",
+            "de": "Rolle (Name, ID, oder Ping)"
+        }
+    },
+    "channel": {
+        "name": {
+            "en": "Text Channel",
+            "de": "Textkanal"
+        },
+        "name_descriptive": {
+            "en": "Text Channel (Name, ID, or mention)",
+            "de": "Textkanal (Name, ID, oder Ping)"
+        }
+    }
+
+}

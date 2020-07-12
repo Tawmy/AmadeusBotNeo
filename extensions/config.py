@@ -196,67 +196,57 @@ class Config(commands.Cog):
 
     async def __convert_current_value(self, ctx, category, option):
         current_value = await config.get_config(ctx, category, option)
-
-        converted_input = await config.prepare_input(ctx, category, option, str(current_value))
-
-        if converted_input is not None or True:
-            return converted_input
-        return current_value
+        converted_input = await config.prepare_input(ctx, category, option, current_value.value)
+        if len(converted_input.list) == 1:
+            return converted_input.list[0]
+        return converted_input.list
 
     async def __add_valid_field(self, ctx, prompt, category, option):
-        field_value = await config.get_valid_input(ctx, category, option)
-        if field_value is None:
-            return prompt
+        valid_input = await config.get_valid_input(ctx, category, option)
 
-        string = await s.get_string(ctx, s.String("config", "valid_entries"))
-        if field_value == "boolean":
-            field_value = ["True", "False"]
-            field_value = '\n'.join(field_value)
-        elif field_value == "channel":
-            string = await s.get_string(ctx, s.String("config", "channel_type"))
-            field_value = string.string
-        elif field_value == "role":
-            string = await s.get_string(ctx, s.String("config", "role_type"))
-            field_value = string.string
-        else:
-            field_value = '\n'.join(field_value)
+        title = await s.get_string(ctx, s.String("config", "valid_entries"))
+        for i, item in enumerate(valid_input.valid_list):
+            if not isinstance(item, str):
+                valid_input.valid_list[i] = str(item)
+        value = '\n'.join(valid_input.valid_list)
 
-        await prompt.add_field(string.string, field_value, False)
+        await prompt.add_field(title.string, value, False)
         return prompt
 
     async def __check_value_data(self, ctx, input_data):
         prepared_input = await config.prepare_input(ctx, input_data.category, input_data.option, input_data.values)
-        if isinstance(prepared_input, ConfigStatus):
-            await self.__show_config_status(ctx, input_data.message, prepared_input)
+        # if isinstance(prepared_input, ConfigStatus):
+        if prepared_input.status != ConfigStatus.PREPARATION_SUCCESSFUL:
+            await self.__show_config_status(ctx, input_data.message, prepared_input.status)
             return
-        status = await config.set_config(ctx, input_data.category, input_data.option, prepared_input)
-        await self.__show_config_status(ctx, input_data.message, status)
+        await config.set_config(ctx, prepared_input)
+        await self.__show_config_status(ctx, input_data.message, prepared_input.status)
 
-    async def __show_config_status(self, ctx, message, error):
+    async def __show_config_status(self, ctx, message, status):
         embed = discord.Embed()
 
         string_desc = None
-        if error == ConfigStatus.OPTION_DOES_NOT_EXIST:
+        if status == ConfigStatus.OPTION_DOES_NOT_EXIST:
             string = await s.get_string(ctx, s.String("config_status", "OPTION_DOES_NOT_EXIST"))
-        elif error == ConfigStatus.CONVERSION_FAILED:
+        elif status == ConfigStatus.CONVERSION_FAILED:
             string = await s.get_string(ctx, s.String("config_status", "CONVERSION_FAILED"))
-        elif error == ConfigStatus.NOT_IN_VALID_LIST:
+        elif status == ConfigStatus.NOT_IN_VALID_LIST:
             string = await s.get_string(ctx, s.String("config_status", "NOT_IN_VALID_LIST"))
             string_desc = await s.get_string(ctx, s.String("config_status", "NOT_IN_VALID_LIST_DESC"))
-        elif error == ConfigStatus.UNKNOWN_DATA_TYPE:
+        elif status == ConfigStatus.UNKNOWN_DATA_TYPE:
             string = await s.get_string(ctx, s.String("config_status", "UNKNOWN_DATA_TYPE"))
-        elif error == ConfigStatus.NOT_VALID_FOR_DATA_TYPE:
+        elif status == ConfigStatus.NOT_VALID_FOR_DATA_TYPE:
             string = await s.get_string(ctx, s.String("config_status", "NOT_VALID_FOR_DATA_TYPE"))
             string_desc = await s.get_string(ctx, s.String("config_status", "NOT_VALID_FOR_DATA_TYPE_DESC"))
-        elif error == ConfigStatus.TEXT_CHANNEL_NOT_FOUND:
+        elif status == ConfigStatus.TEXT_CHANNEL_NOT_FOUND:
             string = await s.get_string(ctx, s.String("config_status", "TEXT_CHANNEL_NOT_FOUND"))
             string_desc = await s.get_string(ctx, s.String("config_status", "TEXT_CHANNEL_NOT_FOUND_DESC"))
-        elif error == ConfigStatus.ROLE_NOT_FOUND:
+        elif status == ConfigStatus.ROLE_NOT_FOUND:
             string = await s.get_string(ctx, s.String("config_status", "ROLE_NOT_FOUND"))
             string_desc = await s.get_string(ctx, s.String("config_status", "ROLE_NOT_FOUND_DESC"))
-        elif error == ConfigStatus.SAVE_SUCCESS:
+        elif status == ConfigStatus.SAVE_SUCCESS:
             string = await s.get_string(ctx, s.String("config_status", "SAVE_SUCCESS"))
-        elif error == ConfigStatus.SAVE_FAIL:
+        elif status == ConfigStatus.SAVE_FAIL:
             string = await s.get_string(ctx, s.String("config_status", "SAVE_FAIL"))
         else:
             string = await s.get_string(ctx, s.String("config_status", "OTHER"))

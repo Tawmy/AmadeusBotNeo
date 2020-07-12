@@ -84,7 +84,7 @@ async def get_string(ctx: Context, string: String) -> String:
     lang = await get_language(ctx, string)
     returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang)
     # Get string in default language if nothing found for specified one
-    if string.list is None and string.string is None and lang != ctx.bot.default_language:
+    if returned_string is None and lang != ctx.bot.default_language:
         returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(ctx.bot.default_language)
     if isinstance(returned_string, list):
         string.list = returned_string

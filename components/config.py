@@ -1,10 +1,14 @@
 import json
 import asyncio
 import shlex
+from dataclasses import dataclass
+from distutils.util import strtobool
 from enum import Enum
 
 from discord.ext import commands
 from discord.ext.commands import Context
+
+from components import strings as s
 
 
 class ConfigStatus(Enum):
@@ -16,11 +20,65 @@ class ConfigStatus(Enum):
     NOT_VALID_FOR_DATA_TYPE = 5
     TEXT_CHANNEL_NOT_FOUND = 6
     ROLE_NOT_FOUND = 7
-    SAVE_SUCCESS = 10
-    SAVE_FAIL = 11
+    PREPARATION_SUCCESSFUL = 10
+    SAVE_SUCCESS = 11
+    SAVE_FAIL = 12
 
 
-async def load_values(bot: commands.bot):
+class ReturnType(Enum):
+    DEFAULT_VALUE = 0
+    SERVER_VALUE = 1
+
+
+class Datatype(Enum):
+    CUSTOM = 0
+    BOOLEAN = 1
+    STRING = 2
+    INTEGER = 3
+    ROLE = 4
+    TEXT_CHANNEL = 5
+    VOICE_CHANNEL = 6
+
+
+class InputType(Enum):
+    ANY = 0
+    AS_DATATYPE = 1
+    AS_VALID_LIST = 2
+    TO_BE_CONVERTED = 3
+
+
+@dataclass
+class Config:
+    category: str
+    name: str
+    value: str = None
+    return_type: ReturnType = None
+
+
+@dataclass
+class ValidInput:
+    datatype: Datatype = None
+    valid_list: list = None
+    input_type: InputType = InputType.AS_DATATYPE
+
+
+@dataclass
+class PreparedInput:
+    category: str
+    name: str
+    list: list = None
+    status: ConfigStatus = None
+
+
+async def load_values(bot: commands.bot) -> list:
+    """Loads options and limits values. Returns list with filenames that failed.
+
+    Parameters
+    -----------
+    bot: :class:`discord.ext.commands.bot`
+        The bot object.
+    """
+
     failed = []
     try:
         with open("values/options.json", 'r') as json_file:
@@ -28,6 +86,9 @@ async def load_values(bot: commands.bot):
                 bot.options = json.load(json_file)
             except ValueError:
                 failed.append("options")
+    except FileNotFoundError as exc:
+        failed.append(exc.filename)
+    try:
         with open("values/limits.json", 'r') as json_file:
             try:
                 bot.limits = json.load(json_file)
@@ -35,10 +96,18 @@ async def load_values(bot: commands.bot):
                 failed.append("limits")
     except FileNotFoundError as exc:
         failed.append(exc.filename)
+    try:
+        with open("values/datatypes.json", 'r') as json_file:
+            try:
+                bot.datatypes = json.load(json_file)
+            except ValueError:
+                failed.append("datatypes")
+    except FileNotFoundError as exc:
+        failed.append(exc.filename)
     return failed
 
 
-async def get_config(ctx: Context, category: str, name: str) -> str:
+async def get_config(ctx: Context, category: str, name: str) -> Config:
     """Returns value of config item specified. Returns default value if not set.
 
     Parameters
@@ -51,24 +120,28 @@ async def get_config(ctx: Context, category: str, name: str) -> str:
         Name of the config option.
     """
 
+    config = Config(category, name)
     config_value = ctx.bot.config.get(str(ctx.guild.id), {}).get(category, {}).get(name)
     if config_value is None:
         # TODO what if no default value
         default_value = await __get_default_config_value(ctx, category, name)
         # Save default value to config
         loop = asyncio.get_event_loop()
-        loop.create_task(set_config(ctx, category, name, default_value))
-        return default_value
-    return config_value
+        loop.create_task(set_config(ctx, PreparedInput(category, name, [default_value])))
+        config.value = default_value
+        config.return_type = ReturnType.DEFAULT_VALUE
+    else:
+        config.value = config_value
+        config.return_type = ReturnType.SERVER_VALUE
+    return config
 
 
 async def __get_default_config_value(ctx: Context, category: str, name: str) -> str:
     return ctx.bot.options.get(category, {}).get("list", {}).get(name, {}).get("default")
 
 
-async def get_valid_input(ctx: Context, category: str, name: str):
+async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
     """Returns valid input for given config option.
-    Returns None if input can be any string.
 
     Parameters
     -----------
@@ -80,18 +153,39 @@ async def get_valid_input(ctx: Context, category: str, name: str):
         Name of the config option.
     """
 
+    valid_input = ValidInput()
     option = ctx.bot.options.get(category, {}).get("list", {}).get(name, {})
-    valid_list = option.get("valid")
-    if valid_list is not None:
-        return valid_list
     data_type = option.get("data_type")
+    valid_list = option.get("valid")
 
-    if data_type in ["boolean", "channel", "role"]:
-        return data_type
-    return None
+    datatype_dict = ctx.bot.datatypes.get(data_type)
+
+    if valid_list is not None:
+        valid_input.input_type = InputType.AS_VALID_LIST
+        valid_input.valid_list = valid_list
+
+    if data_type == "boolean":
+        valid_input.datatype = Datatype.BOOLEAN
+        valid_input.valid_list = datatype_dict.get("valid")
+    if data_type == "string":
+        valid_input.datatype = Datatype.STRING
+        if valid_input.input_type != InputType.AS_VALID_LIST:
+            valid_input.input_type = InputType.ANY
+    if data_type == "role":
+        valid_input.datatype = Datatype.ROLE
+        valid_input.input_type = InputType.TO_BE_CONVERTED
+        lang = await s.get_language(ctx)
+        valid_input.valid_list = [datatype_dict.get("name_descriptive", {}).get(lang)]
+    if data_type == "channel":
+        valid_input.datatype = Datatype.TEXT_CHANNEL
+        valid_input.input_type = InputType.TO_BE_CONVERTED
+        lang = await s.get_language(ctx)
+        valid_input.valid_list = [datatype_dict.get("name_descriptive", {}).get(lang)]
+
+    return valid_input
 
 
-async def set_config(ctx: Context, category: str, name: str, value: str):
+async def set_config(ctx: Context, prepared_input: PreparedInput):
     """Sets config value. First checks if it exists at all, then sets it and saves to config file.
     Please run the input through prepare_input first.
     Returns True if set, false if not.
@@ -100,21 +194,22 @@ async def set_config(ctx: Context, category: str, name: str, value: str):
     -----------
     ctx: :class:`discord.ext.commands.Context`
         The invocation context.
-    category: :class:`str`
-        Category of the config option.
-    name: :class:`str`
-        Name of the config option.
-    value: :class:`str`
-        Value to set
+    prepared_input: :class:`PreparedInput`
+        Prepared input from prepare_input()
     """
 
-    if ctx.bot.options.get(category, {}).get("list", {}).get(name) is not None:
-        ctx.bot.config[str(ctx.guild.id)].setdefault(category, {})[name] = value
-        return await save_config(ctx)
-    return ConfigStatus.OPTION_DOES_NOT_EXIST
+    if len(prepared_input.list) == 1:
+        value = prepared_input.list[0]
+    else:
+        value = prepared_input.list
+    if ctx.bot.options.get(prepared_input.category, {}).get("list", {}).get(prepared_input.name) is not None:
+        ctx.bot.config[str(ctx.guild.id)].setdefault(prepared_input.category, {})[prepared_input.name] = value
+        await save_config(ctx, prepared_input)
+    else:
+        prepared_input.status = ConfigStatus.OPTION_DOES_NOT_EXIST
 
 
-async def prepare_input(ctx: Context, category: str, name: str, user_input: str):
+async def prepare_input(ctx: Context, category: str, name: str, user_input) -> PreparedInput:
     """Checks if input matches type specified in options list. Runs input converter when ctx specified.
     Returns converted input if data type (and input) conversion was/were successful.
 
@@ -126,10 +221,11 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input: str)
         Category of the config option.
     name: :class:`str`
         Name of the config option.
-    user_input: :class:`str`
-        Input the user provided.
+    user_input:
+        Input the user provided. Will be converted to str.
     """
 
+    prepared_input = PreparedInput(category, name)
     option = ctx.bot.options.get(category, {}).get("list", {}).get(name, {})
 
     # shlex to split string into multiple elements while keeping bracket terms intact
@@ -137,65 +233,55 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input: str)
         user_input = shlex.split(user_input)
     elif isinstance(user_input, tuple):
         user_input = list(user_input)
+    elif isinstance(user_input, bool):
+        user_input = [str(user_input)]
 
-    if option is not None:
-        if option.get("is_list"):
-            for i, item in enumerate(user_input):
-                checked_input = await __check_and_convert_input(option, item, ctx)
-                if isinstance(checked_input, ConfigStatus):
-                    return checked_input
-                else:
-                    user_input[i] = checked_input
-            return user_input
-        else:
-            return await __check_and_convert_input(option, user_input[0], ctx)
-    return ConfigStatus.OPTION_DOES_NOT_EXIST
+    valid_input = await get_valid_input(ctx, category, name)
 
-
-async def __check_and_convert_input(option: str, user_input: str, ctx: Context):
-    data_type = option.get("data_type")
-    valid_list = option.get("valid")
-    if valid_list is not None and user_input not in valid_list:
-        return ConfigStatus.NOT_IN_VALID_LIST
-    user_input_dt = await __convert_data_type(data_type, user_input)
-    if isinstance(user_input_dt, ConfigStatus):
-        converted_input = await __convert_input(ctx, data_type, user_input_dt)
-        return converted_input
-    else:
-        return user_input_dt
-
-
-async def __convert_data_type(data_type: str, user_input: str):
-    if data_type == "boolean":
-        if user_input.lower() in ["true", "yes", "1"]:
-            return True
-        elif user_input.lower() in ["false", "no", "0"]:
-            return False
-        return ConfigStatus.NOT_VALID_FOR_DATA_TYPE
-    return user_input
-
-
-async def __convert_input(ctx: Context, data_type: str, user_input: str):
-    if data_type == "channel":
-        try:
-            return await commands.TextChannelConverter().convert(ctx, user_input)
-        except commands.CommandError:
-            return ConfigStatus.TEXT_CHANNEL_NOT_FOUND
-    elif data_type == "role":
-        try:
-            return await commands.RoleConverter().convert(ctx, user_input)
-        except commands.CommandError:
-            return ConfigStatus.ROLE_NOT_FOUND
-    return user_input
+    prepared_input.list = []
+    for user_input_item in user_input:
+        if valid_input.input_type == InputType.AS_DATATYPE:
+            if valid_input.datatype == Datatype.BOOLEAN:
+                try:
+                    prepared_input.list.append(strtobool(user_input_item))
+                except ValueError:
+                    prepared_input.status = ConfigStatus.NOT_VALID_FOR_DATA_TYPE
+                    return prepared_input
+            elif valid_input.datatype == Datatype.ROLE:
+                try:
+                    prepared_input.list.append(await commands.RoleConverter().convert(ctx, user_input))
+                except commands.CommandError:
+                    prepared_input.status = ConfigStatus.ROLE_NOT_FOUND
+                    return prepared_input
+            elif valid_input.datatype == Datatype.TEXT_CHANNEL:
+                try:
+                    prepared_input.list.append(await commands.TextChannelConverter().convert(ctx, user_input))
+                except commands.CommandError:
+                    prepared_input.status = ConfigStatus.TEXT_CHANNEL_NOT_FOUND
+                    return prepared_input
+        elif valid_input.input_type == InputType.ANY:
+            if valid_input.datatype == Datatype.STRING:
+                # TODO check if this needs str converter
+                prepared_input.list.append(user_input_item)
+        elif valid_input.input_type == InputType.AS_VALID_LIST:
+            if user_input_item in valid_input.valid_list:
+                prepared_input.list.append(user_input_item)
+            else:
+                prepared_input.status = ConfigStatus.NOT_IN_VALID_LIST
+                return prepared_input
+    prepared_input.status = ConfigStatus.PREPARATION_SUCCESSFUL
+    return prepared_input
 
 
-async def save_config(ctx: Context):
+async def save_config(ctx: Context, prepared_input: PreparedInput):
     """Saves config of guild from ctx to json file
 
     Parameters
     -----------
     ctx: :class:`discord.ext.commands.Context`
         Invocation context, needed to determine guild.
+    prepared_input: :class:`PreparedInput`
+        Prepared input from prepare_input()
     """
     if ctx.guild is not None:
         json_file = 'config/' + str(ctx.guild.id) + '.json'
@@ -205,9 +291,10 @@ async def save_config(ctx: Context):
             with open(json_file, 'w') as file:
                 try:
                     json.dump(ctx.bot.config[str(ctx.guild.id)], file, indent=4)
-                    return ConfigStatus.SAVE_SUCCESS
+                    prepared_input.status = ConfigStatus.SAVE_SUCCESS
+                    return
                 except Exception as e:
                     print(e)
             retries -= 1
             await asyncio.sleep(1)
-    return ConfigStatus.SAVE_FAIL
+    prepared_input.status = ConfigStatus.SAVE_FAIL
