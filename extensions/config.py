@@ -4,7 +4,7 @@ from enum import Enum
 import discord
 from discord.ext import commands
 from components import amadeusMenu, amadeusPrompt, checks, strings as s, config
-from components.config import ConfigStatus
+from components.config import ConfigStatus, InputType
 from components.enums import AmadeusMenuStatus, AmadeusPromptStatus
 
 
@@ -204,12 +204,14 @@ class Config(commands.Cog):
     async def __add_valid_field(self, ctx, prompt, category, option):
         valid_input = await config.get_valid_input(ctx, category, option)
 
+        if valid_input.input_type == InputType.ANY:
+            return prompt
+
         title = await s.get_string(ctx, s.String("config", "valid_entries"))
         for i, item in enumerate(valid_input.valid_list):
             if not isinstance(item, str):
                 valid_input.valid_list[i] = str(item)
         value = '\n'.join(valid_input.valid_list)
-
         await prompt.add_field(title.string, value, False)
         return prompt
 

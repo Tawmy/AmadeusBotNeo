@@ -188,7 +188,6 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
 async def set_config(ctx: Context, prepared_input: PreparedInput):
     """Sets config value. First checks if it exists at all, then sets it and saves to config file.
     Please run the input through prepare_input first.
-    Returns True if set, false if not.
 
     Parameters
     -----------
@@ -211,7 +210,6 @@ async def set_config(ctx: Context, prepared_input: PreparedInput):
 
 async def prepare_input(ctx: Context, category: str, name: str, user_input) -> PreparedInput:
     """Checks if input matches type specified in options list. Runs input converter when ctx specified.
-    Returns converted input if data type (and input) conversion was/were successful.
 
     Parameters
     -----------
@@ -243,7 +241,7 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
         if valid_input.input_type == InputType.AS_DATATYPE:
             if valid_input.datatype == Datatype.BOOLEAN:
                 try:
-                    prepared_input.list.append(strtobool(user_input_item))
+                    prepared_input.list.append(bool(strtobool(user_input_item)))
                 except ValueError:
                     prepared_input.status = ConfigStatus.NOT_VALID_FOR_DATA_TYPE
                     return prepared_input
