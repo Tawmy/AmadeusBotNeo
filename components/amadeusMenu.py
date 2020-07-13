@@ -14,6 +14,12 @@ class AmadeusMenuResult:
     reaction_emoji: str = None
 
 
+@dataclass
+class Option:
+    name: str
+    value: str
+
+
 class AmadeusMenu:
     def __init__(self, bot, prompt):
         self.bot = bot
@@ -25,40 +31,18 @@ class AmadeusMenu:
         self.__embed = discord.Embed()
         self.__embed.title = prompt
 
+        self.__options = []
         self.__reaction_emoji = []
 
         self.__result = AmadeusMenuResult()
 
-    async def set_options(self, names, descriptions=None):
-        """Sets the options of the amadeusMenu.
+    async def add_option(self, name: str, description=None):
+        if name is not None:
+            self.__options.append(Option(name, description))
 
-        Parameters
-        -----------
-        names: :class:`list`
-            A list of strings with options.
-        descriptions: :class:`list`
-            An optional list of descriptions for the menu options. Must be same length as names.
-        """
-
-        self.__embed.clear_fields()
-        self.__reaction_emoji = []
-        for i, name in enumerate(names):
-            name = self.bot.config["bot"]["menu_emoji"][i] + " " + name
-            if descriptions is not None and descriptions[i] is not None:
-                value = descriptions[i]
-            else:
-                value = "\u200b"
-            self.__embed.add_field(name=name, value=value)
-            self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][i])
-
-    async def add_option(self, name, description=None):
-        name = self.bot.config["bot"]["menu_emoji"][len(self.__embed.fields)] + " " + name
-        if description is not None:
-            value = description
-        else:
-            value = "\u200b"
-        self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][len(self.__embed.fields)])
-        self.__embed.add_field(name=name, value=value)
+    async def add_field(self, name: str, description: str, inline=True):
+        if name is not None and description is not None:
+            self.__embed.add_field(name=name, value=description, inline=inline)
 
     async def set_author(self, name, url="", icon_url=""):
         """Sets the author of the amadeusMenu.
@@ -143,8 +127,9 @@ class AmadeusMenu:
             Optional message. This will be edited if specified.
         """
 
+        await self.__add_options(ctx)
         await self.__prepare_footer(ctx)
-        if len(self.__embed.fields) == 0 and len(self.__reaction_emoji) == 0:
+        if len(self.__options) == 0:
             return None
         else:
             if message is None:
@@ -199,6 +184,21 @@ class AmadeusMenu:
             name = name + self.__footer_text
         if len(name) > 0:
             self.__embed.set_footer(text=name, icon_url=avatar)
+
+    async def __add_options(self, ctx):
+        if len(self.__embed.fields) > 0:
+            string = await s.get_string(ctx, s.String("amadeusMenu", "options"))
+            value = "***__" + string.string + "__***"
+            self.__embed.add_field(name="\u200b", value=value, inline=False)
+
+        for i, option in enumerate(self.__options):
+            name = self.bot.config["bot"]["menu_emoji"][i] + " " + option.name
+            if option.value is not None:
+                value = option.value
+            else:
+                value = "\u200b"
+            self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][i])
+            self.__embed.add_field(name=name, value=value)
 
     async def __add_reactions(self, message):
         for emoji in self.__reaction_emoji:

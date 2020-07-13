@@ -13,7 +13,10 @@ class ConfigStep(Enum):
     CATEGORY = 1
     OPTION = 2
     CATEGORY_OPTION = 3
-    CATEGORY_OPTION_VALUE = 4
+    CATEGORY_OPTION_CONFIRMED = 4
+    CATEGORY_OPTION_CANCELLED = 5
+    CATEGORY_OPTION_VALUE = 6
+    CATEGORY_OPTION_SETDEFAULT = 7
     FINISHED = 10
 
 
@@ -76,8 +79,13 @@ class Config(commands.Cog):
             elif input_data.configStep == ConfigStep.CATEGORY:
                 await self.ask_for_option(ctx, input_data)
             elif input_data.configStep in [ConfigStep.OPTION, ConfigStep.CATEGORY_OPTION]:
-                await self.show_info_and_ask_for_value(ctx, input_data)
-            elif input_data.configStep == ConfigStep.CATEGORY_OPTION_VALUE:
+                await self.show_info(ctx, input_data)
+            elif input_data.configStep == ConfigStep.CATEGORY_OPTION_CONFIRMED:
+                await self.ask_for_value(ctx, input_data)
+            elif input_data.configStep == ConfigStep.CATEGORY_OPTION_SETDEFAULT:
+                # TODO
+                await self.set_default_value()
+            elif input_data.configStep in [ConfigStep.CATEGORY_OPTION_VALUE, ConfigStep.CATEGORY_OPTION_CANCELLED]:
                 return
 
     async def ask_for_category(self, ctx, input_data):
@@ -157,33 +165,64 @@ class Config(commands.Cog):
             input_data.message = menu_data.message
             input_data.option = option_names[menu_data.reaction_index]
 
-    async def show_info_and_ask_for_value(self, ctx, input_data):
-
-        # prepare prompt
+    async def show_info(self, ctx, input_data):
+        # prepare menu
         option_full = self.bot.options.get(input_data.category).get("list").get(input_data.option)
         option_values = await s.extract_config_option_strings(ctx, option_full)
-        prompt = amadeusPrompt.AmadeusPrompt(self.bot, option_values.name)
-        await prompt.set_description(option_values.description)
-        await prompt.set_user_specific(True)
+        menu = amadeusMenu.AmadeusMenu(self.bot, option_values.name)
+        await menu.set_description(option_values.description)
+        await menu.set_user_specific(True)
 
-        # add fields to prompt
+        prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
+        footer_text = prefix + ctx.command.name + " " + input_data.category + " " + input_data.option
+        await menu.set_footer_text(footer_text)
 
+        await self.__add_info_fields_to_info(ctx, input_data, menu, option_full)
+        await self.__add_options_to_info(ctx, menu, option_full)
+
+        menu_data = await menu.show_menu(ctx, 120, input_data.message)
+        if menu_data.status != AmadeusMenuStatus.SELECTED:
+            input_data.configStep = ConfigStep.FINISHED
+            await menu.show_result(ctx)
+        else:
+            if menu_data.reaction_index == 0:
+                input_data.configStep = ConfigStep.CATEGORY_OPTION_CONFIRMED
+            elif menu_data.reaction_index == 1:
+                input_data.configStep = ConfigStep.CATEGORY_OPTION_SETDEFAULT
+
+    async def __add_info_fields_to_info(self, ctx, input_data, menu, option_full):
+        # add fields to menu
         current_value = await self.__convert_current_value(ctx, input_data.category, input_data.option)
 
         string = await s.get_string(ctx, s.String("config", "current_value"))
-        await prompt.add_field(string.string, current_value)
+        await menu.add_field(string.string, current_value)
 
         string = await s.get_string(ctx, s.String("config", "default_value"))
         default_value = option_full.get("default")
         if default_value is not None:
-            await prompt.add_field(string.string, default_value)
+            await menu.add_field(string.string, default_value)
 
         # TODO add field about is_list
 
-        prompt = await self.__add_valid_field(ctx, prompt, input_data.category, input_data.option)
+        await self.__add_valid_field(ctx, menu, input_data.category, input_data.option)
 
-        string = await s.get_string(ctx, s.String("config", "internal_name"))
-        await prompt.add_field(string.string, input_data.option)
+    async def __add_options_to_info(self, ctx, menu, option_full):
+        string = await s.get_string(ctx, s.String("config", "option_change"))
+        await menu.add_option(string.string)
+        default_value = option_full.get("default")
+        if default_value is not None:
+            string = await s.get_string(ctx, s.String("config", "option_setdefault"))
+            await menu.add_option(string.string)
+
+    async def ask_for_value(self, ctx, input_data):
+        option_full = self.bot.options.get(input_data.category).get("list").get(input_data.option)
+        option_values = await s.extract_config_option_strings(ctx, option_full)
+        prompt = amadeusPrompt.AmadeusPrompt(self.bot, option_values.name)
+        await prompt.set_user_specific(True)
+        string = await s.get_string(ctx, s.String("prompt", "please_enter"))
+        await prompt.set_author(string.string)
+
+        await self.__add_valid_field(ctx, prompt, input_data.category, input_data.option)
 
         prompt_data = await prompt.show_prompt(ctx, 120, input_data.message)
         if prompt_data.status != AmadeusPromptStatus.INPUT_GIVEN:
@@ -194,6 +233,7 @@ class Config(commands.Cog):
             input_data.message = prompt_data.message
             input_data.values = prompt_data.input
 
+
     async def __convert_current_value(self, ctx, category, option):
         current_value = await config.get_config(ctx, category, option)
         converted_input = await config.prepare_input(ctx, category, option, current_value.value)
@@ -201,19 +241,18 @@ class Config(commands.Cog):
             return converted_input.list[0]
         return converted_input.list
 
-    async def __add_valid_field(self, ctx, prompt, category, option):
+    async def __add_valid_field(self, ctx, menu, category, option):
         valid_input = await config.get_valid_input(ctx, category, option)
 
         if valid_input.input_type == InputType.ANY:
-            return prompt
+            return menu
 
         title = await s.get_string(ctx, s.String("config", "valid_entries"))
         for i, item in enumerate(valid_input.valid_list):
             if not isinstance(item, str):
                 valid_input.valid_list[i] = str(item)
         value = '\n'.join(valid_input.valid_list)
-        await prompt.add_field(title.string, value, False)
-        return prompt
+        await menu.add_field(title.string, value, False)
 
     async def __check_value_data(self, ctx, input_data):
         prepared_input = await config.prepare_input(ctx, input_data.category, input_data.option, input_data.values)

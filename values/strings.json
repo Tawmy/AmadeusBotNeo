@@ -66,9 +66,13 @@
             "en": "Valid entries",
             "de": "Zulässige Werte"
         },
-        "internal_name": {
-            "en": "Internal name",
-            "de": "Interner Name"
+        "option_change": {
+            "en": "Change",
+            "de": "Ändern"
+        },
+        "option_setdefault": {
+            "en": "Set to default",
+            "de": "Auf Standardwert"
         }
     },
     "config_status": {
@@ -127,6 +131,12 @@
         "OTHER": {
             "en": "Configuration closed",
             "de": "Konfiguration geschlossen"
+        }
+    },
+    "amadeusMenu": {
+        "options": {
+            "en": "Options",
+            "de": "Optionen"
         }
     },
     "amadeusMenuStatus": {
