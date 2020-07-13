@@ -20,6 +20,7 @@ class AmadeusMenu:
         self.__is_user_specific = False
         self.__clear_on_timeout = True
         self.__specified_user = None
+        self.__footer_text = None
 
         self.__embed = discord.Embed()
         self.__embed.title = prompt
@@ -79,6 +80,9 @@ class AmadeusMenu:
 
     async def set_description(self, description):
         self.__embed.description = description
+
+    async def set_footer_text(self, text):
+        self.__footer_text = text
 
     async def append_description(self, description):
         """Appends to description.
@@ -180,6 +184,8 @@ class AmadeusMenu:
         self.__result.message = await self.__result.message.edit(embed=self.__embed)
 
     async def __prepare_footer(self, ctx):
+        name = ""
+        avatar = ""
         if self.__is_user_specific:
             if self.__specified_user is not None:
                 name = self.__specified_user.display_name
@@ -187,6 +193,11 @@ class AmadeusMenu:
             else:
                 name = ctx.author.display_name
                 avatar = ctx.author.avatar_url_as(static_format="png")
+        if self.__footer_text is not None:
+            if len(avatar) > 0:
+                name = name + " | "
+            name = name + self.__footer_text
+        if len(name) > 0:
             self.__embed.set_footer(text=name, icon_url=avatar)
 
     async def __add_reactions(self, message):
