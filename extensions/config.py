@@ -83,8 +83,8 @@ class Config(commands.Cog):
             elif input_data.configStep == ConfigStep.CATEGORY_OPTION_CONFIRMED:
                 await self.ask_for_value(ctx, input_data)
             elif input_data.configStep == ConfigStep.CATEGORY_OPTION_SETDEFAULT:
-                # TODO
-                await self.set_default_value()
+                await self.set_default_value(ctx, input_data)
+                return
             elif input_data.configStep in [ConfigStep.CATEGORY_OPTION_VALUE, ConfigStep.CATEGORY_OPTION_CANCELLED]:
                 return
 
@@ -185,6 +185,7 @@ class Config(commands.Cog):
             input_data.configStep = ConfigStep.FINISHED
             await menu.show_result(ctx)
         else:
+            input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
                 input_data.configStep = ConfigStep.CATEGORY_OPTION_CONFIRMED
             elif menu_data.reaction_index == 1:
@@ -232,6 +233,10 @@ class Config(commands.Cog):
             input_data.configStep = ConfigStep.CATEGORY_OPTION_VALUE
             input_data.message = prompt_data.message
             input_data.values = prompt_data.input
+
+    async def set_default_value(self, ctx, input_data):
+        prepared_input = await config.set_default_config(ctx, input_data.category, input_data.option)
+        await self.__show_config_status(ctx, input_data.message, prepared_input.status)
 
 
     async def __convert_current_value(self, ctx, category, option):
