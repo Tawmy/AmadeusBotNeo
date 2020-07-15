@@ -149,6 +149,8 @@ class Config(commands.Cog):
         await menu.set_description(category_values.description)
         await menu.set_user_specific(True)
 
+        await self.__add_footer(ctx, input_data, menu)
+
         # add options to menu
         option_names = []
         for option_key, option_val in category["list"].items():
@@ -173,9 +175,7 @@ class Config(commands.Cog):
         await menu.set_description(option_values.description)
         await menu.set_user_specific(True)
 
-        prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
-        footer_text = prefix + ctx.command.name + " " + input_data.category + " " + input_data.option
-        await menu.set_footer_text(footer_text)
+        await self.__add_footer(ctx, input_data, menu)
 
         await self.__add_info_fields_to_info(ctx, input_data, menu, option_full)
         await self.__add_options_to_info(ctx, menu, option_full)
@@ -214,6 +214,13 @@ class Config(commands.Cog):
         if default_value is not None:
             string = await s.get_string(ctx, s.String("config", "option_setdefault"))
             await menu.add_option(string.string)
+
+    async def __add_footer(self, ctx, input_data, menu):
+        prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
+        footer_text = prefix + ctx.command.name + " " + input_data.category
+        if input_data.option is not None:
+            footer_text = footer_text + " " + input_data.option
+        await menu.set_footer_text(footer_text)
 
     async def ask_for_value(self, ctx, input_data):
         option_full = self.bot.options.get(input_data.category).get("list").get(input_data.option)
