@@ -1,24 +1,98 @@
 import asyncio
 import json
 import shutil
+from enum import Enum
 from os.path import isfile
 
 import discord
 from discord.ext import commands
 
-from components import checks
+from components import checks, strings as s
 from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt
+from components.enums import AmadeusMenuStatus
+
+
+class SetupType(Enum):
+    REGULAR = 0
+    FULL_RESET = 1
+    CANCELLED = 2
 
 
 class ServerSetup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.setup_emoji = ["✅", "🟦", "🟥"]
 
     @commands.command(name='setup')
     @commands.check(checks.is_guild_owner)
     @commands.check(checks.block_dms)
-    async def setup(self, ctx, setup_user: discord.Member = "owner_has_not_specified_user"):
+    async def setup(self, ctx, setup_user: discord.Member = None):
+        if setup_user is None:
+            setup_user = ctx.author
+
+        menu = await self.__prepare_setup_type_selection_menu(ctx)
+        await menu.set_user_specific(True, setup_user)
+        setup_type = await self.__ask_for_setup_type(ctx, menu)
+        await self.__initialise_guild_config(ctx, setup_type)
+
+
+    async def __prepare_setup_type_selection_menu(self, ctx) -> AmadeusMenu:
+        string = s.String("server_setup", "setup_title")
+        await s.get_string(ctx, string)
+        string_combination = s.StringCombination([self.bot.app_info.name], [string.string], s.InsertPosition.LEFT)
+        await s.insert_into_string(string_combination)
+        title = string_combination.string_combined
+
+        string = s.String("server_setup", "setup_introduction")
+        await s.get_string(ctx, string)
+        string_combination = s.StringCombination([self.bot.app_info.name, self.bot.app_info.name], string.list)
+        await s.insert_into_string(string_combination)
+        description = string_combination.string_combined
+
+        # Different prompt if server has been configured before
+        # Backup current config to subdirectory
+        json_file = str(ctx.guild.id) + '.json'
+        if isfile('config/' + json_file):
+            shutil.copy('config/' + json_file, 'config/backup/' + json_file)
+            string = s.String("server_setup", "server_configured_before")
+            await s.get_string(ctx, string)
+            description += string.string
+            emoji = [self.setup_emoji[1], self.setup_emoji[2]]
+        else:
+            string = s.String("server_setup", "setup_confirm_ready")
+            await s.get_string(ctx, string)
+            description += string.string
+            emoji = [self.setup_emoji[0]]
+
+        menu = AmadeusMenu(self.bot, title)
+        await menu.set_description(description)
+        await menu.append_emoji(emoji)
+        return menu
+
+    async def __ask_for_setup_type(self, ctx, menu: AmadeusMenu) -> SetupType:
+        result = await menu.show_menu(ctx, 120)
+        if result.status == AmadeusMenuStatus.SELECTED:
+            if result.reaction_emoji in [self.setup_emoji[0], self.setup_emoji[1]]:
+                return SetupType.REGULAR
+            elif result.reaction_emoji == self.setup_emoji[2]:
+                return SetupType.FULL_RESET
+        else:
+            # TODO show menu result ("user cancelled")
+            return SetupType.CANCELLED
+
+    async def __initialise_guild_config(self, ctx, setup_type: SetupType):
+        # delete config if reset emoji clicked
+        if setup_type == SetupType.FULL_RESET:
+            self.bot.config[str(ctx.guild.id)] = {}
+        else:
+            self.bot.config.setdefault(str(ctx.guild.id), {})
+
+    """
+    @commands.command(name='setup_old')
+    @commands.check(checks.is_guild_owner)
+    @commands.check(checks.block_dms)
+    async def setup_old(self, ctx, setup_user: discord.Member = "owner_has_not_specified_user"):
         # Guild owner can give another user permission to execute setup
         if setup_user == "owner_has_not_specified_user":
             setup_user = ctx.author
@@ -185,6 +259,7 @@ class ServerSetup(commands.Cog):
             if len(permissions_embed) > 0:
                 embed.add_field(name="#" + str(channel), value=permissions_embed)
         return embed
+    """
 
 
 def setup(bot):
