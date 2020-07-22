@@ -81,7 +81,7 @@ async def get_string(ctx: Context, string: String) -> String:
         String dataclass. Category and name must be provided.
     """
 
-    lang = await get_language(ctx, string)
+    lang = await get_guild_language(ctx, string)
     returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang)
     # Get string in default language if nothing found for specified one
     if returned_string is None and lang != ctx.bot.default_language:
@@ -95,7 +95,7 @@ async def get_string(ctx: Context, string: String) -> String:
     return string
 
 
-async def get_language(ctx: Context, string: String = None) -> str:
+async def get_guild_language(ctx: Context, string: String = None) -> str:
     """Gets language for guild.
     Returns default language if run outside of a guild or if guild has no language set.
 
@@ -132,7 +132,7 @@ async def get_exception_strings(ctx: Context, ex_string: ExceptionString) -> Exc
         ExceptionString dataclass. Name must be provided.
     """
 
-    lang = await get_language(ctx)
+    lang = await get_guild_language(ctx)
     exception = ctx.bot.exception_strings.get(ex_string.name)
     if exception is not None:
         ex_string.successful = True
@@ -160,7 +160,7 @@ async def extract_config_option_strings(ctx: Context, option_dict: dict) -> Opti
     """
 
     option_strings = OptionStrings()
-    lang = await get_language(ctx)
+    lang = await get_guild_language(ctx)
     option_strings.name = option_dict.get("name", {}).get(lang)
     # Get string in default language if nothing found for specified on
     if option_strings.name is None and lang != ctx.bot.default_language:

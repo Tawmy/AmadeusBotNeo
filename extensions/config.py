@@ -122,7 +122,7 @@ class Config(commands.Cog):
 
     async def check_value(self, ctx, value, user_input):
         # check for value name in server language
-        lang = await s.get_language(ctx)
+        lang = await s.get_guild_language(ctx)
         option = value.get("name", {}).get(lang)
         if option is not None and user_input == option.lower():
             return True

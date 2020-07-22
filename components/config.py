@@ -175,12 +175,12 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
     if data_type == "role":
         valid_input.datatype = Datatype.ROLE
         valid_input.input_type = InputType.TO_BE_CONVERTED
-        lang = await s.get_language(ctx)
+        lang = await s.get_guild_language(ctx)
         valid_input.valid_list = [datatype_dict.get("name_descriptive", {}).get(lang)]
     if data_type == "channel":
         valid_input.datatype = Datatype.TEXT_CHANNEL
         valid_input.input_type = InputType.TO_BE_CONVERTED
-        lang = await s.get_language(ctx)
+        lang = await s.get_guild_language(ctx)
         valid_input.valid_list = [datatype_dict.get("name_descriptive", {}).get(lang)]
 
     return valid_input
