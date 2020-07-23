@@ -186,7 +186,7 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
     return valid_input
 
 
-async def set_config(ctx: Context, prepared_input: PreparedInput):
+async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool = True):
     """Sets config value. First checks if it exists at all, then sets it and saves to config file.
     Please run the input through prepare_input first.
 
@@ -196,6 +196,8 @@ async def set_config(ctx: Context, prepared_input: PreparedInput):
         The invocation context.
     prepared_input: :class:`PreparedInput`
         Prepared input from prepare_input()
+    do_save: :class:`bool`
+        Defines if value should be saved to file. Defaults to True.
     """
 
     await __convert_to_ids(prepared_input)
@@ -205,7 +207,9 @@ async def set_config(ctx: Context, prepared_input: PreparedInput):
         value = prepared_input.list
     if ctx.bot.options.get(prepared_input.category, {}).get("list", {}).get(prepared_input.name) is not None:
         ctx.bot.config[str(ctx.guild.id)].setdefault(prepared_input.category, {})[prepared_input.name] = value
-        await save_config(ctx, prepared_input)
+        if do_save:
+            save_successful = await save_config(ctx)
+            prepared_input.status = ConfigStatus.SAVE_SUCCESS if save_successful else ConfigStatus.SAVE_FAIL
     else:
         prepared_input.status = ConfigStatus.OPTION_DOES_NOT_EXIST
 
@@ -279,15 +283,13 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
     return prepared_input
 
 
-async def save_config(ctx: Context, prepared_input: PreparedInput):
+async def save_config(ctx: Context,) -> bool:
     """Saves config of guild from ctx to json file
 
     Parameters
     -----------
     ctx: :class:`discord.ext.commands.Context`
         Invocation context, needed to determine guild.
-    prepared_input: :class:`PreparedInput`
-        Prepared input from prepare_input()
     """
     if ctx.guild is not None:
         json_file = 'config/' + str(ctx.guild.id) + '.json'
@@ -297,10 +299,9 @@ async def save_config(ctx: Context, prepared_input: PreparedInput):
             with open(json_file, 'w') as file:
                 try:
                     json.dump(ctx.bot.config[str(ctx.guild.id)], file, indent=4)
-                    prepared_input.status = ConfigStatus.SAVE_SUCCESS
-                    return
+                    return True
                 except Exception as e:
                     print(e)
             retries -= 1
             await asyncio.sleep(1)
-    prepared_input.status = ConfigStatus.SAVE_FAIL
+    return False
