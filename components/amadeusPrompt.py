@@ -14,6 +14,7 @@ class AmadeusPromptResult:
 
 
 class AmadeusPrompt:
+    # TODO change bot to ctx for consistency (in menu too)
     def __init__(self, bot, title):
         self.bot = bot
         self.__is_user_specific = False

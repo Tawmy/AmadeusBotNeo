@@ -210,6 +210,13 @@ async def set_config(ctx: Context, prepared_input: PreparedInput):
         prepared_input.status = ConfigStatus.OPTION_DOES_NOT_EXIST
 
 
+async def set_default_config(ctx: Context, category: str, option: str) -> PreparedInput:
+    default_value = await __get_default_config_value(ctx, category, option)
+    prepared_input = PreparedInput(category, option, [default_value])
+    await set_config(ctx, prepared_input)
+    return prepared_input
+
+
 async def __convert_to_ids(prepared_input: PreparedInput):
     for i, item in enumerate(prepared_input.list):
         if isinstance(item, (discord.TextChannel, discord.VoiceChannel, discord.Role)):
