@@ -249,7 +249,7 @@ async def prepare_command_error_embed_custom(ctx, message, error_config=None):
             string_combination = await strings.insert_into_string(string_combination)
             embed.description = string_combination.string_combined
         elif isinstance(message, ex.BotNotConfigured):
-            string_combination = StringCombination([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
+            string_combination = StringCombination([bot.app_info.name, ctx.guild.owner.mention], ex_string.description, InsertPosition.LEFT)
             string_combination = await strings.insert_into_string(string_combination)
             embed.description = string_combination.string_combined
         elif isinstance(message, ex.BotDisabled):
