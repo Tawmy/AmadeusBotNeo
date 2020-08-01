@@ -1,181 +1,205 @@
 import asyncio
+import copy
 import json
 import shutil
+from dataclasses import dataclass
+from enum import Enum
 from os.path import isfile
 
 import discord
 from discord.ext import commands
 
-from components import checks
+from components import checks, strings as s, config as c
 from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt
+from components.config import ConfigStatus, PreparedInput
+from components.enums import AmadeusMenuStatus, AmadeusPromptStatus
+from components.strings import StringCombination
+
+
+class SetupType(Enum):
+    REGULAR = 0
+    FULL_RESET = 1
+    CANCELLED = 2
+
+
+class InputType(Enum):
+    NONE = 0
+    OK = 1
+    WRONG = 2
+    CANCELLED = 3
+
+
+class SetupStatus(Enum):
+    CANCELLED = 0
+    SUCCESSFUL = 1
+    SAVE_FAILED = 2
+
+
+@dataclass
+class SetupTypeSelection:
+    message: discord.Message
+    setup_type: SetupType = None
+
+
+@dataclass
+class UserInput:
+    type: InputType = InputType.NONE
+    prepared_input: PreparedInput = None
 
 
 class ServerSetup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.setup_emoji = ["✅", "🟦", "🟥"]
 
     @commands.command(name='setup')
     @commands.check(checks.is_guild_owner)
     @commands.check(checks.block_dms)
-    async def setup(self, ctx, setup_user: discord.Member = "owner_has_not_specified_user"):
-        # Guild owner can give another user permission to execute setup
-        if setup_user == "owner_has_not_specified_user":
+    async def setup(self, ctx, setup_user: discord.Member = None):
+        if setup_user is None:
             setup_user = ctx.author
 
-        setup_menu = AmadeusMenu(self.bot, None)
-        await self.__prepare_setup_menu(ctx, setup_menu)
-        await setup_menu.set_user_specific(True, setup_user)
-        result = await setup_menu.show_menu(ctx, 120)
-        if result is None:
-            return
+        menu = await self.__prepare_setup_type_selection_menu(ctx)
+        await menu.set_user_specific(True, setup_user)
+        setup_type_selection = await self.__ask_for_setup_type(ctx, menu)
+        if setup_type_selection.setup_type == SetupType.CANCELLED:
+            embed = await self.__prepare_status_embed(ctx, SetupStatus.CANCELLED)
+            return await setup_type_selection.message.edit(embed=embed)
 
-        # Overwrite config entirely?
-        if result[2] == "🟥":
+        # copy current config to later apply if cancelled
+        backed_up_config = copy.deepcopy(self.bot.config.get(str(ctx.guild.id)))
+
+        await self.__initialise_guild_config(ctx, setup_type_selection.setup_type)
+        all_successful_bool = await self.__iterate_config_options(ctx, setup_user, setup_type_selection.message)
+
+        if all_successful_bool:
+            await self.__set_bot_enabled(ctx)
+            save_successful_bool = await c.save_config(ctx)
+            setup_status = SetupStatus.SUCCESSFUL if save_successful_bool else SetupStatus.SAVE_FAILED
+        else:
+            setup_status = SetupStatus.CANCELLED
+
+        embed = await self.__prepare_status_embed(ctx, setup_status)
+        await setup_type_selection.message.edit(embed=embed)
+
+        if setup_status == SetupStatus.SUCCESSFUL:
+            embed = await self.__check_bot_permissions(ctx)
+            await ctx.send(embed=embed)
+        elif setup_status == SetupStatus.CANCELLED and setup_type_selection.setup_type == SetupType.REGULAR:
+            self.bot.config[str(ctx.guild.id)] = backed_up_config
+
+    async def __prepare_setup_type_selection_menu(self, ctx) -> AmadeusMenu:
+        string = s.String("server_setup", "setup_title")
+        await s.get_string(ctx, string)
+        string_combination = s.StringCombination([self.bot.app_info.name], [string.string], s.InsertPosition.LEFT)
+        await s.insert_into_string(string_combination)
+        title = string_combination.string_combined
+
+        string = s.String("server_setup", "setup_introduction")
+        await s.get_string(ctx, string)
+        string_combination = s.StringCombination([self.bot.app_info.name, self.bot.app_info.name], string.list)
+        await s.insert_into_string(string_combination)
+        description = string_combination.string_combined
+
+        # Different prompt if server has been configured before
+        # Backup current config to subdirectory
+        json_file = str(ctx.guild.id) + '.json'
+        if isfile('config/' + json_file):
+            shutil.copy('config/' + json_file, 'config/backup/' + json_file)
+            string = s.String("server_setup", "server_configured_before")
+            await s.get_string(ctx, string)
+            description += string.string
+            emoji = [self.setup_emoji[1], self.setup_emoji[2]]
+        else:
+            string = s.String("server_setup", "setup_confirm_ready")
+            await s.get_string(ctx, string)
+            description += string.string
+            emoji = [self.setup_emoji[0]]
+
+        menu = AmadeusMenu(self.bot, title)
+        await menu.set_description(description)
+        await menu.append_emoji(emoji)
+        return menu
+
+    async def __ask_for_setup_type(self, ctx, menu: AmadeusMenu) -> SetupTypeSelection:
+        result = await menu.show_menu(ctx, 120)
+        setup_type_selection = SetupTypeSelection(result.message)
+        if result.status == AmadeusMenuStatus.SELECTED:
+            if result.reaction_emoji in [self.setup_emoji[0], self.setup_emoji[1]]:
+                setup_type_selection.setup_type = SetupType.REGULAR
+            elif result.reaction_emoji == self.setup_emoji[2]:
+                setup_type_selection.setup_type = SetupType.FULL_RESET
+        else:
+            setup_type_selection.setup_type = SetupType.CANCELLED
+        return setup_type_selection
+
+    async def __initialise_guild_config(self, ctx, setup_type: SetupType):
+        # delete config if reset emoji clicked
+        if setup_type == SetupType.FULL_RESET:
             self.bot.config[str(ctx.guild.id)] = {}
         else:
             self.bot.config.setdefault(str(ctx.guild.id), {})
 
-        setup_prompt = AmadeusPrompt(self.bot, None)
-        await setup_prompt.set_user_specific(True, setup_user)
+    async def __iterate_config_options(self, ctx, setup_user: discord.User, message: discord.Message) -> bool:
+        # Iterate categories
+        for category_key, category_values in self.bot.options.items():
+            # Iterate options in category
+            for option_key, option_values in self.bot.options[category_key]["list"].items():
+                if option_values["is_essential"]:
+                    user_input = await self.__ask_for_value(ctx, category_key, option_key, option_values, setup_user, message)
+                    if user_input.type == InputType.CANCELLED:
+                        return False
+                    await c.set_config(ctx, user_input.prepared_input, False)
+        return True
 
-        collected_information = await self.__collect_setup_information(ctx, setup_prompt, result[0])
-        # If input chain not successful (cancelled or timeout)
-        if collected_information is None:
-            return
-        # Apply all the previously collected information to server config
-        self.bot.config[str(ctx.guild.id)].update(collected_information)
-        # Copy default values to server config
-        await self.__copy_default_values(ctx)
-        # Save server config to json file and give feedback on its success
-        if await self.save_config(ctx):
-            if str(ctx.guild.id) in self.bot.corrupt_configs:
-                self.bot.corrupt_configs.remove(str(ctx.guild.id))
-            embed = await self.prepare_status_embed(ctx, True)
-            permissions_embed = await self.__check_bot_permissions(ctx)
-            for field in permissions_embed.fields:
-                embed.add_field(name=field.name, value=field.value, inline=field.inline)
-        else:
-            embed = await self.__prepare_status_embed(False)
-        await result[0].edit(embed=embed)
+    async def __ask_for_value(self, ctx, c_key: str, o_key: str, o_val: dict, setup_user: discord.User, message: discord.Message) -> UserInput:
+        user_input = UserInput()
 
-    async def save_config(self, ctx):
-        json_file = 'config/' + str(ctx.guild.id) + '.json'
-        save_status = False
-        retries = 4
-        while save_status is False and retries > 0:
-            with open(json_file, 'w+') as file:
-                try:
-                    json.dump(self.bot.config[str(ctx.guild.id)], file)
-                    return True
-                except Exception as e:
-                    print(e)
-            retries -= 1
-            await asyncio.sleep(1)
-        return False
+        option_strings = await s.extract_config_option_strings(ctx, o_val)
+        prompt = AmadeusPrompt(self.bot, option_strings.name)
+        await prompt.set_description(option_strings.description)
+        await prompt.set_user_specific(True, setup_user)
+        while True:
+            if user_input.type == InputType.WRONG:
+                string = await s.get_string(ctx, s.String("prompt", "error_not_found"))
+                await prompt.append_description(string.string)
+            prompt_data = await prompt.show_prompt(ctx, 120, message)
+            if prompt_data.status in [AmadeusPromptStatus.CANCELLED, AmadeusPromptStatus.TIMEOUT]:
+                user_input.type = InputType.CANCELLED
+                break
+            prepared_input = await c.prepare_input(ctx, c_key, o_key, prompt_data.input)
+            if prepared_input.status == ConfigStatus.PREPARATION_SUCCESSFUL:
+                user_input.prepared_input = prepared_input
+                user_input.type = InputType.OK
+                break
+            else:
+                user_input.type = InputType.WRONG
+        return user_input
 
-    async def __prepare_setup_menu(self, ctx, setup_menu):
-        bot_name = self.bot.app_info.name
-        string_list = await self.bot.strings.get_string(ctx, "server_setup", "setup_title")
-        title = await self.bot.strings.insert_into_string(string_list, bot_name, "left")
-        string_list = await self.bot.strings.get_string(ctx, "server_setup", "setup_introduction")
-        description = await self.bot.strings.insert_into_string(string_list, [bot_name, bot_name])
-
-        # Different prompt if server has been configured before
-        json_file = str(ctx.guild.id) + '.json'
-        if isfile('config/' + json_file):
-            shutil.copy('config/' + json_file, 'config/backup/' + json_file)
-            description += await self.bot.strings.get_string(ctx, "server_setup", "server_configured_before")
-            emoji = ["🟦", "🟥"]
-        else:
-            description += await self.bot.strings.get_string(ctx, "server_setup", "setup_confirm_ready")
-            emoji = ["✅"]
-
-        await setup_menu.set_title(title)
-        await setup_menu.set_description(description)
-        await setup_menu.append_emoji(emoji)
-
-    async def __prepare_prompt(self, setup_prompt, opt_val, status):
-        # opt_val is None when no user input is to be prompted
-        if opt_obj is not None:
-            await setup_prompt.set_author(await self.bot.strings.get_string(ctx, "prompt", "please_enter"))
-            cfg_strings = await self.bot.strings.extract_config_strings(ctx, opt_obj)
-            await setup_prompt.set_title(cfg_strings[0])
-            await setup_prompt.set_description(cfg_strings[1])
-        # if input invalid
-        if status == 1:
-            await setup_prompt.append_description(await self.bot.strings.get_string(ctx, "prompt", "error_not_found"))
-        # if setup cancelled
-        elif status == 2:
-            await setup_prompt.set_description(await self.bot.strings.get_string(ctx, "server_setup", "setup_cancelled"))
-
-    async def prepare_status_embed(self, ctx, successful_bool):
+    async def __prepare_status_embed(self, ctx, setup_status: SetupStatus):
         embed = discord.Embed()
-        if successful_bool:
-            embed.title = await self.bot.strings.get_string(ctx, "server_setup", "setup_successful")
-            string = await self.bot.strings.get_string(ctx, "server_setup", "setup_successful_description")
-            embed.description = await self.bot.strings.insert_into_string(string, self.bot.app_info.name)
-        else:
-            embed.title = await self.bot.strings.get_string(ctx, "server_setup", "setup_error_save_config")
+        if setup_status == SetupStatus.SUCCESSFUL:
+            string = await s.get_string(ctx, s.String("server_setup", "setup_successful"))
+            embed.title = string.string
+            string = await s.get_string(ctx, s.String("server_setup", "setup_successful_description"))
+            string_combination = StringCombination([self.bot.app_info.name], string.list)
+            string_combination = await s.insert_into_string(string_combination)
+            embed.description = string_combination.string_combined
+        elif setup_status == SetupStatus.SAVE_FAILED:
+            string = await s.get_string(ctx, s.String("server_setup", "setup_error_save_config"))
+            embed.title = string.string
+        elif setup_status == SetupStatus.CANCELLED:
+            string = await s.get_string(ctx, s.String("server_setup", "setup_cancelled"))
+            embed.title = string.string
         return embed
 
-    async def __collect_setup_information(self, ctx, setup_prompt, setup_message):
-        collected_information = {}
-        # Iterate categories
-        for cat_key, cat_val in self.bot.values.options.items():
-            # Only iterate essential categories
-            if cat_key.startswith("essential_"):
-                collected_information[cat_key] = {}
-                # Iterate options in category
-                for opt_key, opt_val in self.bot.values.options[cat_key]["list"].items():
-                    await self.prepare_prompt(ctx, setup_prompt, opt_val, 0)
-                    obj = None
-                    while obj is None:
-                        result = await setup_prompt.show_prompt(ctx, 120, setup_message)
-                        # If user has not cancelled
-                        if result is not None:
-                            obj = await self.__check_input(ctx, cat_key, result[1])
-                            # if input invalid
-                            if obj is None:
-                                await self.__prepare_prompt(setup_prompt, opt_val, 1)
-                            else:
-                                collected_information[cat_key].setdefault(opt_key, obj.id)
-                        # If user has cancelled
-                        else:
-                            await self.__prepare_prompt(setup_prompt, None, 2)
-                            return None
-        return collected_information
-
-    async def __check_input(self, ctx, cat_key, user_input):
-        if cat_key == "essential_channels":
-            try:
-                return await commands.TextChannelConverter().convert(ctx, user_input)
-            except commands.CommandError:
-                return None
-        elif cat_key == "essential_roles":
-            try:
-                return await commands.RoleConverter().convert(ctx, user_input)
-            except commands.CommandError:
-                return None
-
-    async def __copy_default_values(self, ctx):
-        # Iterate categories
-        for cat_key, cat_val in self.bot.values.options.items():
-            # Only iterate non-essential categories
-            if not cat_key.startswith("essential_"):
-                self.bot.config[str(ctx.guild.id)].setdefault(cat_key, {})
-                # Iterate options in category
-                for opt_key, opt_val in self.bot.values.options[cat_key]["list"].items():
-                    # Set option for server if not already set
-                    self.bot.config[str(ctx.guild.id)][cat_key].setdefault(
-                        opt_key, self.bot.values.options[cat_key]["list"][opt_key]["default"])
-
-    async def __check_bot_permissions(self, ctx):
+    async def __check_bot_permissions(self, ctx) -> discord.Embed:
         embed = discord.Embed()
         for ch_key, ch_val in self.bot.config[str(ctx.guild.id)]["essential_channels"].items():
             channel = ctx.guild.get_channel(ch_val)
             permissions_have = channel.permissions_for(ctx.guild.me)
-            permissions_need = self.bot.values.options["essential_channels"]["list"][ch_key]["permissions"]
+            permissions_need = self.bot.options["essential_channels"]["list"][ch_key]["permissions"]
             permissions_embed = ""
             for permission in permissions_need:
                 if getattr(permissions_have, permission) is True:
@@ -185,6 +209,12 @@ class ServerSetup(commands.Cog):
             if len(permissions_embed) > 0:
                 embed.add_field(name="#" + str(channel), value=permissions_embed)
         return embed
+
+    async def __set_bot_enabled(self, ctx):
+        prepared_input = await c.prepare_input(ctx, "general", "enabled", True)
+        if str(ctx.guild.id) in self.bot.corrupt_configs:
+            self.bot.corrupt_configs.remove(str(ctx.guild.id))
+        await c.set_config(ctx, prepared_input, False)
 
 
 def setup(bot):

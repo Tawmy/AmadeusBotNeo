@@ -20,7 +20,8 @@
                 },
                 "default": true,
                 "data_type": "boolean",
-                "is_list": false
+                "is_list": false,
+                "is_essential": false
             },
             "language": {
                 "name": {
@@ -34,6 +35,7 @@
                 "default": "en",
                 "data_type": "string",
                 "is_list": false,
+                "is_essential": false,
                 "valid": ["en", "de"]
             },
             "command_prefix": {
@@ -47,7 +49,8 @@
                 },
                 "default": "!",
                 "data_type": "string",
-                "is_list": false
+                "is_list": false,
+                "is_essential": true
             },
             "mods_override_limits": {
                 "name": {
@@ -60,7 +63,8 @@
                 },
                 "default": true,
                 "data_type": "boolean",
-                "is_list": false
+                "is_list": false,
+                "is_essential": false
             }
         }
     },
@@ -85,7 +89,8 @@
                 },
                 "default": false,
                 "data_type": "boolean",
-                "is_list": false
+                "is_list": false,
+                "is_essential": false
             },
             "hide_disabled_errors": {
                 "name": {
@@ -98,7 +103,8 @@
                 },
                 "default": false,
                 "data_type": "boolean",
-                "is_list": false
+                "is_list": false,
+                "is_essential": false
             },
             "hide_role_errors": {
                 "name": {
@@ -111,7 +117,8 @@
                 },
                 "default": false,
                 "data_type": "boolean",
-                "is_list": false
+                "is_list": false,
+                "is_essential": false
             },
             "hide_channel_errors": {
                 "name": {
@@ -124,7 +131,8 @@
                 },
                 "default": false,
                 "data_type": "boolean",
-                "is_list": false
+                "is_list": false,
+                "is_essential": false
             },
             "hide_whitelist_role": {
                 "name": {
@@ -137,7 +145,8 @@
                 },
                 "default": false,
                 "data_type": "boolean",
-                "is_list": false
+                "is_list": false,
+                "is_essential": false
             },
             "hide_blacklist_role": {
                 "name": {
@@ -150,7 +159,8 @@
                 },
                 "default": false,
                 "data_type": "boolean",
-                "is_list": false
+                "is_list": false,
+                "is_essential": false
             }
         }
     },
@@ -180,7 +190,8 @@
                     "view_channel"
                 ],
                 "data_type": "channel",
-                "is_list": false
+                "is_list": false,
+                "is_essential": true
             },
             "mod_channel": {
                 "name": {
@@ -198,7 +209,8 @@
                     "view_channel"
                 ],
                 "data_type": "channel",
-                "is_list": false
+                "is_list": false,
+                "is_essential": true
             },
             "log_channel": {
                 "name": {
@@ -216,7 +228,8 @@
                     "view_channel"
                 ],
                 "data_type": "channel",
-                "is_list": false
+                "is_list": false,
+                "is_essential": true
             }
         }
     },
@@ -240,7 +253,8 @@
                     "de": "Rolle, die standardmäßig Kontrolle über den Bot hat."
                 },
                 "data_type": "role",
-                "is_list": false
+                "is_list": false,
+                "is_essential": true
             }
         }
     }
