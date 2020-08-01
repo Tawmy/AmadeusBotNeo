@@ -91,13 +91,11 @@ class ServerSetup(commands.Cog):
 
     async def __prepare_setup_type_selection_menu(self, ctx) -> AmadeusMenu:
         string = await s.get_string(ctx, "server_setup", "setup_title")
-        string_combination = s.StringCombination([self.bot.app_info.name], [string.string], s.InsertPosition.LEFT)
-        await s.insert_into_string(string_combination)
+        string_combination = await s.insert_into_string([self.bot.app_info.name], [string.string], s.InsertPosition.LEFT)
         title = string_combination.string_combined
 
         string = await s.get_string(ctx, "server_setup", "setup_introduction")
-        string_combination = s.StringCombination([self.bot.app_info.name, self.bot.app_info.name], string.list)
-        await s.insert_into_string(string_combination)
+        string_combination = await s.insert_into_string([self.bot.app_info.name, self.bot.app_info.name], string.list)
         description = string_combination.string_combined
 
         # Different prompt if server has been configured before
@@ -179,8 +177,7 @@ class ServerSetup(commands.Cog):
             string = await s.get_string(ctx, "server_setup", "setup_successful")
             embed.title = string.string
             string = await s.get_string(ctx, "server_setup", "setup_successful_description")
-            string_combination = StringCombination([self.bot.app_info.name], string.list)
-            string_combination = await s.insert_into_string(string_combination)
+            string_combination = await s.insert_into_string([self.bot.app_info.name], string.list)
             embed.description = string_combination.string_combined
         elif setup_status == SetupStatus.SAVE_FAILED:
             string = await s.get_string(ctx, "server_setup", "setup_error_save_config")

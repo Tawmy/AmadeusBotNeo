@@ -177,18 +177,24 @@ async def extract_config_option_strings(ctx: Context, option_dict: dict) -> Opti
     return option_strings
 
 
-async def insert_into_string(string_combination: StringCombination) -> StringCombination:
+async def insert_into_string(strings_source: list, strings_target: list, position: InsertPosition = None) -> StringCombination:
     """Inserts values into string. Length of values must be one shorter than strings.
     If same length, position must be speficied.
 
     Parameters
     -----------
-    string_combination: :class:`StringCombination`
-        StringCombination object.
+    strings_source: :class:`list`
+        List of strings to be inserted into strings_target.
+    strings_target: :class:`list`
+        List of strings strings_source should be inserted into.
+    position: :class:`InsertionPosition`
+        Enum required if length of strings_source = strings_target.
+        Sets whether strings_source are to be inserted on the left or right.
     """
 
     # TODO allow for insertion without automatic space between combined elements
 
+    string_combination = StringCombination(strings_source, strings_target, position)
     if len(string_combination.strings_target) == len(string_combination.strings_source) + 1:
         string_combination.successful = True
         string_combination.string_combined = string_combination.strings_target[0]

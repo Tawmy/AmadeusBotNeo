@@ -216,7 +216,8 @@ async def prepare_command_error_embed(ctx, message):
     if hasattr(message.original, "code") and message.original.code == 50013:
         string = await strings.get_string(ctx, "amadeus", "exception_forbidden")
         values = [ctx.channel.mention, ctx.author.mention, ctx.command.name]
-        embed.description = await strings.insert_into_string(StringCombination(values, string.list))
+        string_combination = await strings.insert_into_string(values, string.list)
+        embed.description = string_combination.string_combined
     return embed
 
 
@@ -233,28 +234,22 @@ async def prepare_command_error_embed_custom(ctx, message, error_config=None):
         # TODO test these after the changes
         # TODO separate lines for stringcombination
         if isinstance(message, ex.BotNotReady):
-            string_combination = StringCombination([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
-            string_combination = await strings.insert_into_string(string_combination)
+            string_combination = await strings.insert_into_string([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
             embed.description = string_combination.string_combined
         elif isinstance(message, ex.CorruptConfig):
-            string_combination = StringCombination([bot.app_info.name, ctx.guild.name, bot.app_info.name], ex_string.description, InsertPosition.LEFT)
-            string_combination = await strings.insert_into_string(string_combination)
+            string_combination = await strings.insert_into_string([bot.app_info.name, ctx.guild.name, bot.app_info.name], ex_string.description, InsertPosition.LEFT)
             embed.description = string_combination.string_combined
         elif isinstance(message, ex.DatabaseNotConnected):
-            string_combination = StringCombination([bot.app_info.name], ex_string.description)
-            string_combination = await strings.insert_into_string(string_combination)
+            string_combination = await strings.insert_into_string([bot.app_info.name], ex_string.description)
             embed.description = string_combination.string_combined
         elif isinstance(message, ex.NotGuildOwner):
-            string_combination = StringCombination([ctx.guild.owner.mention], ex_string.description)
-            string_combination = await strings.insert_into_string(string_combination)
+            string_combination = await strings.insert_into_string([ctx.guild.owner.mention], ex_string.description)
             embed.description = string_combination.string_combined
         elif isinstance(message, ex.BotNotConfigured):
-            string_combination = StringCombination([bot.app_info.name, ctx.guild.owner.mention], ex_string.description, InsertPosition.LEFT)
-            string_combination = await strings.insert_into_string(string_combination)
+            string_combination = await strings.insert_into_string([bot.app_info.name, ctx.guild.owner.mention], ex_string.description, InsertPosition.LEFT)
             embed.description = string_combination.string_combined
         elif isinstance(message, ex.BotDisabled):
-            string_combination = StringCombination([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
-            string_combination = await strings.insert_into_string(string_combination)
+            string_combination = await strings.insert_into_string([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
             embed.description = string_combination.string_combined
         elif isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
             if error_config.get("hide_whitelist_role") is not True:
