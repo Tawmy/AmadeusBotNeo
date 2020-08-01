@@ -38,6 +38,21 @@
                 "is_essential": false,
                 "valid": ["en", "de"]
             },
+            "style": {
+                "name": {
+                    "en": "Expressive style",
+                    "de": "Ausdrucksweise"
+                },
+                "description": {
+                    "en": "Form of address the bot will use throughout all messages.",
+                    "de": "Ausdrucksweise des Bots in allen Nachrichten."
+                },
+                "default": "neutral",
+                "data_type": "string",
+                "is_list": false,
+                "is_essential": false,
+                "valid": ["amadeus", "neutral"]
+            },
             "command_prefix": {
                 "name": {
                     "en": "Command Prefix",

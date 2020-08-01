@@ -85,7 +85,8 @@ async def get_string(ctx: Context, category: str, name: str) -> String:
 
     string = String(category, name)
     lang = await get_guild_language(ctx, string)
-    returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang)
+    style = await get_guild_style(ctx)
+    returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang, {}).get(style)
     # Get string in default language if nothing found for specified one
     if returned_string is None and lang != ctx.bot.default_language:
         returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(ctx.bot.default_language)
@@ -121,7 +122,29 @@ async def get_guild_language(ctx: Context, string: String = None) -> str:
     else:
         if string is not None:
             string.return_type = ReturnType.DEFAULT_LANGUAGE
-        return ctx.bot.default_language
+        default_language = ctx.bot.options.get("general", {}).get("list", {}).get("language", {}).get("default")
+        return default_language if default_language is not None else ctx.bot.default_language
+
+
+async def get_guild_style(ctx: Context) -> str:
+    """Gets language for guild.
+    Returns default language if run outside of a guild or if guild has no language set.
+
+    Parameters
+    -----------
+    ctx: :class:`discord.ext.commands.Context`
+        Invocation context, needed to determine guild.
+    """
+
+    if ctx.guild is not None:
+        style = ctx.bot.config.get(str(ctx.guild.id), {}).get("general", {}).get("style")
+    else:
+        style = None
+    if style is not None:
+        return style
+    else:
+        # TODO change default to amadeus once those have been created
+        return ctx.bot.options["general"]["list"]["style"]["default"]
 
 
 async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
