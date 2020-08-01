@@ -223,7 +223,7 @@ async def prepare_command_error_embed(ctx, message):
 
 async def prepare_command_error_embed_custom(ctx, message, error_config=None):
     embed = discord.Embed()
-    ex_string = await strings.get_exception_strings(ctx, ExceptionString(type(message).__name__))
+    ex_string = await strings.get_exception_strings(ctx, type(message).__name__)
 
     # if exception in strings, use that, otherwise show exception itself
     if not ex_string.successful:

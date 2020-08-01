@@ -124,17 +124,18 @@ async def get_guild_language(ctx: Context, string: String = None) -> str:
         return ctx.bot.default_language
 
 
-async def get_exception_strings(ctx: Context, ex_string: ExceptionString) -> ExceptionString:
+async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
     """Gets strings for exception.
 
     Parameters
     -----------
     ctx: :class:`discord.ext.commands.Context`
         Invocation context, needed to determine guild.
-    ex_string: :class:`ExceptionString`
-        ExceptionString dataclass. Name must be provided.
+    ex_name: :class:`str`
+        Name of Exception.
     """
 
+    ex_string = ExceptionString(ex_name)
     lang = await get_guild_language(ctx)
     exception = ctx.bot.exception_strings.get(ex_string.name)
     if exception is not None:
