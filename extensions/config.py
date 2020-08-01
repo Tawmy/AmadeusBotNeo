@@ -89,8 +89,7 @@ class Config(commands.Cog):
                 return
 
     async def ask_for_category(self, ctx, input_data):
-        string = s.String("config", "select_category")
-        await s.get_string(ctx, string)
+        string = await s.get_string(ctx, "config", "select_category")
         menu = amadeusMenu.AmadeusMenu(self.bot, string.string)
         await menu.set_user_specific(True)
         category_names = []
@@ -195,10 +194,10 @@ class Config(commands.Cog):
         # add fields to menu
         current_value = await self.__convert_current_value(ctx, input_data.category, input_data.option)
 
-        string = await s.get_string(ctx, s.String("config", "current_value"))
+        string = await s.get_string(ctx, "config", "current_value")
         await menu.add_field(string.string, current_value)
 
-        string = await s.get_string(ctx, s.String("config", "default_value"))
+        string = await s.get_string(ctx, "config", "default_value")
         default_value = option_full.get("default")
         if default_value is not None:
             await menu.add_field(string.string, default_value)
@@ -208,11 +207,11 @@ class Config(commands.Cog):
         await self.__add_valid_field(ctx, menu, input_data.category, input_data.option)
 
     async def __add_options_to_info(self, ctx, menu, option_full):
-        string = await s.get_string(ctx, s.String("config", "option_change"))
+        string = await s.get_string(ctx, "config", "option_change")
         await menu.add_option(string.string)
         default_value = option_full.get("default")
         if default_value is not None:
-            string = await s.get_string(ctx, s.String("config", "option_setdefault"))
+            string = await s.get_string(ctx, "config", "option_setdefault")
             await menu.add_option(string.string)
 
     async def __add_footer(self, ctx, input_data, menu):
@@ -227,7 +226,7 @@ class Config(commands.Cog):
         option_values = await s.extract_config_option_strings(ctx, option_full)
         prompt = amadeusPrompt.AmadeusPrompt(self.bot, option_values.name)
         await prompt.set_user_specific(True)
-        string = await s.get_string(ctx, s.String("prompt", "please_enter"))
+        string = await s.get_string(ctx, "prompt", "please_enter")
         await prompt.set_author(string.string)
 
         await self.__add_valid_field(ctx, prompt, input_data.category, input_data.option)
@@ -259,7 +258,7 @@ class Config(commands.Cog):
         if valid_input.input_type == InputType.ANY:
             return menu
 
-        title = await s.get_string(ctx, s.String("config", "valid_entries"))
+        title = await s.get_string(ctx, "config", "valid_entries")
         for i, item in enumerate(valid_input.valid_list):
             if not isinstance(item, str):
                 valid_input.valid_list[i] = str(item)
@@ -280,29 +279,29 @@ class Config(commands.Cog):
 
         string_desc = None
         if status == ConfigStatus.OPTION_DOES_NOT_EXIST:
-            string = await s.get_string(ctx, s.String("config_status", "OPTION_DOES_NOT_EXIST"))
+            string = await s.get_string(ctx, "config_status", "OPTION_DOES_NOT_EXIST")
         elif status == ConfigStatus.CONVERSION_FAILED:
-            string = await s.get_string(ctx, s.String("config_status", "CONVERSION_FAILED"))
+            string = await s.get_string(ctx, "config_status", "CONVERSION_FAILED")
         elif status == ConfigStatus.NOT_IN_VALID_LIST:
-            string = await s.get_string(ctx, s.String("config_status", "NOT_IN_VALID_LIST"))
-            string_desc = await s.get_string(ctx, s.String("config_status", "NOT_IN_VALID_LIST_DESC"))
+            string = await s.get_string(ctx, "config_status", "NOT_IN_VALID_LIST")
+            string_desc = await s.get_string(ctx, "config_status", "NOT_IN_VALID_LIST_DESC")
         elif status == ConfigStatus.UNKNOWN_DATA_TYPE:
-            string = await s.get_string(ctx, s.String("config_status", "UNKNOWN_DATA_TYPE"))
+            string = await s.get_string(ctx, "config_status", "UNKNOWN_DATA_TYPE")
         elif status == ConfigStatus.NOT_VALID_FOR_DATA_TYPE:
-            string = await s.get_string(ctx, s.String("config_status", "NOT_VALID_FOR_DATA_TYPE"))
-            string_desc = await s.get_string(ctx, s.String("config_status", "NOT_VALID_FOR_DATA_TYPE_DESC"))
+            string = await s.get_string(ctx, "config_status", "NOT_VALID_FOR_DATA_TYPE")
+            string_desc = await s.get_string(ctx, "config_status", "NOT_VALID_FOR_DATA_TYPE_DESC")
         elif status == ConfigStatus.TEXT_CHANNEL_NOT_FOUND:
-            string = await s.get_string(ctx, s.String("config_status", "TEXT_CHANNEL_NOT_FOUND"))
-            string_desc = await s.get_string(ctx, s.String("config_status", "TEXT_CHANNEL_NOT_FOUND_DESC"))
+            string = await s.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND")
+            string_desc = await s.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND_DESC")
         elif status == ConfigStatus.ROLE_NOT_FOUND:
-            string = await s.get_string(ctx, s.String("config_status", "ROLE_NOT_FOUND"))
-            string_desc = await s.get_string(ctx, s.String("config_status", "ROLE_NOT_FOUND_DESC"))
+            string = await s.get_string(ctx, "config_status", "ROLE_NOT_FOUND")
+            string_desc = await s.get_string(ctx, "config_status", "ROLE_NOT_FOUND_DESC")
         elif status == ConfigStatus.SAVE_SUCCESS:
-            string = await s.get_string(ctx, s.String("config_status", "SAVE_SUCCESS"))
+            string = await s.get_string(ctx, "config_status", "SAVE_SUCCESS")
         elif status == ConfigStatus.SAVE_FAIL:
-            string = await s.get_string(ctx, s.String("config_status", "SAVE_FAIL"))
+            string = await s.get_string(ctx, "config_status", "SAVE_FAIL")
         else:
-            string = await s.get_string(ctx, s.String("config_status", "OTHER"))
+            string = await s.get_string(ctx, "config_status", "OTHER")
 
         embed.title = string.string
         if string_desc is not None and string_desc.successful:

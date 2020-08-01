@@ -90,14 +90,12 @@ class ServerSetup(commands.Cog):
             self.bot.config[str(ctx.guild.id)] = backed_up_config
 
     async def __prepare_setup_type_selection_menu(self, ctx) -> AmadeusMenu:
-        string = s.String("server_setup", "setup_title")
-        await s.get_string(ctx, string)
+        string = await s.get_string(ctx, "server_setup", "setup_title")
         string_combination = s.StringCombination([self.bot.app_info.name], [string.string], s.InsertPosition.LEFT)
         await s.insert_into_string(string_combination)
         title = string_combination.string_combined
 
-        string = s.String("server_setup", "setup_introduction")
-        await s.get_string(ctx, string)
+        string = await s.get_string(ctx, "server_setup", "setup_introduction")
         string_combination = s.StringCombination([self.bot.app_info.name, self.bot.app_info.name], string.list)
         await s.insert_into_string(string_combination)
         description = string_combination.string_combined
@@ -107,13 +105,11 @@ class ServerSetup(commands.Cog):
         json_file = str(ctx.guild.id) + '.json'
         if isfile('config/' + json_file):
             shutil.copy('config/' + json_file, 'config/backup/' + json_file)
-            string = s.String("server_setup", "server_configured_before")
-            await s.get_string(ctx, string)
+            string = await s.get_string(ctx, "server_setup", "server_configured_before")
             description += string.string
             emoji = [self.setup_emoji[1], self.setup_emoji[2]]
         else:
-            string = s.String("server_setup", "setup_confirm_ready")
-            await s.get_string(ctx, string)
+            string = await s.get_string(ctx, "server_setup", "setup_confirm_ready")
             description += string.string
             emoji = [self.setup_emoji[0]]
 
@@ -162,7 +158,7 @@ class ServerSetup(commands.Cog):
         await prompt.set_user_specific(True, setup_user)
         while True:
             if user_input.type == InputType.WRONG:
-                string = await s.get_string(ctx, s.String("prompt", "error_not_found"))
+                string = await s.get_string(ctx, "prompt", "error_not_found")
                 await prompt.append_description(string.string)
             prompt_data = await prompt.show_prompt(ctx, 120, message)
             if prompt_data.status in [AmadeusPromptStatus.CANCELLED, AmadeusPromptStatus.TIMEOUT]:
@@ -180,17 +176,17 @@ class ServerSetup(commands.Cog):
     async def __prepare_status_embed(self, ctx, setup_status: SetupStatus):
         embed = discord.Embed()
         if setup_status == SetupStatus.SUCCESSFUL:
-            string = await s.get_string(ctx, s.String("server_setup", "setup_successful"))
+            string = await s.get_string(ctx, "server_setup", "setup_successful")
             embed.title = string.string
-            string = await s.get_string(ctx, s.String("server_setup", "setup_successful_description"))
+            string = await s.get_string(ctx, "server_setup", "setup_successful_description")
             string_combination = StringCombination([self.bot.app_info.name], string.list)
             string_combination = await s.insert_into_string(string_combination)
             embed.description = string_combination.string_combined
         elif setup_status == SetupStatus.SAVE_FAILED:
-            string = await s.get_string(ctx, s.String("server_setup", "setup_error_save_config"))
+            string = await s.get_string(ctx, "server_setup", "setup_error_save_config")
             embed.title = string.string
         elif setup_status == SetupStatus.CANCELLED:
-            string = await s.get_string(ctx, s.String("server_setup", "setup_cancelled"))
+            string = await s.get_string(ctx, "server_setup", "setup_cancelled")
             embed.title = string.string
         return embed
 

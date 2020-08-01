@@ -154,15 +154,15 @@ class AmadeusMenu:
         string = None
 
         if self.__result.status == AmadeusMenuStatus.SELECTED:
-            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "SELECTED"))
+            string = await s.get_string(ctx, "amadeusMenuStatus", "SELECTED")
         elif self.__result.status == AmadeusMenuStatus.TIMEOUT:
-            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "TIMEOUT"))
+            string = await s.get_string(ctx, "amadeusMenuStatus", "TIMEOUT")
         elif self.__result.status == AmadeusMenuStatus.CANCELLED:
-            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "CANCELLED"))
+            string = await s.get_string(ctx, "amadeusMenuStatus", "CANCELLED")
         elif self.__result.status == AmadeusMenuStatus.SHOWN:
-            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "SHOWN"))
+            string = await s.get_string(ctx, "amadeusMenuStatus", "SHOWN")
         elif self.__result.status == AmadeusMenuStatus.NEW:
-            string = await s.get_string(ctx, s.String("amadeusMenuStatus", "NEW"))
+            string = await s.get_string(ctx, "amadeusMenuStatus", "NEW")
         if string is not None:
             self.__embed.title = string.string
         await self.__prepare_footer(ctx)
@@ -187,7 +187,7 @@ class AmadeusMenu:
 
     async def __add_options(self, ctx):
         if len(self.__embed.fields) > 0:
-            string = await s.get_string(ctx, s.String("amadeusMenu", "options"))
+            string = await s.get_string(ctx, "amadeusMenu", "options")
             value = "***__" + string.string + "__***"
             self.__embed.add_field(name="\u200b", value=value, inline=False)
 

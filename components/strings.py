@@ -70,17 +70,20 @@ async def load_strings(bot: commands.bot) -> list:
     return failed
 
 
-async def get_string(ctx: Context, string: String) -> String:
+async def get_string(ctx: Context, category: str, name: str) -> String:
     """Gets string.
 
     Parameters
     -----------
     ctx: :class:`Context`
         Context
-    string: :class:`String`
-        String dataclass. Category and name must be provided.
+    category: :class:`str`
+        Category of string.
+    name: :class:`str`
+        Name of string.
     """
 
+    string = String(category, name)
     lang = await get_guild_language(ctx, string)
     returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang)
     # Get string in default language if nothing found for specified one
