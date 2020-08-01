@@ -129,7 +129,7 @@ class AmadeusMenu:
 
         await self.__add_options(ctx)
         await self.__prepare_footer(ctx)
-        if len(self.__options) == 0:
+        if len(self.__reaction_emoji) == 0:
             return None
         else:
             if message is None:
