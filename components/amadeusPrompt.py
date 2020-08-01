@@ -1,9 +1,18 @@
 import asyncio
+from enum import Enum
+
 import discord
 
 from dataclasses import dataclass
-from components.enums import AmadeusPromptStatus
 from components import strings as s
+
+
+class AmadeusPromptStatus(Enum):
+    NEW = 0
+    SHOWN = 1
+    CANCELLED = 2
+    TIMEOUT = 3
+    INPUT_GIVEN = 4
 
 
 @dataclass

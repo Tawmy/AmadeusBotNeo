@@ -4,8 +4,9 @@ from enum import Enum
 import discord
 from discord.ext import commands
 from components import amadeusMenu, amadeusPrompt, checks, strings as s, config
+from components.amadeusMenu import AmadeusMenuStatus
+from components.amadeusPrompt import AmadeusPromptStatus
 from components.config import ConfigStatus, InputType
-from components.enums import AmadeusMenuStatus, AmadeusPromptStatus
 
 
 class ConfigStep(Enum):

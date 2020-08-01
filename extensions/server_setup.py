@@ -10,10 +10,9 @@ import discord
 from discord.ext import commands
 
 from components import checks, strings as s, config as c
-from components.amadeusMenu import AmadeusMenu
-from components.amadeusPrompt import AmadeusPrompt
+from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus
+from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 from components.config import ConfigStatus, PreparedInput
-from components.enums import AmadeusMenuStatus, AmadeusPromptStatus
 from components.strings import StringCombination
 
 
