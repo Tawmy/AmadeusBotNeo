@@ -50,7 +50,7 @@
                 "default": "!",
                 "data_type": "string",
                 "is_list": false,
-                "is_essential": false
+                "is_essential": true
             },
             "mods_override_limits": {
                 "name": {

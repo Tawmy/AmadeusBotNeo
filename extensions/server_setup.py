@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import json
 import shutil
 from dataclasses import dataclass
@@ -66,6 +67,9 @@ class ServerSetup(commands.Cog):
             embed = await self.__prepare_status_embed(ctx, SetupStatus.CANCELLED)
             return await setup_type_selection.message.edit(embed=embed)
 
+        # copy current config to later apply if cancelled
+        backed_up_config = copy.deepcopy(self.bot.config.get(str(ctx.guild.id)))
+
         await self.__initialise_guild_config(ctx, setup_type_selection.setup_type)
         all_successful_bool = await self.__iterate_config_options(ctx, setup_user, setup_type_selection.message)
 
@@ -82,8 +86,8 @@ class ServerSetup(commands.Cog):
         if setup_status == SetupStatus.SUCCESSFUL:
             embed = await self.__check_bot_permissions(ctx)
             await ctx.send(embed=embed)
-
-        # TODO temporarily save config before setup and restore if cancel or timeout
+        elif setup_status == SetupStatus.CANCELLED and setup_type_selection.setup_type == SetupType.REGULAR:
+            self.bot.config[str(ctx.guild.id)] = backed_up_config
 
     async def __prepare_setup_type_selection_menu(self, ctx) -> AmadeusMenu:
         string = s.String("server_setup", "setup_title")
