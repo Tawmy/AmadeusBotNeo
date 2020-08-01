@@ -1,186 +1,353 @@
 {
     "amadeus": {
         "exception_forbidden": {
-            "en": ["Cannot reply in", "due to missing permissions.\n\nThis was caused by", "running the `", "` command."],
-            "de": ["Kann in", "aufgrund von fehlenden Berechtigungen nicht antworten.\n\nDies wurde durch", "und den Befehl `", "` verursacht."]
+            "en": {
+                "neutral": ["Cannot reply in", "due to missing permissions.\n\nThis was caused by", "running the `", "` command."]
+            },
+            "de": {
+                "neutral": ["Kann in", "aufgrund von fehlenden Berechtigungen nicht antworten.\n\nDies wurde durch", "und den Befehl `", "` verursacht."]}
         }
     },
     "prompt": {
         "please_enter": {
-            "en": "Please enter:",
-            "de": "Bitte eingeben:"
+            "en": {
+                "neutral": "Please enter:"
+            },
+            "de": {
+                "neutral": "Bitte eingeben:"
+            }
         },
         "error_not_found": {
-            "en": "\n\n⚠ Not found. Please try again.",
-            "de": "\n\n⚠ Nicht gefunden. Bitte nochmal versuchen."
+            "en": {
+                "neutral": "\n\n⚠ Not found. Please try again."
+            },
+            "de": {
+                "neutral": "\n\n⚠ Nicht gefunden. Bitte nochmal versuchen."
+            }
         }
     },
     "server_setup": {
         "setup_title": {
-            "en": "Setup",
-            "de": "Setup"
+            "en": {
+                "neutral": "Setup"
+            },
+            "de": {
+                "neutral": "Setup"
+            }
         },
         "setup_introduction": {
-            "en": ["Before", "can do its job, some channels and roles need to be configured.", "will walk you through this process step by step.\n\n"],
-            "de": ["Bevor", "arbeiten kann, müssen einige Kanäle und Rollen konfiguriert werden.", "wird Dich Schritt für Schritt durch diesen Prozess führen.\n\n"]
+            "en": {
+                "neutral": ["Before", "can do its job, some channels and roles need to be configured.", "will walk you through this process step by step.\n\n"]
+            },
+            "de": {
+                "neutral": ["Bevor", "arbeiten kann, müssen einige Kanäle und Rollen konfiguriert werden.", "wird Dich Schritt für Schritt durch diesen Prozess führen.\n\n"]
+            }
         },
         "server_configured_before": {
-            "en": "Your server has been configured before. You can choose to either overwrite only the channels and roles set during setup, or reset the configuration **entirely** (❗).\n\n\uD83D\uDFE6 *Regular setup* **|** \uD83D\uDFE5 *Full reset*",
-            "de": "Dieser Server wurde bereits konfiguriert. Du kannst entweder nur die Optionen, die während des Setups konfiguriert werden, überschreiben, oder die Konfiguration **vollständig** (❗) zurücksetzen.\n\n\uD83D\uDFE6 *Normaler Setup* **|** \uD83D\uDFE5 *Vollständig zurücksetzen*"
+            "en": {
+                "neutral": "Your server has been configured before. You can choose to either overwrite only the channels and roles set during setup, or reset the configuration **entirely** ().\n\n\uD83D\uDFE6 *Regular setup* **|** \uD83D\uDFE5 *Full reset*"
+            },
+            "de": {
+                "neutral": "Dieser Server wurde bereits konfiguriert. Du kannst entweder nur die Optionen, die während des Setups konfiguriert werden, überschreiben, oder die Konfiguration **vollständig** () zurücksetzen.\n\n\uD83D\uDFE6 *Normaler Setup* **|** \uD83D\uDFE5 *Vollständig zurücksetzen*"
+            }
         },
         "setup_confirm_ready": {
-            "en": "Once you are ready, click the ✅ reaction under this message.",
-            "de": "Betätige mit einem Kick auf ✅ unter dieser Nachricht, dass Du bereit bist."
+            "en": {
+                "neutral": "Once you are ready, click the ✅ reaction under this message."
+            },
+            "de": {
+                "neutral": "Betätige mit einem Kick auf ✅ unter dieser Nachricht, dass Du bereit bist."
+            }
         },
         "setup_cancelled": {
-            "en": "Setup cancelled",
-            "de": "Setup abgebrochen"
+            "en": {
+                "neutral": "Setup cancelled"
+            },
+            "de": {
+                "neutral": "Setup abgebrochen"
+            }
         },
         "setup_successful": {
-            "en": "Setup successful!",
-            "de": "Setup erfolgreich!"
+            "en": {
+                "neutral": "Setup successful!"
+            },
+            "de": {
+                "neutral": "Setup erfolgreich!"
+            }
         },
         "setup_successful_description": {
-            "en": ["You can now use", "!\n\nBelow are all the permissions the bot needs in the channels just set up. Please make sure to grant it access to all of these."],
-            "de": ["Du kannst", "jetzt benutzen!\n\nUnten sind alle Berechtigungen gelistet, die der Bot in den jeweiligen Kanälen braucht. Bitte stelle sicher, dass der Bot Zugriff auf alle von diesen hat."]
+            "en": {
+                "neutral": ["You can now use", "!\n\nBelow are all the permissions the bot needs in the channels just set up. Please make sure to grant it access to all of these."]
+            },
+            "de": {
+                "neutral": ["Du kannst", "jetzt benutzen!\n\nUnten sind alle Berechtigungen gelistet, die der Bot in den jeweiligen Kanälen braucht. Bitte stelle sicher, dass der Bot Zugriff auf alle von diesen hat."]
+            }
         },
         "setup_error_save_config": {
-            "en": "Could not save config.",
-            "de": "Konfiguration konnte nicht gespeichert werden."
+            "en": {
+                "neutral": "Could not save config."
+            },
+            "de": {
+                "neutral": "Konfiguration konnte nicht gespeichert werden."
+            }
         }
     },
     "config": {
         "select_category": {
-            "en": "Please select a category",
-            "de": "Bitte eine Kategorie wählen"
+            "en": {
+                "neutral": "Please select a category"
+            },
+            "de": {
+                "neutral": "Bitte eine Kategorie wählen"
+            }
         },
         "current_value": {
-            "en": "Current value",
-            "de": "Aktueller Wert"
+            "en": {
+                "neutral": "Current value"
+            },
+            "de": {
+                "neutral": "Aktueller Wert"
+            }
         },
         "default_value": {
-            "en": "Default value",
-            "de": "Standardwert"
+            "en": {
+                "neutral": "Default value"
+            },
+            "de": {
+                "neutral": "Standardwert"
+            }
         },
         "valid_entries": {
-            "en": "Valid entries",
-            "de": "Zulässige Werte"
+            "en": {
+                "neutral": "Valid entries"
+            },
+            "de": {
+                "neutral": "Zulässige Werte"
+            }
         },
         "option_change": {
-            "en": "Change",
-            "de": "Ändern"
+            "en": {
+                "neutral": "Change"
+            },
+            "de": {
+                "neutral": "Ändern"
+            }
         },
         "option_setdefault": {
-            "en": "Set to default",
-            "de": "Auf Standardwert"
+            "en": {
+                "neutral": "Set to default"
+            },
+            "de": {
+                "neutral": "Auf Standardwert"
+            }
         }
     },
     "config_status": {
         "OPTION_DOES_NOT_EXIST": {
-            "en": "Configuration option does not exist",
-            "de": "Konfigurationsoption existiert nicht"
+            "en": {
+                "neutral": "Configuration option does not exist"
+            },
+            "de": {
+                "neutral": "Konfigurationsoption existiert nicht"
+            }
         },
         "CONVERSION_FAILED": {
-            "en": "",
-            "de": ""
+            "en": {
+                "neutral": ""
+            },
+            "de": {
+                "neutral": ""
+            }
         },
         "NOT_VALID_FOR_DATA_TYPE": {
-            "en": "Invalid input",
-            "de": "Ungültige Eingabe"
+            "en": {
+                "neutral": "Invalid input"
+            },
+            "de": {
+                "neutral": "Ungültige Eingabe"
+            }
         },
         "NOT_VALID_FOR_DATA_TYPE_DESC": {
-            "en": "Your input is not matching the type this configuration option accepts. All allowed values are listed when you check on the configuration option.",
-            "de": "Der Input stimmt nicht mit den Vorgaben der Konfigurationsoption überein. Alle erlaubten Werte werden beim Aufruf der Konfigurationsoption gelistet."
+            "en": {
+                "neutral": "Your input is not matching the type this configuration option accepts. All allowed values are listed when you check on the configuration option."
+            },
+            "de": {
+                "neutral": "Der Input stimmt nicht mit den Vorgaben der Konfigurationsoption überein. Alle erlaubten Werte werden beim Aufruf der Konfigurationsoption gelistet."
+            }
         },
         "UNKNOWN_DATA_TYPE": {
-            "en": "",
-            "de": ""
+            "en": {
+                "neutral": ""
+            },
+            "de": {
+                "neutral": ""
+            }
         },
         "NOT_IN_VALID_LIST": {
-            "en": "Invalid input",
-            "de": "Ungültige Eingabe"
+            "en": {
+                "neutral": "Invalid input"
+            },
+            "de": {
+                "neutral": "Ungültige Eingabe"
+            }
         },
         "NOT_IN_VALID_LIST_DESC": {
-            "en": "This data type only accepts specific values. All allowed values are listed when you check on the configuration option.",
-            "de": "Dieser Datentyp akzeptiert nur bestimmte Werde. Alle erlaubten Werte werden beim Aufruf der Konfigurationsoption gelistet."
+            "en": {
+                "neutral": "This data type only accepts specific values. All allowed values are listed when you check on the configuration option."
+            },
+            "de": {
+                "neutral": "Dieser Datentyp akzeptiert nur bestimmte Werde. Alle erlaubten Werte werden beim Aufruf der Konfigurationsoption gelistet."
+            }
         },
         "TEXT_CHANNEL_NOT_FOUND": {
-            "en": "Channel not found",
-            "de": "Kanal nicht gefunden"
+            "en": {
+                "neutral": "Channel not found"
+            },
+            "de": {
+                "neutral": "Kanal nicht gefunden"
+            }
         },
         "TEXT_CHANNEL_NOT_FOUND_DESC": {
-            "en": "At least one of the given channels was not found. Please check if all of them exist and are spelt correctly.",
-            "de": "Mindestens einer der gegebenen Kanäle wurde nicht gefunden. Bitte überprüfe, ob alle existieren und korrekt geschrieben sind."
+            "en": {
+                "neutral": "At least one of the given channels was not found. Please check if all of them exist and are spelt correctly."
+            },
+            "de": {
+                "neutral": "Mindestens einer der gegebenen Kanäle wurde nicht gefunden. Bitte überprüfe, ob alle existieren und korrekt geschrieben sind."
+            }
         },
         "ROLE_NOT_FOUND": {
-            "en": "Role not found",
-            "de": "Rolle nicht gefunden"
+            "en": {
+                "neutral": "Role not found"
+            },
+            "de": {
+                "neutral": "Rolle nicht gefunden"
+            }
         },
         "ROLE_NOT_FOUND_DESC": {
-            "en": "At least one of the given roles was not found. Please check if all of them exist and are spelt correctly.",
-            "de": "Mindestens einer der gegebenen Rollen wurde nicht gefunden. Bitte überprüfe, ob alle existieren und korrekt geschrieben sind."
+            "en": {
+                "neutral": "At least one of the given roles was not found. Please check if all of them exist and are spelt correctly."
+            },
+            "de": {
+                "neutral": "Mindestens einer der gegebenen Rollen wurde nicht gefunden. Bitte überprüfe, ob alle existieren und korrekt geschrieben sind."
+            }
         },
         "SAVE_SUCCESS": {
-            "en": "Configuration saved!",
-            "de": "Konfiguration gespeichert!"
+            "en": {
+                "neutral": "Configuration saved!"
+            },
+            "de": {
+                "neutral": "Konfiguration gespeichert!"
+            }
         },
         "SAVE_FAIL": {
-            "en": "Could not save config.",
-            "de": "Konfiguration konnte nicht gespeichert werden."
+            "en": {
+                "neutral": "Could not save config."
+            },
+            "de": {
+                "neutral": "Konfiguration konnte nicht gespeichert werden."
+            }
         },
         "OTHER": {
-            "en": "Configuration closed",
-            "de": "Konfiguration geschlossen"
+            "en": {
+                "neutral": "Configuration closed"
+            },
+            "de": {
+                "neutral": "Konfiguration geschlossen"
+            }
         }
     },
     "amadeusMenu": {
         "options": {
-            "en": "Options",
-            "de": "Optionen"
+            "en": {
+                "neutral": "Options"
+            },
+            "de": {
+                "neutral": "Optionen"
+            }
         }
     },
     "amadeusMenuStatus": {
         "NEW": {
-            "en": "Menu was created",
-            "de": "Menü wurde erstellt"
+            "en": {
+                "neutral": "Menu was created"
+            },
+            "de": {
+                "neutral": "Menü wurde erstellt"
+            }
         },
         "SHOWN": {
-            "en": "Menu was shown",
-            "de": "Menü wurde angezeigt"
+            "en": {
+                "neutral": "Menu was shown"
+            },
+            "de": {
+                "neutral": "Menü wurde angezeigt"
+            }
         },
         "CANCELLED": {
-            "en": "Cancelled by user",
-            "de": "Vom Nutzer abgebrochen"
+            "en": {
+                "neutral": "Cancelled by user"
+            },
+            "de": {
+                "neutral": "Vom Nutzer abgebrochen"
+            }
         },
         "TIMEOUT": {
-            "en": "Menu closed due to timeout",
-            "de": "Menü wegen Zeitüberschreitung geschlossen"
+            "en": {
+                "neutral": "Menu closed due to timeout"
+            },
+            "de": {
+                "neutral": "Menü wegen Zeitüberschreitung geschlossen"
+            }
         },
         "SELECTED": {
-            "en": "Option selected",
-            "de": "Option ausgewählt"
+            "en": {
+                "neutral": "Option selected"
+            },
+            "de": {
+                "neutral": "Option ausgewählt"
+            }
         }
     },
     "amadeusPromptStatus": {
         "NEW": {
-            "en": "Prompt was created",
-            "de": "Prompt wurde erstellt"
+            "en": {
+                "neutral": "Prompt was created"
+            },
+            "de": {
+                "neutral": "Prompt wurde erstellt"
+            }
         },
         "SHOWN": {
-            "en": "Prompt was shown",
-            "de": "Prompt wurde angezeigt"
+            "en": {
+                "neutral": "Prompt was shown"
+            },
+            "de": {
+                "neutral": "Prompt wurde angezeigt"
+            }
         },
         "CANCELLED": {
-            "en": "Cancelled by user",
-            "de": "Vom Nutzer abgebrochen"
+            "en": {
+                "neutral": "Cancelled by user"
+            },
+            "de": {
+                "neutral": "Vom Nutzer abgebrochen"
+            }
         },
         "TIMEOUT": {
-            "en": "Prompt closed due to timeout",
-            "de": "Prompt wegen Zeitüberschreitung geschlossen"
+            "en": {
+                "neutral": "Prompt closed due to timeout"
+            },
+            "de": {
+                "neutral": "Prompt wegen Zeitüberschreitung geschlossen"
+            }
         },
         "INPUT_GIVEN": {
-            "en": "Input given",
-            "de": "Eingabe gegeben"
+            "en": {
+                "neutral": "Input given"
+            },
+            "de": {
+                "neutral": "Eingabe gegeben"
+            }
         }
     }
 }
