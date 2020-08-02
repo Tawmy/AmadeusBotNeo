@@ -7,7 +7,7 @@ from discord.ext import commands
 
 from components import strings as s
 from components.amadeusMenu import AmadeusMenu
-from components.amadeusPrompt import AmadeusPrompt
+from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 
 
 class Changelog(commands.Cog):
@@ -16,8 +16,24 @@ class Changelog(commands.Cog):
 
     @commands.command(name='changelog')
     async def changelog(self, ctx, version: str = None):
+        result = None
         if version is None:
-            pass
+            # if no version given, show version history and prompt for input
+            prompt = await self.__prepare_version_list_prompt(ctx)
+            result = await prompt.show_prompt(ctx, 120)
+            # cancel by showing result if no input given
+            if result.status != AmadeusPromptStatus.INPUT_GIVEN:
+                await prompt.show_result(ctx)
+            else:
+                version = result.input
+        # if version given either on command call or through prompt, check if exists and show details
+        if version is not None:
+            embed = await self.__prepare_version_info_embed(ctx, version)
+            # if prompt shown previously, edit, otherwise send new message
+            if result is not None and result.message is not None:
+                await result.message.edit(embed=embed)
+            else:
+                await ctx.send(embed=embed)
 
     @commands.command(name='addchangelog')
     @commands.is_owner()
@@ -45,6 +61,33 @@ class Changelog(commands.Cog):
         await self.__add_to_changelog(version_number, changes)
         await self.__save_changelog()
         await self.__show_result(ctx, True)
+
+    async def __prepare_version_list_prompt(self, ctx):
+        string = await s.get_string(ctx, "changelog", "version_history")
+        prompt = AmadeusPrompt(self.bot, string.string)
+        await prompt.set_user_specific(True)
+        string = await s.get_string(ctx, "changelog", "please_select")
+        version_list = string.string + "\n\n"
+        for version_number in self.bot.changelog:
+            version_list += version_number + "\n"
+        await prompt.set_description(version_list)
+        return prompt
+
+    async def __prepare_version_info_embed(self, ctx, version) -> discord.Embed:
+        embed = discord.Embed()
+        if self.bot.changelog.get(version) is None:
+            string = await s.get_string(ctx, "changelog", "does_not_exist")
+            embed.title = string.string
+        else:
+            string = await s.get_string(ctx, "changelog", "version")
+            embed.title = string.string + " " + version
+            date_changelog = self.bot.changelog.get(version).get("date")
+            changes = self.bot.changelog.get(version).get("changes")
+            string = await s.get_string(ctx, "changelog", "release_date")
+            embed.add_field(name=string.string, value=date_changelog)
+            string = await s.get_string(ctx, "changelog", "changes")
+            embed.add_field(name=string.string, value=changes, inline=False)
+        return embed
 
     async def __ask_for_version_number(self, ctx, string_version_number):
         prompt = AmadeusPrompt(self.bot, string_version_number.string)

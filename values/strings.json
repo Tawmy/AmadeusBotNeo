@@ -359,6 +359,14 @@
         }
     },
     "changelog": {
+        "version": {
+            "en": {
+                "neutral": "Version"
+            },
+            "de": {
+                "neutral": "Version"
+            }
+        },
         "version_number": {
             "en": {
                 "neutral": "Version number"
@@ -397,6 +405,38 @@
             },
             "de": {
                 "neutral": "Nicht hinzugefügt. Der Changelog wurde nicht bearbeitet."
+            }
+        },
+        "does_not_exist": {
+            "en": {
+                "neutral": "The specified version does not exist."
+            },
+            "de": {
+                "neutral": "Die angegebene Version existiert nicht."
+            }
+        },
+        "release_date": {
+            "en": {
+                "neutral": "Release date"
+            },
+            "de": {
+                "neutral": "Veröffentlichungsdatum"
+            }
+        },
+        "version_history": {
+            "en": {
+                "neutral": "Version history"
+            },
+            "de": {
+                "neutral": "Versions-Historie"
+            }
+        },
+        "please_select": {
+            "en": {
+                "neutral": "Please enter the release you want to see the details of:"
+            },
+            "de": {
+                "neutral": "Bitte Version wählen, dessen Details angezeigt werden sollen:"
             }
         }
     }
