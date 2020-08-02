@@ -357,5 +357,47 @@
                 "neutral": "Eingabe gegeben"
             }
         }
+    },
+    "changelog": {
+        "version_number": {
+            "en": {
+                "neutral": "Version number"
+            },
+            "de": {
+                "neutral": "Versionsnummer"
+            }
+        },
+        "changes": {
+            "en": {
+                "neutral": "Changes"
+            },
+            "de": {
+                "neutral": "Änderungen"
+            }
+        },
+        "save": {
+            "en": {
+                "neutral": "Add this version to changelog?"
+            },
+            "de": {
+                "neutral": "Version zum Changelog hinzufügen?"
+            }
+        },
+        "added": {
+            "en": {
+                "neutral": "Added to changelog."
+            },
+            "de": {
+                "neutral": "Zum Changelog hinzugefügt."
+            }
+        },
+        "not_added": {
+            "en": {
+                "neutral": "Not added. The changelog has not been modified."
+            },
+            "de": {
+                "neutral": "Nicht hinzugefügt. Der Changelog wurde nicht bearbeitet."
+            }
+        }
     }
 }

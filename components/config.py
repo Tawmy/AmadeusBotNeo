@@ -105,6 +105,14 @@ async def load_values(bot: commands.bot) -> list:
                 failed.append("datatypes")
     except FileNotFoundError as exc:
         failed.append(exc.filename)
+    try:
+        with open("values/changelog.json", 'r') as json_file:
+            try:
+                bot.changelog = json.load(json_file)
+            except ValueError:
+                failed.append("changelog")
+    except FileNotFoundError as exc:
+        failed.append(exc.filename)
     return failed
 
 
