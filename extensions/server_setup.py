@@ -80,13 +80,12 @@ class ServerSetup(commands.Cog):
             setup_status = SetupStatus.CANCELLED
 
         embed = await self.__prepare_status_embed(ctx, setup_status)
-        await setup_type_selection.message.edit(embed=embed)
 
         if setup_status == SetupStatus.SUCCESSFUL:
-            embed = await self.__check_bot_permissions(ctx)
-            await ctx.send(embed=embed)
+            embed = await self.__check_bot_permissions(ctx, embed)
         elif setup_status == SetupStatus.CANCELLED and setup_type_selection.setup_type == SetupType.REGULAR:
             self.bot.config[str(ctx.guild.id)] = backed_up_config
+        await setup_type_selection.message.edit(embed=embed)
 
     async def __prepare_setup_type_selection_menu(self, ctx) -> AmadeusMenu:
         string = await s.get_string(ctx, "server_setup", "setup_title")
@@ -186,8 +185,7 @@ class ServerSetup(commands.Cog):
             embed.title = string.string
         return embed
 
-    async def __check_bot_permissions(self, ctx) -> discord.Embed:
-        embed = discord.Embed()
+    async def __check_bot_permissions(self, ctx, embed) -> discord.Embed:
         for ch_key, ch_val in self.bot.config[str(ctx.guild.id)]["essential_channels"].items():
             channel = ctx.guild.get_channel(ch_val)
             permissions_have = channel.permissions_for(ctx.guild.me)
