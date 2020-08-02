@@ -108,6 +108,7 @@ class AmadeusPrompt:
         """
 
         await self.__prepare_footer(ctx)
+        await self.__add_cancel_string_to_footer(ctx)
         if message is None:
             self.__result.message = await ctx.send(embed=self.__embed)
         else:
@@ -154,11 +155,19 @@ class AmadeusPrompt:
             else:
                 text = ctx.author.display_name
                 avatar = ctx.author.avatar_url_as(static_format="png")
-            text += " | "
+        self.__embed.set_footer(text=text, icon_url=avatar)
+
+    async def __add_cancel_string_to_footer(self, ctx):
+        """
+            Make sure to always run __prepare_footer before this one, otherwise icon_url may cause exception
+        """
+        current_text = self.__embed.footer.text
+        if current_text is not None and len(current_text) > 0:
+            current_text += " | "
         string = await s.get_string(ctx, "prompt", "cancel")
         string_combination = await s.insert_into_string(["\"" + self.__cancel_string + "\""], string.list)
-        text += string_combination.string_combined
-        self.__embed.set_footer(text=text, icon_url=avatar)
+        current_text += string_combination.string_combined
+        self.__embed.set_footer(text=current_text, icon_url=self.__embed.footer.icon_url)
 
     async def __await_user_input(self, ctx, timeout_seconds):
         def check(user_message):
