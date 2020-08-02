@@ -88,8 +88,9 @@ async def get_string(ctx: Context, category: str, name: str) -> String:
     style = await get_guild_style(ctx)
     returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang, {}).get(style)
     # Get string in default language if nothing found for specified one
+    # TODO possibly fall back to default style before falling back to default lang
     if returned_string is None and lang != ctx.bot.default_language:
-        returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(ctx.bot.default_language)
+        returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(ctx.bot.default_language, {}).get(style)
     if isinstance(returned_string, list):
         string.list = returned_string
     else:
@@ -160,17 +161,19 @@ async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
 
     ex_string = ExceptionString(ex_name)
     lang = await get_guild_language(ctx)
+    style = await get_guild_style(ctx)
     exception = ctx.bot.exception_strings.get(ex_string.name)
     if exception is not None:
         ex_string.successful = True
-        ex_string.message = exception.get("message", {}).get(lang)
+        # TODO possibly fall back to default style before falling back to default lang
+        ex_string.message = exception.get("message", {}).get(lang, {}).get(style)
         # Get string in default language if nothing found for specified one
         if ex_string.message is None and lang != ctx.bot.default_language:
-            ex_string.message = exception.get("message", {}).get(ctx.bot.default_language)
-        description = exception.get("description", {}).get(lang)
+            ex_string.message = exception.get("message", {}).get(ctx.bot.default_language, {}).get(style)
+        description = exception.get("description", {}).get(lang, {}).get(style)
         # Get string in default language if nothing found for specified one
         if description is None and lang != ctx.bot.default_language:
-            description = exception.get("description", {}).get(ctx.bot.default_language)
+            description = exception.get("description", {}).get(ctx.bot.default_language, {}).get(style)
         ex_string.description = [description] if isinstance(description, str) else description
     return ex_string
 
