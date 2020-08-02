@@ -10,6 +10,20 @@ from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 
 
+async def save_changelog(bot):
+    json_file = 'values/changelog.json'
+    retries = 4
+    while retries > 0:
+        with open(json_file, 'w') as file:
+            try:
+                json.dump(bot.changelog, file, indent=4)
+                return True
+            except Exception as e:
+                print(e)
+        retries -= 1
+        await asyncio.sleep(1)
+
+
 class Changelog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -59,7 +73,7 @@ class Changelog(commands.Cog):
 
         # if user selected yes, add to changelog and save to json file
         await self.__add_to_changelog(version_number, changes)
-        await self.__save_changelog()
+        await save_changelog(self.bot)
         await self.__show_result(ctx, True)
 
     async def __prepare_version_list_prompt(self, ctx):
@@ -129,19 +143,6 @@ class Changelog(commands.Cog):
         self.bot.changelog.get(version_number).setdefault("date", str(date.today()))
         self.bot.changelog.get(version_number).setdefault("acknowledged", False)
         self.bot.changelog.get(version_number).setdefault("changes", changes)
-
-    async def __save_changelog(self):
-        json_file = 'values/changelog.json'
-        retries = 4
-        while retries > 0:
-            with open(json_file, 'w') as file:
-                try:
-                    json.dump(self.bot.changelog, file, indent=4)
-                    return True
-                except Exception as e:
-                    print(e)
-            retries -= 1
-            await asyncio.sleep(1)
 
     async def __list_versions(self):
         embed = discord.Embed()

@@ -10,6 +10,7 @@ import discord
 from discord.ext import commands
 from components import exceptions as ex, strings, config
 from components.strings import InsertPosition
+from extensions.changelog import save_changelog
 
 
 def get_command_prefix(amadeus, message):
@@ -24,6 +25,7 @@ bot.ready = False
 bot.corrupt_configs = []
 bot.app_info = None
 bot.database_pool = None
+bot.changelog = None
 
 bot.config = {}
 with open("config/bot.json", 'r') as file:
@@ -441,48 +443,19 @@ async def connect_database(init_embed_extended, init_message_extended):
 
 
 async def check_changelog(init_embed, init_embed_extended):
-    sql = '''   (SELECT id, version, changes, acknowledged
-                FROM changelog
-                WHERE acknowledged = false
-                ORDER BY time
-                LIMIT 1)
-                
-                UNION ALL
-                
-                (SELECT id, version, changes, acknowledged
-                FROM changelog
-                WHERE acknowledged = true
-                ORDER BY time DESC
-                LIMIT 1)
-                '''
-
-    con = await bot.database_pool.acquire()
-    try:
-        fields = await con.fetch(sql)
-        bot.version = fields[0]["version"]
-    finally:
-        await bot.database_pool.release(con)
-
+    values = list(bot.changelog.items())[-1]
+    bot.version = values[0]
     embed_title = init_embed.title + " " + bot.version
     init_embed.title = embed_title
     init_embed_extended.title = embed_title
 
-    if len(fields) > 0 and fields[0]["acknowledged"] is False:
-
+    if values[1].get("acknowledged") is False:
         description = "**Changes:**\n"
-        description += fields[0]["changes"]
+        description += values[1].get("changes")
         init_embed.description = description
         init_embed_extended.description = description
-
-        sql = '''   UPDATE changelog
-                    SET acknowledged = true
-                    WHERE id = $1::integer'''
-
-        con = await bot.database_pool.acquire()
-        try:
-            await con.execute(sql, fields[0]["id"])
-        finally:
-            await bot.database_pool.release(con)
+        values[1]["acknowledged"] = True
+        await save_changelog(bot)
 
         return init_embed, init_embed_extended
 
