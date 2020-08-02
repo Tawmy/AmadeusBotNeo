@@ -13,6 +13,10 @@
         "error_not_found": {
             "en": "\n\n⚠ Not found. Please try again.",
             "de": "\n\n⚠ Nicht gefunden. Bitte nochmal versuchen."
+        },
+        "cancel": {
+            "en": ["Type", "to cancel"],
+            "de": ["Zum Abbrechen", "eingeben"]
         }
     },
     "server_setup": {

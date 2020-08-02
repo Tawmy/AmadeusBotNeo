@@ -155,7 +155,9 @@ class AmadeusPrompt:
                 text = ctx.author.display_name
                 avatar = ctx.author.avatar_url_as(static_format="png")
             text += " | "
-        text += "Type \"" + self.__cancel_string + "\" to cancel"
+        string = await s.get_string(ctx, "prompt", "cancel")
+        string_combination = await s.insert_into_string(["\"" + self.__cancel_string + "\""], string.list)
+        text += string_combination.string_combined
         self.__embed.set_footer(text=text, icon_url=avatar)
 
     async def __await_user_input(self, ctx, timeout_seconds):
