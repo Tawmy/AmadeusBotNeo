@@ -151,10 +151,10 @@ class AmadeusPrompt:
         if self.__is_user_specific:
             if self.__specified_user is not None:
                 text = self.__specified_user.display_name
-                avatar = self.__specified_user.avatar_url_as(static_format="png")
+                avatar = self.__specified_user.avatar_url_as(static_format="png", size=64)
             else:
                 text = ctx.author.display_name
-                avatar = ctx.author.avatar_url_as(static_format="png")
+                avatar = ctx.author.avatar_url_as(static_format="png", size=64)
         self.__embed.set_footer(text=text, icon_url=avatar)
 
     async def __add_cancel_string_to_footer(self, ctx):
