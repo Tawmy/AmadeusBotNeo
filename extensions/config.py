@@ -245,7 +245,6 @@ class Config(commands.Cog):
         prepared_input = await config.set_default_config(ctx, input_data.category, input_data.option)
         await self.__show_config_status(ctx, input_data.message, prepared_input.status)
 
-
     async def __convert_current_value(self, ctx, category, option):
         current_value = await config.get_config(ctx, category, option)
         converted_input = await config.prepare_input(ctx, category, option, current_value.value)

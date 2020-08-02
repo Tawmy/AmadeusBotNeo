@@ -9,7 +9,7 @@ import asyncpg
 import discord
 from discord.ext import commands
 from components import exceptions as ex, strings, config
-from components.strings import String, StringCombination, ExceptionString, InsertPosition
+from components.strings import InsertPosition
 
 
 def get_command_prefix(amadeus, message):
@@ -22,6 +22,8 @@ def get_command_prefix(amadeus, message):
 bot = commands.Bot(command_prefix=get_command_prefix)
 bot.ready = False
 bot.corrupt_configs = []
+bot.app_info = None
+bot.database_pool = None
 
 bot.config = {}
 with open("config/bot.json", 'r') as file:
@@ -385,11 +387,11 @@ async def load_extensions():
     for extension in bot.config["bot"]["extensions"]:
         try:
             bot.load_extension("extensions." + extension)
-        except (commands.ExtensionNotFound, commands.ExtensionFailed, commands.NoEntryPointError) as ex:
-            print(ex)
+        except (commands.ExtensionNotFound, commands.ExtensionFailed, commands.NoEntryPointError) as exc:
+            print(exc)
             failed.append(extension)
-        except commands.ExtensionAlreadyLoaded as ex:
-            print(ex)
+        except commands.ExtensionAlreadyLoaded as exc:
+            print(exc)
     return failed
 
 
