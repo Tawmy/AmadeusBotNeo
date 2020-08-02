@@ -51,7 +51,7 @@
                 "data_type": "string",
                 "is_list": false,
                 "is_essential": false,
-                "valid": ["amadeus", "neutral"]
+                "valid": ["neutral"]
             },
             "command_prefix": {
                 "name": {
