@@ -24,6 +24,14 @@
             "de": {
                 "neutral": "\n\n⚠ Nicht gefunden. Bitte nochmal versuchen."
             }
+        },
+        "cancel": {
+			"en": {
+                "neutral": ["Type", "to cancel"]
+            },
+            "de": {
+                "neutral": ["Zum Abbrechen", "eingeben"]
+            }
         }
     },
     "server_setup": {

@@ -183,10 +183,10 @@ class AmadeusMenu:
         if self.__is_user_specific:
             if self.__specified_user is not None:
                 name = self.__specified_user.display_name
-                avatar = self.__specified_user.avatar_url_as(static_format="png")
+                avatar = self.__specified_user.avatar_url_as(static_format="png", size=64)
             else:
                 name = ctx.author.display_name
-                avatar = ctx.author.avatar_url_as(static_format="png")
+                avatar = ctx.author.avatar_url_as(static_format="png", size=64)
         if self.__footer_text is not None:
             if len(avatar) > 0:
                 name = name + " | "
