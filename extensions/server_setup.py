@@ -7,10 +7,11 @@ from os.path import isfile
 import discord
 from discord.ext import commands
 
-from components import checks, strings as s, config as c
+from components import checks
+from helpers import strings as s, config as c
 from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
-from components.config import ConfigStatus, PreparedInput
+from helpers.config import ConfigStatus, PreparedInput
 
 
 class SetupType(Enum):

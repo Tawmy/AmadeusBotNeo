@@ -5,7 +5,7 @@ from datetime import date
 import discord
 from discord.ext import commands
 
-from components import strings as s
+from helpers import strings as s
 from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 

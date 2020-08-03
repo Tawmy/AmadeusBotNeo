@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from components import strings as s
+from helpers import strings as s
 
 
 class ConfigStatus(Enum):

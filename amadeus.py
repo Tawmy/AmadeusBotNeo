@@ -8,8 +8,9 @@ import platform
 import asyncpg
 import discord
 from discord.ext import commands
-from components import exceptions as ex, strings, config
-from components.strings import InsertPosition
+from components import exceptions as ex
+from helpers import strings, config
+from helpers.strings import InsertPosition
 from extensions.changelog import save_changelog
 
 

@@ -4,7 +4,7 @@ from enum import Enum
 import discord
 
 from dataclasses import dataclass
-from components import strings as s
+from helpers import strings as s
 
 
 class AmadeusPromptStatus(Enum):
