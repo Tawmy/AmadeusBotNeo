@@ -169,9 +169,6 @@ async def on_ready():
         # Connect to database
         await connect_database(init_embed_extended, init_message_extended)
 
-        # Update guild table in database
-        await update_guilds_table()
-
         # Send startup message on all servers
         await send_startup_message(init_embed)
 
@@ -268,42 +265,6 @@ async def prepare_command_error_embed_custom(ctx, message, error_config=None):
             embed.description = ex_string.description[0]
     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
     return embed
-
-
-@bot.event
-async def on_guild_join(guild):
-    db_guilds = await request_guild_ids()
-
-    in_database = False
-    for db_guild in db_guilds:
-        if db_guild["id"] == guild.id:
-            in_database = True
-
-    if in_database is False:
-        await upsert_guild(guild)
-
-
-async def request_guild_ids():
-    sql = '''   SELECT id
-                FROM guilds'''
-
-    con = await bot.database_pool.acquire()
-    try:
-        return await con.fetch(sql)
-    finally:
-        await bot.database_pool.release(con)
-
-
-async def upsert_guild(guild):
-    sql = '''   INSERT INTO guilds (id, name)
-                VALUES ($1::bigint, $2::text)
-                ON CONFLICT (id)
-                DO UPDATE SET id = $1::bigint, name = $2::text'''
-    con = await bot.database_pool.acquire()
-    try:
-        await con.execute(sql, guild.id, guild.name)
-    finally:
-        await bot.database_pool.release(con)
 
 
 async def prepare_init_embeds():
@@ -421,8 +382,6 @@ async def load_configs():
 
 
 async def connect_database(init_embed_extended, init_message_extended):
-    bot.database_pool = None
-
     while bot.database_pool is None:
         try:
             bot.database_pool = await asyncpg.create_pool(host=bot.config["bot"]["database"]["ip"],
@@ -457,19 +416,6 @@ async def check_changelog(init_embed, init_embed_extended):
         await save_changelog(bot)
 
         return init_embed, init_embed_extended
-
-
-async def update_guilds_table():
-    db_guilds = await request_guild_ids()
-
-    db_guild_ids = []
-    for db_guild in db_guilds:
-        db_guild_ids.append(db_guild["id"])
-
-    # Upsert only if not already in guild list provided by Discord API
-    for bot_guild in bot.guilds:
-        if bot_guild.id not in db_guild_ids:
-            await upsert_guild(bot_guild)
 
 
 async def send_startup_message(init_embed):
