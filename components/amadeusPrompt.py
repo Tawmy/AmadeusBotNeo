@@ -23,6 +23,29 @@ class AmadeusPromptResult:
 
 
 class AmadeusPrompt:
+    """
+    Prompt awaiting text by user as input.
+
+    This menu can be customised using:
+    - set_author: Set the embed author
+    - set_title: Change the title of the prompt
+    - set_description: Set the embed description
+    - append_description: Append more text to the embed description
+    - add_field: Add a field to the embed
+    - set_user_specific: Sets if only one and optionally which user will be able to reply to the prompt
+    - set_cancel_string: Sets a custom cancel string - this is "cancel" by default
+
+    This menu can be controlled using:
+    - show_prompt: Shows prompt and awaits input for specified number of seconds
+    - show_result: Edits prompt and shows result
+
+    Parameters
+    ------------
+    bot: discord.ext.commands.bot
+        Bot object
+    title: str
+        Title of the prompt
+    """
     # TODO change bot to ctx for consistency (in menu too)
     def __init__(self, bot, title):
         self.bot = bot
@@ -36,18 +59,18 @@ class AmadeusPrompt:
         self.__result = AmadeusPromptResult()
 
     async def set_author(self, name, url="", icon_url=""):
-        """Sets the author of the amadeusPrompt.
+        """
+        Sets the author of the amadeusPrompt.
 
         Parameters
         -----------
-        name: :class:`str`
+        name: str
             The name of the author.
-        url: :class:`str`
+        url: Optional[str]
             An optional url.
-        icon_url: :class:`str`
+        icon_url: Optional[str]
             An optional icon url
         """
-
         self.__embed.set_author(name=name, url=url, icon_url=icon_url)
 
     async def set_title(self, title):
@@ -57,14 +80,14 @@ class AmadeusPrompt:
         self.__embed.description = description
 
     async def append_description(self, description):
-        """Appends to description.
+        """
+        Appends to description.
 
         Parameters
         -----------
-        description: :class:`str`
+        description: str
             The string to append to the description.
         """
-
         if self.__embed.description is not None and len(self.__embed.description) > 0:
             self.__embed.description += description
         else:
@@ -75,17 +98,17 @@ class AmadeusPrompt:
             self.__embed.add_field(name=name, value=description, inline=inline)
 
     async def set_user_specific(self, is_user_specific, user=None):
-        """Sets if the prompt should be usable by one speficic user only.
+        """
+        Sets if the prompt should be usable by one speficic user only.
         Defaults to context author if user is not speficied.
 
         Parameters
         -----------
-        is_user_specific: :class:`bool`
+        is_user_specific: bool
             Should prompt be user specific?.
-        user: :class:`discord.User`
+        user: Optional[discord.User]
             Optional user the prompt should be accessible by.
         """
-
         self.__is_user_specific = is_user_specific
         if user is not None:
             self.__specified_user = user
@@ -93,20 +116,19 @@ class AmadeusPrompt:
     async def set_cancel_string(self, cancel_string):
         self.__cancel_string = cancel_string
 
-    async def show_prompt(self, ctx, timeout_seconds, message=None):
-        """Displays the amadeusPrompt and waits for user input. Edits message if specified.
-        Returns AmadeusPromptResult object.
+    async def show_prompt(self, ctx, timeout_seconds, message=None) -> AmadeusPromptResult:
+        """
+        Displays the amadeusPrompt and waits for user input. Edits message if specified.
 
         Parameters
         -----------
-        ctx: :class:`discord.ext.commands.Context`
+        ctx: discord.ext.commands.Context
             The invocation context.
-        timeout_seconds: :class:`int`
+        timeout_seconds: int
             Timeout in seconds.
-        message: :class:`discord.Message`
+        message: Optional[discord.Message]
             Optional message. This will be edited if specified.
         """
-
         await self.__prepare_footer(ctx)
         await self.__add_cancel_string_to_footer(ctx)
         if message is None:
@@ -119,14 +141,14 @@ class AmadeusPrompt:
         return self.__result
 
     async def show_result(self, ctx):
-        """Edits menu to show result.
+        """
+        Edits menu to show result.
 
         Parameters
         -----------
-        ctx: :class:`discord.ext.commands.Context`
+        ctx: discord.ext.commands.Context
             The invocation context.
         """
-
         self.__embed = discord.Embed()
         string = None
 
@@ -159,7 +181,12 @@ class AmadeusPrompt:
 
     async def __add_cancel_string_to_footer(self, ctx):
         """
-            Make sure to always run __prepare_footer before this one, otherwise icon_url may cause exception
+        Make sure to always run __prepare_footer before this one, otherwise icon_url may cause exception.
+
+        Parameters
+        -----------
+        ctx: discord.ext.commands.Context
+            The invocation context.
         """
         current_text = self.__embed.footer.text
         if current_text is not None and len(current_text) > 0:
