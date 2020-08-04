@@ -1,4 +1,4 @@
-from enum import Enum
+from dataclasses import dataclass
 from io import BytesIO
 
 import pyxivapi
@@ -7,9 +7,16 @@ from PIL import Image, ImageDraw, ImageFont
 from discord.ext import commands
 
 
+@dataclass
+class Values:
+    name_top_y = 18
+    name_bottom_y = 48
+
+
 class FFXIV(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.values = Values()
 
     @commands.command(name='ffchar')
     async def ffchar(self, ctx, first_name: str, last_name: str, server: str):
@@ -54,11 +61,8 @@ class FFXIV(commands.Cog):
     async def __request_character_data(self, character_id: int):
         client = pyxivapi.XIVAPIClient(api_key=self.bot.config["bot"]["ffxiv"]["api_key"])
         character = await client.character_by_id(
-            # lodestone_id=28812634,
-            # lodestone_id=28835226,
-            # lodestone_id=11111111,
             lodestone_id=character_id,
-            extended=True,  # TODO check if extended necessary
+            extended=True,  # extended includes title string, not just id
             include_freecompany=True,
             include_classjobs=True
         )
@@ -79,7 +83,7 @@ class FFXIV(commands.Cog):
 
     async def __add_character_name(self, draw: ImageDraw.Draw, font: ImageFont.truetype, character: dict, width: int):
         name = character.get("Character", {}).get("Name")
-        name_position_y = 48
+        name_position_y = self.values.name_bottom_y
         if character.get("FreeCompany") is not None:
             name += " <<" + character.get("FreeCompany", {}).get("Tag") + ">>"
         font_width_name, font_height_name = draw.textsize(name, font=font)
@@ -88,10 +92,10 @@ class FFXIV(commands.Cog):
             title = "<" + title + ">"
             font_width_title, font_height_title = draw.textsize(title, font=font)
             if character.get("Character", {}).get("TitleTop"):
-                title_position_y = 18
+                title_position_y = self.values.name_top_y
             else:
-                name_position_y = 18
-                title_position_y = 48
+                name_position_y = self.values.name_top_y
+                title_position_y = self.values.name_bottom_y
             draw.text((width / 2 - font_width_title / 2, title_position_y), title, fill='rgb(255, 255, 255)', font=font)
         draw.text((width / 2 - font_width_name / 2, name_position_y), name, fill='rgb(255, 255, 255)', font=font)
 
