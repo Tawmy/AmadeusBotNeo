@@ -72,14 +72,15 @@ class PreparedInput:
 
 
 async def load_values(bot: commands.bot) -> list:
-    """Loads options and limits values. Returns list with filenames that failed.
+    """
+    Loads options, limits, datatypes, and changelog from values directory.
+    Returns list with filenames that failed.
 
     Parameters
     -----------
-    bot: :class:`discord.ext.commands.bot`
+    bot: discord.ext.commands.bot
         The bot object.
     """
-
     failed = []
     try:
         with open("values/options.json", 'r') as json_file:
@@ -117,18 +118,19 @@ async def load_values(bot: commands.bot) -> list:
 
 
 async def get_config(ctx: Context, category: str, name: str) -> Config:
-    """Returns value of config item specified. Returns default value if not set.
+    """
+    Returns value of config item specified for the guild from context.
+    Returns default value if not set.
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         The invocation context.
-    category: :class:`str`
+    category: str
         Category of the config option.
-    name: :class:`str`
+    name: str
         Name of the config option.
     """
-
     config = Config(category, name)
     config_value = ctx.bot.config.get(str(ctx.guild.id), {}).get(category, {}).get(name)
     if config_value is None:
@@ -150,18 +152,19 @@ async def __get_default_config_value(ctx: Context, category: str, name: str) -> 
 
 
 async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
-    """Returns valid input for given config option.
+    """
+    Checks what type of input and if applicable which specific input must be provided. (eg ["en", "de"] for language)
+    Returns ValidInput for given config option.
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         The invocation context.
-    category: :class:`str`
+    category: str
         Category of the config option.
-    name: :class:`str`
+    name: str
         Name of the config option.
     """
-
     valid_input = ValidInput()
     option = ctx.bot.options.get(category, {}).get("list", {}).get(name, {})
     data_type = option.get("data_type")
@@ -195,19 +198,19 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
 
 
 async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool = True):
-    """Sets config value. First checks if it exists at all, then sets it and saves to config file.
-    Please run the input through prepare_input first.
+    """
+    Sets config value. First checks if it exists at all, then sets it and saves to config file.
+    !!! Please run the input through prepare_input first !!!
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         The invocation context.
-    prepared_input: :class:`PreparedInput`
+    prepared_input: PreparedInput
         Prepared input from prepare_input()
-    do_save: :class:`bool`
+    do_save: Optional[bool]
         Defines if value should be saved to file. Defaults to True.
     """
-
     await __convert_to_ids(prepared_input)
     if len(prepared_input.list) == 1:
         value = prepared_input.list[0]
@@ -236,18 +239,20 @@ async def __convert_to_ids(prepared_input: PreparedInput):
 
 
 async def prepare_input(ctx: Context, category: str, name: str, user_input) -> PreparedInput:
-    """Checks if input matches type specified in options list. Runs input converter when ctx specified.
+    """
+    Checks if input matches type specified in options list.
+    Eg checks if valid channel/role, or if given input is part of the option's valid_list.
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         Invocation context.
-    category: :class:`str`
+    category: str
         Category of the config option.
-    name: :class:`str`
+    name: str
         Name of the config option.
     user_input:
-        Input the user provided. Will be converted to str.
+        Input the user provided. Can be str, tuple of strings, bool, or int.
     """
 
     prepared_input = PreparedInput(category, name)
@@ -299,11 +304,12 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
 
 
 async def save_config(ctx: Context,) -> bool:
-    """Saves config of guild from ctx to json file
+    """
+    Saves config of guild from ctx to json file.
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         Invocation context, needed to determine guild.
     """
     if ctx.guild is not None:
