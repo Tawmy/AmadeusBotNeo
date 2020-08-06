@@ -52,6 +52,15 @@ class StringCombination:
 
 
 async def load_strings(bot: commands.bot) -> list:
+    """
+    Loads strings and exceptions from values directory.
+    Returns list with filenames that failed.
+
+    Parameters
+    -----------
+    bot: discord.ext.commands.bot
+        The bot object.
+    """
     bot.default_language = bot.config["bot"].get("default_language", "en")
     failed = []
     try:
@@ -71,15 +80,16 @@ async def load_strings(bot: commands.bot) -> list:
 
 
 async def get_string(ctx: Context, category: str, name: str) -> String:
-    """Gets string.
+    """
+    Gets string. First tries to get string in server language, falls back to default language if not found.
 
     Parameters
     -----------
-    ctx: :class:`Context`
-        Context
-    category: :class:`str`
+    ctx: discord.ext.commands.Context
+        Invocation context. Needed to determine guild language.
+    category: str
         Category of string.
-    name: :class:`str`
+    name: str
         Name of string.
     """
 
@@ -101,15 +111,16 @@ async def get_string(ctx: Context, category: str, name: str) -> String:
 
 
 async def get_guild_language(ctx: Context, string: String = None) -> str:
-    """Gets language for guild.
+    """
+    Gets language for guild.
     Returns default language if run outside of a guild or if guild has no language set.
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         Invocation context, needed to determine guild.
-    string: :class:`String`
-        Optional String dataclass. If provided, return type is set.
+    string: Optional[str]
+        Optional String dataclass. If provided, return type in this dataclass object is set.
     """
 
     if ctx.guild is not None:
@@ -128,12 +139,13 @@ async def get_guild_language(ctx: Context, string: String = None) -> str:
 
 
 async def get_guild_style(ctx: Context) -> str:
-    """Gets language for guild.
-    Returns default language if run outside of a guild or if guild has no language set.
+    """
+    Gets language style for guild.
+    Returns default style if run outside of a guild or if guild has no language set.
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         Invocation context, needed to determine guild.
     """
 
@@ -149,13 +161,14 @@ async def get_guild_style(ctx: Context) -> str:
 
 
 async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
-    """Gets strings for exception.
+    """
+    Gets strings for exception.
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         Invocation context, needed to determine guild.
-    ex_name: :class:`str`
+    ex_name: str
         Name of Exception.
     """
 
@@ -179,13 +192,14 @@ async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
 
 
 async def extract_config_option_strings(ctx: Context, option_dict: dict) -> OptionStrings:
-    """Extracts config strings from submitted configuration option dictionary.
+    """
+    Extracts config strings from submitted configuration option dictionary.
 
     Parameters
     -----------
-    ctx: :class:`discord.ext.commands.Context`
+    ctx: discord.ext.commands.Context
         Invocation context, needed to determine guild.
-    option_dict: :class:`dict`
+    option_dict: dict
         Dictionary to extract strings from.
     """
 
@@ -205,16 +219,17 @@ async def extract_config_option_strings(ctx: Context, option_dict: dict) -> Opti
 
 
 async def insert_into_string(strings_source: list, strings_target: list, position: InsertPosition = None) -> StringCombination:
-    """Inserts values into string. Length of values must be one shorter than strings.
+    """
+    Inserts values into string. Length of strings_source is ideally one less than length of strings_target.
     If same length, position must be speficied.
 
     Parameters
     -----------
-    strings_source: :class:`list`
+    strings_source: list
         List of strings to be inserted into strings_target.
-    strings_target: :class:`list`
+    strings_target: list
         List of strings strings_source should be inserted into.
-    position: :class:`InsertionPosition`
+    position: Optional[InsertionPosition]
         Enum required if length of strings_source = strings_target.
         Sets whether strings_source are to be inserted on the left or right.
     """
@@ -250,14 +265,15 @@ async def insert_into_string(strings_source: list, strings_target: list, positio
 
 
 async def append_roles(string: str, roles: list) -> str:
-    """Adds newlines and appends roles to string.
+    """
+    Adds newlines and appends roles to string.
     I actually hate this.
 
     Parameters
     -----------
-    string: :class:`str`
+    string: str
         String to append to.
-    roles: :class:`list`
+    roles: list
         List of strings to append to string.
     """
 
