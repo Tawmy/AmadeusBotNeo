@@ -28,7 +28,7 @@ class FFXIV(commands.Cog):
         character = await self.__request_character_data(character_id)
 
         # load background image, download character image, merge them
-        image = await self.__load_image(character)
+        image = await self.__load_images(character)
         draw = ImageDraw.Draw(image)
         font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=24)
 
@@ -72,13 +72,15 @@ class FFXIV(commands.Cog):
             return character
         return None
 
-    async def __load_image(self, character: dict):
-        background = Image.open("resources/ffchar.jpg")
+    async def __load_images(self, character: dict):
+        template = Image.open("resources/ffchar.png")
+        background = Image.new('RGB', template.size, color='grey')
         response = requests.get(character.get("Character", {}).get("Portrait"))
         character = Image.open(BytesIO(response.content))
+        character = character.crop((40, 0, 600, 873))
         # portrait height is 873px, hence the 27 above
-        position_w = int(background.width / 2 - character.width / 2)
-        background.paste(character, (position_w, background.height - character.height))
+        background.paste(character, (0, background.height - character.height))
+        background.paste(template, (0, 0), template)
         return background
 
     async def __add_character_name(self, draw: ImageDraw.Draw, font: ImageFont.truetype, character: dict, width: int):
