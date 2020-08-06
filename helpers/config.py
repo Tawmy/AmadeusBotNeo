@@ -113,6 +113,14 @@ async def load_values(bot: commands.bot) -> list:
                 failed.append("changelog")
     except FileNotFoundError as exc:
         failed.append(exc.filename)
+    try:
+        with open("values/ffxiv.json", 'r') as json_file:
+            try:
+                bot.ffxiv = json.load(json_file)
+            except ValueError:
+                failed.append("ffxiv")
+    except FileNotFoundError as exc:
+        failed.append(exc.filename)
     return failed
 
 

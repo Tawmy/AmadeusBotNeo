@@ -9,8 +9,8 @@ from discord.ext import commands
 
 @dataclass
 class Values:
-    name_top_y = 18
-    name_bottom_y = 48
+    name_top_y: int = 18
+    name_bottom_y: int = 48
 
 
 class FFXIV(commands.Cog):
@@ -34,6 +34,9 @@ class FFXIV(commands.Cog):
 
         # add character name, fc when applicable, title when applicable
         await self.__add_character_name(draw, font, character, image.width)
+
+        # add job levels
+        await self.__add_job_levels(draw, font, character)
 
         # level_whm = str(character.get("Character", {}).get("ClassJobs", {})[8].get("Level"))
         # draw.text((1465, 115), level_whm, fill='rgb(255, 255, 255)', font=font)
@@ -100,6 +103,18 @@ class FFXIV(commands.Cog):
                 title_position_y = self.values.name_bottom_y
             draw.text((width / 2 - font_width_title / 2, title_position_y), title, fill='rgb(255, 255, 255)', font=font)
         draw.text((width / 2 - font_width_name / 2, name_position_y), name, fill='rgb(255, 255, 255)', font=font)
+
+    async def __add_job_levels(self, draw, font, character):
+        for ff_class in character.get("Character", {}).get("ClassJobs"):
+            abbr = ff_class.get("Job", {}).get("Abbreviation")
+            x, y = self.bot.ffxiv.get("JobPositions", {}).get(abbr).values()
+            level = ff_class.get("Level")
+            if level == 0:
+                text = "-"
+            else:
+                text = str(level)
+            txt_length_x, txt_length_y = draw.textsize(text, font=font)
+            draw.text((x - txt_length_x / 2, y - txt_length_y / 2), text, fill='rgb(255, 255, 255)', font=font)
 
 
 def setup(bot):
