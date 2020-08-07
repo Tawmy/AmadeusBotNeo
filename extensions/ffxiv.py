@@ -7,16 +7,9 @@ from PIL import Image, ImageDraw, ImageFont
 from discord.ext import commands
 
 
-@dataclass
-class Values:
-    name_top_y: int = 18
-    name_bottom_y: int = 48
-
-
 class FFXIV(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.values = Values()
 
     @commands.command(name='ffchar')
     async def ffchar(self, ctx, first_name: str, last_name: str, server: str):
@@ -33,7 +26,7 @@ class FFXIV(commands.Cog):
         font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=24)
 
         # add character name, fc when applicable, title when applicable
-        await self.__add_character_name(draw, font, character, image.width)
+        await self.__add_character_name(draw, character)
 
         # add job levels
         await self.__add_job_levels(draw, font, character)
@@ -86,23 +79,29 @@ class FFXIV(commands.Cog):
         background.paste(template, (0, 0), template)
         return background
 
-    async def __add_character_name(self, draw: ImageDraw.Draw, font: ImageFont.truetype, character: dict, width: int):
+    async def __add_character_name(self, draw: ImageDraw.Draw, character: dict):
         name = character.get("Character", {}).get("Name")
-        name_position_y = self.values.name_bottom_y
-        if character.get("FreeCompany") is not None:
-            name += " <<" + character.get("FreeCompany", {}).get("Tag") + ">>"
-        font_width_name, font_height_name = draw.textsize(name, font=font)
         title = character.get("Character", {}).get("Title", {}).get("Name")
+
         if len(title) > 0:
             title = "<" + title + ">"
-            font_width_title, font_height_title = draw.textsize(title, font=font)
             if character.get("Character", {}).get("TitleTop"):
-                title_position_y = self.values.name_top_y
+                cat = "title_top"
             else:
-                name_position_y = self.values.name_top_y
-                title_position_y = self.values.name_bottom_y
-            draw.text((width / 2 - font_width_title / 2, title_position_y), title, fill='rgb(255, 255, 255)', font=font)
-        draw.text((width / 2 - font_width_name / 2, name_position_y), name, fill='rgb(255, 255, 255)', font=font)
+                cat = "title_bot"
+            x_title, y_title = self.bot.ffxiv.get("NamePositions", {}).get(cat, {}).get("title").values()
+            font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=24)
+            await self.__print_text_centered_at_point(draw, font, title, x_title, y_title)
+        else:
+            cat = "no_title"
+
+        x_name, y_name = self.bot.ffxiv.get("NamePositions", {}).get(cat, {}).get("name").values()
+        font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=38)
+        await self.__print_text_centered_at_point(draw, font, name, x_name, y_name)
+
+    async def __print_text_centered_at_point(self, draw, font, text, x, y):
+        text_size_x, text_size_y = draw.textsize(text, font=font)
+        draw.text((x - text_size_x / 2, y - text_size_y / 2), text, fill='rgb(0, 0, 0)', font=font)
 
     async def __add_job_levels(self, draw, font, character):
         for ff_class in character.get("Character", {}).get("ClassJobs"):

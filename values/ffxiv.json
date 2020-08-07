@@ -1,4 +1,10 @@
 {
+    "Positions": {
+        "grand_company": {
+            "x": 515,
+            "y": 205
+        }
+    },
     "JobPositions": {
         "PLD": {
             "x": 550,
@@ -115,6 +121,34 @@
         "FSH": {
             "x": 1098,
             "y": 820
+        }
+    },
+    "NamePositions": {
+        "no_title": {
+            "name": {
+                "x": 830,
+                "y": 85
+            }
+        },
+        "title_top": {
+            "title": {
+                "x": 830,
+                "y": 60
+            },
+            "name": {
+                "x": 830,
+                "y": 105
+            }
+        },
+        "title_bot": {
+            "name": {
+                "x": 830,
+                "y": 70
+            },
+            "title": {
+                "x": 830,
+                "y": 115
+            }
         }
     }
 }
