@@ -31,14 +31,9 @@ class FFXIV(commands.Cog):
         # add job levels
         await self.__add_job_levels(draw, font, character)
 
-        # level_whm = str(character.get("Character", {}).get("ClassJobs", {})[8].get("Level"))
-        # draw.text((1465, 115), level_whm, fill='rgb(255, 255, 255)', font=font)
 
-        # level_sch = str(character.get("Character", {}).get("ClassJobs", {})[9].get("Level"))
-        # draw.text((1350, 115), level_sch, fill='rgb(255, 255, 255)', font=font)
+        await self.__add_grand_company(image, character)
 
-        # level_ast = str(character.get("Character", {}).get("ClassJobs", {})[10].get("Level"))
-        # draw.text((1600, 115), level_ast, fill='rgb(255, 255, 255)', font=font)
 
         # image.save('rocket_pillow_paste_pos.jpg', quality=95)
 
@@ -114,6 +109,20 @@ class FFXIV(commands.Cog):
                 text = str(level)
             txt_length_x, txt_length_y = draw.textsize(text, font=font)
             draw.text((x - txt_length_x / 2, y - txt_length_y / 2), text, fill='rgb(255, 255, 255)', font=font)
+
+    async def __add_grand_company(self, image, character):
+        gc = character.get("Character", {}).get("GrandCompany", {}).get("Company", {}).get("Name")
+        if gc is not None and len(gc) > 0:
+            if gc == "Maelstrom":
+                filename = "gc_m"
+            elif gc == "Order of the Twin Adder":
+                filename = "gc_o"
+            elif gc == "Immortal Flames":
+                filename = "gc_i"
+            gc_icon = Image.open("resources/" + filename + ".png")
+            x, y = self.bot.ffxiv.get("Positions", {}).get("grand_company").values()
+            image.paste(gc_icon, (x, y), gc_icon)
+
 
 
 def setup(bot):
