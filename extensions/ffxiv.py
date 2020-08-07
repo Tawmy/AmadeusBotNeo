@@ -113,15 +113,17 @@ class FFXIV(commands.Cog):
     async def __add_grand_company(self, image, character):
         gc = character.get("Character", {}).get("GrandCompany", {}).get("Company", {}).get("Name")
         if gc is not None and len(gc) > 0:
+            filename = ""
             if gc == "Maelstrom":
                 filename = "gc_m"
             elif gc == "Order of the Twin Adder":
                 filename = "gc_o"
             elif gc == "Immortal Flames":
                 filename = "gc_i"
-            gc_icon = Image.open("resources/" + filename + ".png")
-            x, y = self.bot.ffxiv.get("Positions", {}).get("grand_company").values()
-            image.paste(gc_icon, (x, y), gc_icon)
+            if len(filename) > 0:
+                gc_icon = Image.open("resources/" + filename + ".png")
+                x, y = self.bot.ffxiv.get("Positions", {}).get("grand_company").values()
+                image.paste(gc_icon, (x, y), gc_icon)
 
 
 
