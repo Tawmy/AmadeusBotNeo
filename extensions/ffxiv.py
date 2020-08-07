@@ -32,7 +32,8 @@ class FFXIV(commands.Cog):
         await self.__add_job_levels(draw, font, character)
 
 
-        await self.__add_grand_company(image, character)
+        await self.__add_grand_company(draw, image, character)
+        await self.__add_free_company(draw, character)
 
 
         # image.save('rocket_pillow_paste_pos.jpg', quality=95)
@@ -110,21 +111,36 @@ class FFXIV(commands.Cog):
             txt_length_x, txt_length_y = draw.textsize(text, font=font)
             draw.text((x - txt_length_x / 2, y - txt_length_y / 2), text, fill='rgb(255, 255, 255)', font=font)
 
-    async def __add_grand_company(self, image, character):
+    async def __add_grand_company(self, draw, image, character):
+        if character.get("Character", {}).get("GrandCompany", {}).get("Company") is None:
+            return
         gc = character.get("Character", {}).get("GrandCompany", {}).get("Company", {}).get("Name")
-        if gc is not None and len(gc) > 0:
-            filename = ""
-            if gc == "Maelstrom":
-                filename = "gc_m"
-            elif gc == "Order of the Twin Adder":
-                filename = "gc_o"
-            elif gc == "Immortal Flames":
-                filename = "gc_i"
-            if len(filename) > 0:
-                gc_icon = Image.open("resources/" + filename + ".png")
-                x, y = self.bot.ffxiv.get("Positions", {}).get("grand_company").values()
-                image.paste(gc_icon, (x, y), gc_icon)
+        filename = ""
+        if gc == "Maelstrom":
+            filename = "gc_m"
+        elif gc == "Order of the Twin Adder":
+            filename = "gc_o"
+        elif gc == "Immortal Flames":
+            filename = "gc_i"
+        if len(filename) > 0:
+            gc_icon = Image.open("resources/" + filename + ".png")
+            x, y = self.bot.ffxiv.get("Positions", {}).get("grand_company").values()
+            image.paste(gc_icon, (x, y), gc_icon)
+        # add grand company name if user in no free company
+        # TODO separate method, don't call _add_free_company if this applies
+        if character.get("FreeCompany") is None:
+            font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=28)
+            x, y = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
+            draw.text((x, y), gc, fill='rgb(255, 255, 255)', font=font)
 
+    async def __add_free_company(self, draw, character):
+        if character.get("FreeCompany") is not None:
+            fc_name = character.get("FreeCompany", {}).get("Name")
+            fc_tag = character.get("FreeCompany", {}).get("Tag")
+            fc_text = fc_name + " <" + fc_tag + ">"
+            font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=28)
+            x, y = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
+            draw.text((x, y), fc_text, fill='rgb(255, 255, 255)', font=font)
 
 
 def setup(bot):

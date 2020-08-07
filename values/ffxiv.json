@@ -3,6 +3,10 @@
         "grand_company": {
             "x": 515,
             "y": 205
+        },
+        "free_company": {
+            "x": 585,
+            "y": 208
         }
     },
     "JobPositions": {
