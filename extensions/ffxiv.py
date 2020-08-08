@@ -31,12 +31,12 @@ class FFXIV(commands.Cog):
         # add job levels
         await self.__add_job_levels(draw, font, character)
 
-
         await self.__add_grand_company(draw, image, character)
         await self.__add_free_company(draw, character)
         await self.__add_active_class_job(image, character)
         await self.__add_item_level(draw, character)
         await self.__add_mount_and_minion_percentages(draw, character)
+        await self.__add_server(draw, character)
 
 
         # image.save('rocket_pillow_paste_pos.jpg', quality=95)
@@ -196,14 +196,26 @@ class FFXIV(commands.Cog):
             url = f'https://xivapi.com/search?indexes={value.get("total")}&filters=Order%3E=0&limit=1'
             async with client.session.get(url) as response:
                 response_json = await response.json()
-                mounts_total = response_json.get("Pagination", {}).get("ResultsTotal")
+                count_total = response_json.get("Pagination", {}).get("ResultsTotal")
             await client.session.close()
-            mounts_character = len(character.get(value.get("character")))
-            mounts_percentage = int(round(mounts_character / mounts_total * 100))
-            mounts_percentage = str(mounts_percentage) + "%"
+            count_character = len(character.get(value.get("character")))
+            count_percentage = int(round(count_character / count_total * 100))
+            count_percentage = str(count_percentage) + "%"
             font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=34)
             x, y = self.bot.ffxiv.get("Positions", {}).get(value.get("json")).values()
-            draw.text((x, y), mounts_percentage, fill='rgb(255, 255, 255)', font=font)
+            txt_length_x, txt_length_y = draw.textsize(count_percentage, font=font)
+            x = x - txt_length_x
+            draw.text((x, y), count_percentage, fill='rgb(255, 255, 255)', font=font)
+
+    async def __add_server(self, draw, character):
+        server = character.get("Character", {}).get("Server")
+        if server is None:
+            return
+        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
+        x, y = self.bot.ffxiv.get("Positions", {}).get("server").values()
+        txt_length_x, txt_length_y = draw.textsize(server, font=font)
+        x = x - txt_length_x
+        draw.text((x, y), server, fill='rgb(255, 255, 255)', font=font)
 
 
 def setup(bot):

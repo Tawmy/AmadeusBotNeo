@@ -11,6 +11,22 @@
         "active_job": {
             "x": 513,
             "y": 303
+        },
+        "item_level": {
+            "x": 585,
+            "y": 318
+        },
+        "mount_percentage": {
+            "x": 756,
+            "y": 318
+        },
+        "minion_percentage": {
+            "x": 861,
+            "y": 318
+        },
+        "server": {
+            "x": 1100,
+            "y": 310
         }
     },
     "JobPositions": {
