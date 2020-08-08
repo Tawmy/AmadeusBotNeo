@@ -34,6 +34,7 @@ class FFXIV(commands.Cog):
 
         await self.__add_grand_company(draw, image, character)
         await self.__add_free_company(draw, character)
+        await self.__add_active_class_job(image, character)
 
 
         # image.save('rocket_pillow_paste_pos.jpg', quality=95)
@@ -141,6 +142,14 @@ class FFXIV(commands.Cog):
             font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
             x, y = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
             draw.text((x, y), fc_text, fill='rgb(255, 255, 255)', font=font)
+
+    async def __add_active_class_job(self, image, character):
+        job = character.get("Character", {}).get("ActiveClassJob", {}).get("Job", {}).get("Abbreviation")
+        if job is None:
+            return
+        job_icon = Image.open("resources/ffxiv/jobs/" + job + ".png")
+        x, y = self.bot.ffxiv.get("Positions", {}).get("active_job").values()
+        image.paste(job_icon, (x, y), job_icon)
 
 
 def setup(bot):

@@ -7,6 +7,10 @@
         "free_company": {
             "x": 585,
             "y": 208
+        },
+        "active_job": {
+            "x": 513,
+            "y": 303
         }
     },
     "JobPositions": {
