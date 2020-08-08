@@ -1,9 +1,11 @@
+import datetime
 from dataclasses import dataclass
 from io import BytesIO
 
 import pyxivapi
 import requests
 from PIL import Image, ImageDraw, ImageFont
+from discord import File
 from discord.ext import commands
 
 
@@ -13,23 +15,28 @@ class FFXIV(commands.Cog):
 
     @commands.command(name='ffchar')
     async def ffchar(self, ctx, first_name: str, last_name: str, server: str):
-        character_id = await self.__find_character(first_name, last_name, server)
-        if character_id is None:
-            return  # TODO show status
+        async with ctx.typing():
+            character_id = await self.__find_character(first_name, last_name, server)
+            if character_id is None:
+                return  # TODO show status
 
-        # load character data based on ID from __find_character
-        character = await self.__request_character_data(character_id)
+            # load character data based on ID from __find_character
+            character = await self.__request_character_data(character_id)
+            if character is None:
+                # TODO handle this
+                print("character was none")
+                return
 
-        # load background image, download character image, merge them
-        image = await self.__load_images(character)
-        draw = ImageDraw.Draw(image)
+            # load background image, download character image, merge them
+            image = await self.__load_images(character)
+            draw = ImageDraw.Draw(image)
+            await self.__add_text_to_image(draw, image, character)
 
-        # add character name, fc when applicable, title when applicable
+            await self.__send_character_sheet(ctx, image, character)
+
+    async def __add_text_to_image(self, draw, image, character):
         await self.__add_character_name(draw, character)
-
-        # add job levels
         await self.__add_job_levels(draw, character)
-
         await self.__add_grand_company(draw, image, character)
         await self.__add_free_company(draw, character)
         await self.__add_active_class_job(image, character)
@@ -37,9 +44,6 @@ class FFXIV(commands.Cog):
         await self.__add_mount_and_minion_percentages(draw, character)
         await self.__add_server(draw, character)
         await self.__add_attributes(draw, character)
-
-
-        # image.save('rocket_pillow_paste_pos.jpg', quality=95)
 
     async def __find_character(self, first_name: str, last_name: str, server: str):
         client = pyxivapi.XIVAPIClient(api_key=self.bot.config["bot"]["ffxiv"]["api_key"])
@@ -244,6 +248,14 @@ class FFXIV(commands.Cog):
         x_value = x_value - value_length_x
         draw.text((x_name, y_name), name, fill='rgb(255, 255, 255)', font=font)
         draw.text((x_value, y_value), value, fill='rgb(255, 255, 255)', font=font)
+
+    async def __send_character_sheet(self, ctx, image, character):
+        filename = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S") + "_"
+        filename += character.get("Character", {}).get("Name") + ".jpg"
+        with BytesIO() as image_binary:
+            image.save(image_binary, 'JPEG', quality=90)
+            image_binary.seek(0)
+            await ctx.send(file=File(fp=image_binary, filename=filename))
 
 
 def setup(bot):
