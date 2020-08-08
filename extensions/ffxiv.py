@@ -35,6 +35,7 @@ class FFXIV(commands.Cog):
         await self.__add_grand_company(draw, image, character)
         await self.__add_free_company(draw, character)
         await self.__add_active_class_job(image, character)
+        await self.__add_item_level(draw, character)
 
 
         # image.save('rocket_pillow_paste_pos.jpg', quality=95)
@@ -151,6 +152,29 @@ class FFXIV(commands.Cog):
         x, y = self.bot.ffxiv.get("Positions", {}).get("active_job").values()
         image.paste(job_icon, (x, y), job_icon)
 
+    async def __add_item_level(self, draw, character):
+        ilvl_total = 0
+        ilvl_main_hand = 0
+        has_offhand = False
+
+        for slot, piece in character.get("Character").get("GearSet", {}).get("Gear").items():
+            ilvl = piece.get("Item", {}).get("LevelItem")
+            if slot == "OffHand":
+                has_offhand = True
+            elif slot == "MainHand":
+                ilvl_main_hand = ilvl
+            if slot != "SoulCrystal":
+                ilvl_total = ilvl_total + ilvl
+
+        if has_offhand is False:
+            ilvl_total = ilvl_total + ilvl_main_hand
+
+        # truncate, then convert to string
+        ilvl_total = str(int(ilvl_total/13))
+
+        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=34)
+        x, y = self.bot.ffxiv.get("Positions", {}).get("item_level").values()
+        draw.text((x, y), ilvl_total, fill='rgb(255, 255, 255)', font=font)
 
 def setup(bot):
     bot.add_cog(FFXIV(bot))
