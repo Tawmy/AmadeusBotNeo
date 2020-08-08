@@ -85,19 +85,18 @@ class FFXIV(commands.Cog):
         title = character.get("Character", {}).get("Title", {}).get("Name")
 
         if len(title) > 0:
-            title = "<" + title + ">"
             if character.get("Character", {}).get("TitleTop"):
                 cat = "title_top"
             else:
                 cat = "title_bot"
             x_title, y_title = self.bot.ffxiv.get("NamePositions", {}).get(cat, {}).get("title").values()
-            font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=24)
+            font = ImageFont.truetype('resources/ffxiv/Vollkorn-Regular.ttf', size=28)
             await self.__print_text_centered_at_point(draw, font, title, x_title, y_title)
         else:
             cat = "no_title"
 
         x_name, y_name = self.bot.ffxiv.get("NamePositions", {}).get(cat, {}).get("name").values()
-        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=38)
+        font = ImageFont.truetype('resources/ffxiv/Vollkorn-Regular.ttf', size=48)
         await self.__print_text_centered_at_point(draw, font, name, x_name, y_name)
 
     async def __print_text_centered_at_point(self, draw, font, text, x, y):
