@@ -23,7 +23,7 @@ class FFXIV(commands.Cog):
         # load background image, download character image, merge them
         image = await self.__load_images(character)
         draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=24)
+        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=24)
 
         # add character name, fc when applicable, title when applicable
         await self.__add_character_name(draw, character)
@@ -65,7 +65,7 @@ class FFXIV(commands.Cog):
         return None
 
     async def __load_images(self, character: dict):
-        template = Image.open("resources/ffchar.png")
+        template = Image.open("resources/ffxiv/ffchar.png")
         background = Image.new('RGB', template.size, color='grey')
         response = requests.get(character.get("Character", {}).get("Portrait"))
         character = Image.open(BytesIO(response.content))
@@ -86,13 +86,13 @@ class FFXIV(commands.Cog):
             else:
                 cat = "title_bot"
             x_title, y_title = self.bot.ffxiv.get("NamePositions", {}).get(cat, {}).get("title").values()
-            font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=24)
+            font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=24)
             await self.__print_text_centered_at_point(draw, font, title, x_title, y_title)
         else:
             cat = "no_title"
 
         x_name, y_name = self.bot.ffxiv.get("NamePositions", {}).get(cat, {}).get("name").values()
-        font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=38)
+        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=38)
         await self.__print_text_centered_at_point(draw, font, name, x_name, y_name)
 
     async def __print_text_centered_at_point(self, draw, font, text, x, y):
@@ -123,13 +123,13 @@ class FFXIV(commands.Cog):
         elif gc == "Immortal Flames":
             filename = "gc_i"
         if len(filename) > 0:
-            gc_icon = Image.open("resources/" + filename + ".png")
+            gc_icon = Image.open("resources/ffxiv/" + filename + ".png")
             x, y = self.bot.ffxiv.get("Positions", {}).get("grand_company").values()
             image.paste(gc_icon, (x, y), gc_icon)
         # add grand company name if user in no free company
         # TODO separate method, don't call _add_free_company if this applies
         if character.get("FreeCompany") is None:
-            font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=28)
+            font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
             x, y = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
             draw.text((x, y), gc, fill='rgb(255, 255, 255)', font=font)
 
@@ -138,7 +138,7 @@ class FFXIV(commands.Cog):
             fc_name = character.get("FreeCompany", {}).get("Name")
             fc_tag = character.get("FreeCompany", {}).get("Tag")
             fc_text = fc_name + " <" + fc_tag + ">"
-            font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=28)
+            font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
             x, y = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
             draw.text((x, y), fc_text, fill='rgb(255, 255, 255)', font=font)
 
