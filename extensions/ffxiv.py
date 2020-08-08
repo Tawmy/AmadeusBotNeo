@@ -37,6 +37,7 @@ class FFXIV(commands.Cog):
         await self.__add_item_level(draw, character)
         await self.__add_mount_and_minion_percentages(draw, character)
         await self.__add_server(draw, character)
+        await self.__add_attributes(draw, character)
 
 
         # image.save('rocket_pillow_paste_pos.jpg', quality=95)
@@ -216,6 +217,34 @@ class FFXIV(commands.Cog):
         txt_length_x, txt_length_y = draw.textsize(server, font=font)
         x = x - txt_length_x
         draw.text((x, y), server, fill='rgb(255, 255, 255)', font=font)
+
+    async def __add_attributes(self, draw, character):
+        job = character.get("Character", {}).get("ActiveClassJob", {}).get("Job", {}).get("Abbreviation")
+        job_attributes = self.bot.ffxiv.get("AttributePriorities", {}).get(job, {})
+        character_attributes = character.get("Character", {}).get("GearSet", {}).get("Attributes")
+        attribute_positions = self.bot.ffxiv.get("AttributePositions", {})
+        for i, attribute in enumerate(job_attributes):
+            value = await self.__get_attribute_value(attribute, character_attributes)
+            positions = attribute_positions.get(str(i), {})
+            await self.__draw_attribute(draw, positions, attribute, value)
+
+    async def __get_attribute_value(self, attribute_name, char_attrs) -> str:
+        attribute_dict = self.bot.ffxiv.get("AttributeIDs", {})
+        attribute_index = attribute_dict.get(attribute_name)
+        attribute_value = None
+        for attr in char_attrs:
+            if attr.get("Attribute").get("ID") == attribute_index:
+                attribute_value = attr.get("Value")
+        return str(attribute_value)
+
+    async def __draw_attribute(self, draw, positions, name, value):
+        x_name, y_name = positions.get("name").values()
+        x_value, y_value = positions.get("value").values()
+        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
+        value_length_x, value_length_y = draw.textsize(value, font=font)
+        x_value = x_value - value_length_x
+        draw.text((x_name, y_name), name, fill='rgb(255, 255, 255)', font=font)
+        draw.text((x_value, y_value), value, fill='rgb(255, 255, 255)', font=font)
 
 
 def setup(bot):
