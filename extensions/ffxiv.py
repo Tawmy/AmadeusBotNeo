@@ -36,6 +36,7 @@ class FFXIV(commands.Cog):
         await self.__add_free_company(draw, character)
         await self.__add_active_class_job(image, character)
         await self.__add_item_level(draw, character)
+        await self.__add_mount_and_minion_percentages(draw, character)
 
 
         # image.save('rocket_pillow_paste_pos.jpg', quality=95)
@@ -58,7 +59,8 @@ class FFXIV(commands.Cog):
             lodestone_id=character_id,
             extended=True,  # extended includes title string, not just id
             include_freecompany=True,
-            include_classjobs=True
+            include_classjobs=True,
+            include_minions_mounts=True
         )
         # TODO check behaviour when character ID does not exist
         await client.session.close()
@@ -175,6 +177,34 @@ class FFXIV(commands.Cog):
         font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=34)
         x, y = self.bot.ffxiv.get("Positions", {}).get("item_level").values()
         draw.text((x, y), ilvl_total, fill='rgb(255, 255, 255)', font=font)
+
+    async def __add_mount_and_minion_percentages(self, draw, character):
+        values = {
+            "Mounts": {
+                "total": "Mount",
+                "character": "Mounts",
+                "json": "mount_percentage"
+            },
+            "Minions": {
+                "total": "Companion",
+                "character": "Minions",
+                "json": "minion_percentage"
+            }
+        }
+        for value in values.values():
+            client = pyxivapi.XIVAPIClient(api_key=self.bot.config["bot"]["ffxiv"]["api_key"])
+            url = f'https://xivapi.com/search?indexes={value.get("total")}&filters=Order%3E=0&limit=1'
+            async with client.session.get(url) as response:
+                response_json = await response.json()
+                mounts_total = response_json.get("Pagination", {}).get("ResultsTotal")
+            await client.session.close()
+            mounts_character = len(character.get(value.get("character")))
+            mounts_percentage = int(round(mounts_character / mounts_total * 100))
+            mounts_percentage = str(mounts_percentage) + "%"
+            font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=34)
+            x, y = self.bot.ffxiv.get("Positions", {}).get(value.get("json")).values()
+            draw.text((x, y), mounts_percentage, fill='rgb(255, 255, 255)', font=font)
+
 
 def setup(bot):
     bot.add_cog(FFXIV(bot))
