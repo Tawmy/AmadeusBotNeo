@@ -23,13 +23,12 @@ class FFXIV(commands.Cog):
         # load background image, download character image, merge them
         image = await self.__load_images(character)
         draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=24)
 
         # add character name, fc when applicable, title when applicable
         await self.__add_character_name(draw, character)
 
         # add job levels
-        await self.__add_job_levels(draw, font, character)
+        await self.__add_job_levels(draw, character)
 
         await self.__add_grand_company(draw, image, character)
         await self.__add_free_company(draw, character)
@@ -103,7 +102,8 @@ class FFXIV(commands.Cog):
         text_size_x, text_size_y = draw.textsize(text, font=font)
         draw.text((x - text_size_x / 2, y - text_size_y / 2), text, fill='rgb(0, 0, 0)', font=font)
 
-    async def __add_job_levels(self, draw, font, character):
+    async def __add_job_levels(self, draw, character):
+        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=26)
         for ff_class in character.get("Character", {}).get("ClassJobs"):
             abbr = ff_class.get("Job", {}).get("Abbreviation")
             x, y = self.bot.ffxiv.get("JobPositions", {}).get(abbr).values()
