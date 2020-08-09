@@ -584,6 +584,78 @@
             "de": {
                 "neutral": "Der Befehl kann in keinem dieser Kanäle ausgeführt werden"
             }
+        },
+        "for": {
+            "en": {
+                "neutral": " for "
+            },
+            "de": {
+                "neutral": " für "
+            }
+        },
+        "add": {
+            "en": {
+                "neutral": "Add"
+            },
+            "de": {
+                "neutral": "Hinzufügen"
+            }
+        },
+        "remove": {
+            "en": {
+                "neutral": "Remove"
+            },
+            "de": {
+                "neutral": "Entfernen"
+            }
+        },
+        "replace": {
+            "en": {
+                "neutral": "Replace"
+            },
+            "de": {
+                "neutral": "Ersetzen"
+            }
+        },
+        "reset": {
+            "en": {
+                "neutral": "Reset"
+            },
+            "de": {
+                "neutral": "Zurücksetzen"
+            }
+        },
+        "add_desc": {
+            "en": {
+                "neutral": "Add one or multiple entries to list"
+            },
+            "de": {
+                "neutral": "Füge der Liste einen oder mehrere Einträge hinzu"
+            }
+        },
+        "remove_desc": {
+            "en": {
+                "neutral": "Remove one or multiple entries from list"
+            },
+            "de": {
+                "neutral": "Entferne einen oder mehrere Einträge von der Liste"
+            }
+        },
+        "replace_desc": {
+            "en": {
+                "neutral": "Replace all entries with one or multiple new ones"
+            },
+            "de": {
+                "neutral": "Ersetze alle Einträge mit einem oder mehreren Neuen"
+            }
+        },
+        "reset_desc": {
+            "en": {
+                "neutral": "Reset list entirely"
+            },
+            "de": {
+                "neutral": "Setze die Liste komplett zurück"
+            }
         }
     }
 }

@@ -16,13 +16,19 @@ class LimitStep(Enum):
     NAME = 2
     INNER_SCOPE = 3
     CONFIG_TYPE = 4
-    VALUES = 5
-    FINISHED = 6
+    EDIT_TYPE = 5
+    VALUES = 6
+    FINISHED = 7
 
 
 class OuterScope(Enum):
     CATEGORY = 0
     COMMAND = 1
+
+
+class InnerScope(Enum):
+    ROLE = 0
+    CHANNEL = 1
 
 
 class ConfigType(Enum):
@@ -31,9 +37,11 @@ class ConfigType(Enum):
     BLACKLIST = 2
 
 
-class InnerScope(Enum):
-    ROLE = 0
-    CHANNEL = 1
+class EditType(Enum):
+    ADD = 0
+    REMOVE = 1
+    REPLACE = 2
+    RESET = 3
 
 
 @dataclass
@@ -43,6 +51,7 @@ class InputData:
     outer_scope: OuterScope = None
     inner_scope: InnerScope = None
     config_type: ConfigType = None
+    edit_type: EditType = None
     name: str = None
     values: list = None
 
@@ -77,8 +86,16 @@ class Config(commands.Cog):
                                 if config_type is not None:
                                     input_data.config_type = config_type
                                     if len(args) > 4:
-                                        input_data.values = args[4:]
-                                        input_data.limit_step = LimitStep.VALUES
+                                        edit_type = await self.get_edit_type(args[4])
+                                        if edit_type is not None:
+                                            input_data.edit_type = edit_type
+                                            if len(args) > 5:
+                                                input_data.values = args[5:]
+                                                input_data.limit_step = LimitStep.VALUES
+                                            else:
+                                                input_data.limit_step = LimitStep.EDIT_TYPE
+                                        else:
+                                            input_data.limit_step = LimitStep.CONFIG_TYPE
                                     else:
                                         input_data.limit_step = LimitStep.CONFIG_TYPE
                                 else:
@@ -109,6 +126,8 @@ class Config(commands.Cog):
                 await self.ask_for_config_type(ctx, input_data)
                 return
             elif input_data.limit_step == LimitStep.CONFIG_TYPE:
+                await self.ask_for_edit_type(ctx, input_data)
+            elif input_data.limit_step == LimitStep.EDIT_TYPE:
                 # TODO
                 await self.ask_for_values()
             elif input_data.limit_step == LimitStep.VALUES:
@@ -134,18 +153,31 @@ class Config(commands.Cog):
                     return str(command).lower()
 
     async def get_inner_scope(self, user_input) -> InnerScope:
+        user_input = user_input.lower()
         if user_input in ["role", "roles"]:
             return InnerScope.ROLE
         elif user_input in ["channel", "channels"]:
             return InnerScope.CHANNEL
 
     async def get_config_type(self, user_input) -> ConfigType:
+        user_input = user_input.lower()
         if user_input in ["whitelist", "white list", "wl", "allow list", "allowlist", "al"]:
             return ConfigType.WHITELIST
         elif user_input in ["blacklist", "black list", "bl", "deny list", "denylist", "dl"]:
             return ConfigType.BLACKLIST
         elif user_input in ["enabled", "enable", "on"]:
             return ConfigType.ENABLED
+
+    async def get_edit_type(self, user_input) -> EditType:
+        user_input = user_input.lower()
+        if user_input in ["add", "append"]:
+            return EditType.ADD
+        elif user_input == "remove":
+            return EditType.REMOVE
+        elif user_input == "replace":
+            return EditType.REPLACE
+        elif user_input in ["reset", "default", "revert"]:
+            return EditType.RESET
 
     async def ask_for_outer_scope(self, ctx, input_data: InputData):
         string = await s.get_string(ctx, "limits", "select_outer_scope")
@@ -241,6 +273,7 @@ class Config(commands.Cog):
                 input_data.inner_scope = InnerScope.CHANNEL
 
     async def ask_for_config_type(self, ctx, input_data: InputData):
+        # TODO show current config for wl, bl, and enabled
         string = await s.get_string(ctx, "limits", "select_config_type")
         menu = AmadeusMenu(self.bot, string.string)
 
@@ -282,6 +315,50 @@ class Config(commands.Cog):
                 input_data.config_type = ConfigType.WHITELIST
             elif menu_data.reaction_index == 2:
                 input_data.config_type = ConfigType.BLACKLIST
+
+    async def ask_for_edit_type(self, ctx, input_data):
+        string = None
+        if input_data.config_type == ConfigType.WHITELIST:
+            string = await s.get_string(ctx, "limits", "whitelist")
+        elif input_data.config_type == ConfigType.BLACKLIST:
+            string = await s.get_string(ctx, "limits", "blacklist")
+        connecting_string = await s.get_string(ctx, "limits", "for")
+        title_str = string.string + connecting_string.string + input_data.name
+
+        menu = AmadeusMenu(self.bot, title_str)
+        await menu.set_user_specific(True)
+
+        # TODO add field with current values
+
+        string = await s.get_string(ctx, "limits", "add")
+        string_desc = await s.get_string(ctx, "limits", "add_desc")
+        await menu.add_option(string.string, string_desc.string)
+        string = await s.get_string(ctx, "limits", "remove")
+        string_desc = await s.get_string(ctx, "limits", "remove_desc")
+        await menu.add_option(string.string, string_desc.string)
+        string = await s.get_string(ctx, "limits", "replace")
+        string_desc = await s.get_string(ctx, "limits", "replace_desc")
+        await menu.add_option(string.string, string_desc.string)
+        string = await s.get_string(ctx, "limits", "reset")
+        string_desc = await s.get_string(ctx, "limits", "reset_desc")
+        await menu.add_option(string.string, string_desc.string)
+
+        menu_data = await menu.show_menu(ctx, 120, input_data.message)
+
+        if menu_data.status != AmadeusMenuStatus.SELECTED:
+            input_data.limit_step = LimitStep.FINISHED
+            await menu.show_result(ctx)
+        else:
+            input_data.limit_step = LimitStep.EDIT_TYPE
+            input_data.message = menu_data.message
+            if menu_data.reaction_index == 0:
+                input_data.edit_type = EditType.ADD
+            elif menu_data.reaction_index == 1:
+                input_data.edit_type = EditType.REMOVE
+            elif menu_data.reaction_index == 2:
+                input_data.edit_type = EditType.REPLACE
+            elif menu_data.reaction_index == 3:
+                input_data.edit_type = EditType.RESET
 
 
 def setup(bot):
