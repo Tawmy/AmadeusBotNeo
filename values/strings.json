@@ -439,5 +439,151 @@
                 "neutral": "Bitte Version wählen, dessen Details angezeigt werden sollen:"
             }
         }
+    },
+    "limits": {
+        "select_outer_scope": {
+            "en": {
+                "neutral": "Type to modify"
+            },
+            "de": {
+                "neutral": "Zu modifizierender Typ"
+            }
+        },
+        "category": {
+            "en": {
+                "neutral": "Category"
+            },
+            "de": {
+                "neutral": "Kategorie"
+            }
+        },
+        "categories": {
+            "en": {
+                "neutral": "Categories"
+            },
+            "de": {
+                "neutral": "Kategorien"
+            }
+        },
+        "command": {
+            "en": {
+                "neutral": "Command"
+            },
+            "de": {
+                "neutral": "Befehl"
+            }
+        },
+        "input_category": {
+            "en": {
+                "neutral": "Please input the category to set limits for."
+            },
+            "de": {
+                "neutral": "Bitte die Kategorie, für die Limits gesetzt werden sollen, eingeben."
+            }
+        },
+        "input_command": {
+            "en": {
+                "neutral": "Please input the command to set limits for."
+            },
+            "de": {
+                "neutral": "Bitte den Befehl, für den Limits gesetzt werden sollen, eingeben."
+            }
+        },
+        "select_inner_scope": {
+            "en": {
+                "neutral": "Type to modify"
+            },
+            "de": {
+                "neutral": "Zu modifizierender Typ"
+            }
+        },
+        "role": {
+            "en": {
+                "neutral": "Role(s)"
+            },
+            "de": {
+                "neutral": "Rolle(n)"
+            }
+        },
+        "channel": {
+            "en": {
+                "neutral": "Channel(s)"
+            },
+            "de": {
+                "neutral": "Kanal/Kanäle"
+            }
+        },
+        "select_config_type": {
+            "en": {
+                "neutral": ""
+            },
+            "de": {
+                "neutral": "Kanal/Kanäle"
+            }
+        },
+        "whitelist": {
+            "en": {
+                "neutral": "Whitelist"
+            },
+            "de": {
+                "neutral": "Whitelist"
+            }
+        },
+        "blacklist": {
+            "en": {
+                "neutral": "Blacklist"
+            },
+            "de": {
+                "neutral": "Blacklist"
+            }
+        },
+        "enabled": {
+            "en": {
+                "neutral": "Enabled"
+            },
+            "de": {
+                "neutral": "Aktiviert"
+            }
+        },
+        "enabled_desc": {
+            "en": {
+                "neutral": "Sets if component is enabled"
+            },
+            "de": {
+                "neutral": "Legt fest, ob der Komponent aktiviert ist"
+            }
+        },
+        "whitelist_desc_role": {
+            "en": {
+                "neutral": "Prevents usage if user has none of these roles"
+            },
+            "de": {
+                "neutral": "Unterbindet Nutzung, wenn Nutzer keine dieser Rollen hat"
+            }
+        },
+        "whitelist_desc_channel": {
+            "en": {
+                "neutral": "Command can only be run in any of these channels"
+            },
+            "de": {
+                "neutral": "Der Befehl kann nur in einem dieser Kanäle ausgeführt werden"
+            }
+        },
+        "blacklist_desc_role": {
+            "en": {
+                "neutral": "Prevents usage if user has none of these roles"
+            },
+            "de": {
+                "neutral": "Unterbindet Nutzung, wenn Nutzer keine dieser Rollen hat"
+            }
+        },
+        "blacklist_desc_channel": {
+            "en": {
+                "neutral": "Command cannot be run be run in any of these channels"
+            },
+            "de": {
+                "neutral": "Der Befehl kann in keinem dieser Kanäle ausgeführt werden"
+            }
+        }
     }
 }
