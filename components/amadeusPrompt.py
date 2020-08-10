@@ -4,6 +4,10 @@ from enum import Enum
 import discord
 
 from dataclasses import dataclass
+
+from discord import User, Message
+from discord.ext.commands import Bot, Context
+
 from helpers import strings as s
 
 
@@ -23,6 +27,7 @@ class AmadeusPromptResult:
 
 
 class AmadeusPrompt:
+
     """
     Prompt awaiting text by user as input.
 
@@ -38,16 +43,17 @@ class AmadeusPrompt:
     This menu can be controlled using:
     - show_prompt: Shows prompt and awaits input for specified number of seconds
     - show_result: Edits prompt and shows result
-
-    Parameters
-    ------------
-    bot: discord.ext.commands.bot
-        Bot object
-    title: str
-        Title of the prompt
     """
     # TODO change bot to ctx for consistency (in menu too)
-    def __init__(self, bot, title):
+    def __init__(self, bot: Bot, title: str):
+        """
+        Parameters
+        ------------
+        bot: discord.ext.commands.bot
+            Bot object
+        title: str
+            Title of the prompt
+        """
         self.bot = bot
         self.__is_user_specific = False
         self.__specified_user = None
@@ -58,7 +64,7 @@ class AmadeusPrompt:
 
         self.__result = AmadeusPromptResult()
 
-    async def set_author(self, name, url="", icon_url=""):
+    async def set_author(self, name: str, url: str = "", icon_url: str = ""):
         """
         Sets the author of the amadeusPrompt.
 
@@ -66,57 +72,50 @@ class AmadeusPrompt:
         -----------
         name: str
             The name of the author.
-        url: Optional[str]
+        url: str, optional
             An optional url.
-        icon_url: Optional[str]
+        icon_url: str, optional
             An optional icon url
         """
         self.__embed.set_author(name=name, url=url, icon_url=icon_url)
 
-    async def set_title(self, title):
+    async def set_title(self, title: str):
         self.__embed.title = title
 
-    async def set_description(self, description):
+    async def set_description(self, description: str):
         self.__embed.description = description
 
-    async def append_description(self, description):
-        """
-        Appends to description.
-
-        Parameters
-        -----------
-        description: str
-            The string to append to the description.
-        """
+    async def append_description(self, description: str):
         if self.__embed.description is not None and len(self.__embed.description) > 0:
             self.__embed.description += description
         else:
             await self.set_description(description)
 
-    async def add_field(self, name, description, inline=True):
+    async def add_field(self, name: str, description: str, inline: bool = True):
         if name is not None and description is not None:
             self.__embed.add_field(name=name, value=description, inline=inline)
 
-    async def set_user_specific(self, is_user_specific, user=None):
+    async def set_user_specific(self, is_user_specific: bool, user: User = None):
         """
         Sets if the prompt should be usable by one speficic user only.
+
         Defaults to context author if user is not speficied.
 
         Parameters
         -----------
         is_user_specific: bool
             Should prompt be user specific?.
-        user: Optional[discord.User]
+        user: User, optional
             Optional user the prompt should be accessible by.
         """
         self.__is_user_specific = is_user_specific
         if user is not None:
             self.__specified_user = user
 
-    async def set_cancel_string(self, cancel_string):
+    async def set_cancel_string(self, cancel_string: str):
         self.__cancel_string = cancel_string
 
-    async def show_prompt(self, ctx, timeout_seconds, message=None) -> AmadeusPromptResult:
+    async def show_prompt(self, ctx: Context, timeout_seconds: int, message: Message = None) -> AmadeusPromptResult:
         """
         Displays the amadeusPrompt and waits for user input. Edits message if specified.
 
@@ -126,7 +125,7 @@ class AmadeusPrompt:
             The invocation context.
         timeout_seconds: int
             Timeout in seconds.
-        message: Optional[discord.Message]
+        message: Message, optional
             Optional message. This will be edited if specified.
         """
         await self.__prepare_footer(ctx)
@@ -140,13 +139,13 @@ class AmadeusPrompt:
         await self.__await_user_input(ctx, timeout_seconds)
         return self.__result
 
-    async def show_result(self, ctx):
+    async def show_result(self, ctx: Context):
         """
         Edits menu to show result.
 
         Parameters
         -----------
-        ctx: discord.ext.commands.Context
+        ctx: Context
             The invocation context.
         """
         self.__embed = discord.Embed()
@@ -167,7 +166,7 @@ class AmadeusPrompt:
         await self.__prepare_footer(ctx)
         self.__result.message = await self.__result.message.edit(embed=self.__embed)
 
-    async def __prepare_footer(self, ctx):
+    async def __prepare_footer(self, ctx: Context):
         text = ""
         avatar = ""
         if self.__is_user_specific:
@@ -179,13 +178,13 @@ class AmadeusPrompt:
                 avatar = ctx.author.avatar_url_as(static_format="png", size=64)
         self.__embed.set_footer(text=text, icon_url=avatar)
 
-    async def __add_cancel_string_to_footer(self, ctx):
+    async def __add_cancel_string_to_footer(self, ctx: Context):
         """
         Make sure to always run __prepare_footer before this one, otherwise icon_url may cause exception.
 
         Parameters
         -----------
-        ctx: discord.ext.commands.Context
+        ctx: Context
             The invocation context.
         """
         current_text = self.__embed.footer.text
@@ -196,7 +195,7 @@ class AmadeusPrompt:
         current_text += string_combination.string_combined
         self.__embed.set_footer(text=current_text, icon_url=self.__embed.footer.icon_url)
 
-    async def __await_user_input(self, ctx, timeout_seconds):
+    async def __await_user_input(self, ctx: Context, timeout_seconds: int):
         def check(user_message):
             result = False
             if user_message.channel is ctx.channel:

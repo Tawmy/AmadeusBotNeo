@@ -35,6 +35,7 @@ class Option:
 
 
 class AmadeusMenu:
+
     """
     Menu using Discord reaction to get user input.
 
