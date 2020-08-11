@@ -1,9 +1,11 @@
+from discord import Role
 from discord.ext import commands
 
 
 class BotNotReady(commands.CheckFailure):
     """
     Thrown when the bot has not finished its boot sequence yet.
+
     This sequence ends before the bot tries to connect to its database.
     """
     def __init__(self):
@@ -78,9 +80,16 @@ class CategoryDisabled(commands.CheckFailure):
 class CategoryNoWhitelistedRole(commands.CheckFailure):
     """
     Thrown when user does not have any of the whitelisted roles for a category.
+
     Includes roles list with roles on whitelist.
     """
-    def __init__(self, roles):
+    def __init__(self, roles: list):
+        """
+        Parameters
+        ----------
+        roles: list
+            List of roles in whitelist
+        """
         message = "Role restricted category"
         self.roles = []
 
@@ -93,9 +102,16 @@ class CategoryNoWhitelistedRole(commands.CheckFailure):
 class CategoryBlacklistedRole(commands.CheckFailure):
     """
     Thrown when user does have one of the blacklisted roles for a category.
+
     Includes blacklisted role.
     """
-    def __init__(self, role):
+    def __init__(self, role: Role):
+        """
+        Parameters
+        ----------
+        role: Role
+            Blacklisted role the user has
+        """
         message = "Role restricted category"
         self.role = role.name
         super().__init__(message)
@@ -131,9 +147,16 @@ class CommandBlacklistedChannel(commands.CheckFailure):
 class CommandNoWhitelistedRole(commands.CheckFailure):
     """
     Thrown when user does not have any of the whitelisted roles for a command.
+
     Includes list of whitelisted roles.
     """
-    def __init__(self, missing_roles):
+    def __init__(self, missing_roles: list):
+        """
+        Parameters
+        ----------
+        missing_roles: list
+            List of whitelisted roles
+        """
         message = "Role restricted command"
         self.roles = []
 
@@ -146,9 +169,16 @@ class CommandNoWhitelistedRole(commands.CheckFailure):
 class CommandBlacklistedRole(commands.CheckFailure):
     """
     Thrown when user does have one of the blacklisted roles for a command.
+
     Includes blacklisted role.
     """
     def __init__(self, role):
+        """
+        Parameters
+        ----------
+        role: Role
+            Blacklisted role the user has
+        """
         message = "Role restricted command"
         self.role = role.name
         super().__init__(message)

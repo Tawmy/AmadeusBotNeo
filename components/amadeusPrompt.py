@@ -27,8 +27,8 @@ class AmadeusPromptResult:
 
 
 class AmadeusPrompt:
-
     """
+
     Prompt awaiting text by user as input.
 
     This menu can be customised using:
