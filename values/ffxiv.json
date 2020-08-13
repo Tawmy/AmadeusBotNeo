@@ -4,9 +4,13 @@
             "x": 518,
             "y": 306
         },
+        "grand_company_offset": {
+            "x": 30,
+            "y": 12
+        },
         "free_company": {
             "x": 838,
-            "y": 208
+            "y": 207
         },
         "active_job": {
             "x": 225,

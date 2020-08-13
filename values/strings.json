@@ -439,5 +439,15 @@
                 "neutral": "Bitte Version wählen, dessen Details angezeigt werden sollen:"
             }
         }
+    },
+    "ffxiv": {
+        "new_adventurer": {
+            "en": {
+                "neutral": "New Adventurer"
+            },
+            "de": {
+                "neutral": "Neue*r Abenteurer*in"
+            }
+        }
     }
 }

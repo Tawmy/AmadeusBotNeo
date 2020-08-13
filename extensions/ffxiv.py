@@ -7,6 +7,7 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 from discord import File
 from discord.ext import commands
+from helpers import strings as s
 
 
 class FFXIV(commands.Cog):
@@ -33,14 +34,14 @@ class FFXIV(commands.Cog):
             await self.__load_character_frame(image)
 
             draw = ImageDraw.Draw(image)
-            await self.__add_text_to_image(draw, image, character)
+            await self.__add_text_to_image(ctx, draw, image, character)
 
             await self.__send_character_sheet(ctx, image, character)
 
-    async def __add_text_to_image(self, draw, image, character):
+    async def __add_text_to_image(self, ctx, draw, image, character):
         await self.__add_character_name(draw, character)
         await self.__add_job_levels(draw, character)
-        await self.__add_grand_company(draw, image, character)
+        await self.__add_grand_company(ctx, draw, image, character)
         await self.__add_free_company(draw, character)
         await self.__add_active_class_job(image, character)
         await self.__add_item_level(draw, character)
@@ -125,28 +126,56 @@ class FFXIV(commands.Cog):
             txt_length_x, txt_length_y = draw.textsize(text, font=font)
             draw.text((x - txt_length_x / 2, y - txt_length_y / 2), text, fill='rgb(255, 255, 255)', font=font)
 
-    async def __add_grand_company(self, draw, image, character):
+    async def __add_grand_company(self, ctx, draw, image, character):
+        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
+        x_txt, y_txt = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
+        in_fc = character.get("FreeCompany")
+
+        # add "new adventurer" string if no fc either, return
         if character.get("Character", {}).get("GrandCompany", {}).get("Company") is None:
+            if not in_fc:
+                await self.__add_default_text(ctx, draw, font, x_txt, y_txt)
             return
-        gc = character.get("Character", {}).get("GrandCompany", {}).get("Company", {}).get("Name")
-        filename = ""
-        if gc == "Maelstrom":
-            filename = "gc_m"
-        elif gc == "Order of the Twin Adder":
-            filename = "gc_o"
-        elif gc == "Immortal Flames":
-            filename = "gc_i"
-        if len(filename) > 0:
-            gc_icon = Image.open("resources/ffxiv/" + filename + ".png")
-            x, y = self.bot.ffxiv.get("Positions", {}).get("grand_company").values()
-            image.paste(gc_icon, (x, y), gc_icon)
+
         # add grand company name if user in no free company
-        # TODO separate method, don't call _add_free_company if this applies
-        if character.get("FreeCompany") is None:
-            font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
-            x, y = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
-            txt_length_x, txt_length_y = draw.textsize(gc, font=font)
-            draw.text((x - txt_length_x / 2, y), gc, fill='rgb(255, 255, 255)', font=font)
+        gc = character.get("Character", {}).get("GrandCompany", {}).get("Company", {}).get("Name")
+        x_gc, y_gc = 0, 0
+        if not in_fc:
+            x_gc, y_gc = await self.__add_grand_company_name(draw, font, x_txt, y_txt, gc)
+        await self.__add_grand_company_icon(image, gc, in_fc, x_gc, y_gc)
+
+    async def __get_gc_filename(self, gc: str) -> str:
+        if gc is not None:
+            if gc == "Maelstrom":
+                return "gc_m"
+            elif gc == "Order of the Twin Adder":
+                return "gc_o"
+            elif gc == "Immortal Flames":
+                return "gc_i"
+        return ""
+
+    async def __add_grand_company_name(self, draw, font, x_txt, y_txt, gc):
+        x_gc_offset, y_gc_offset = self.bot.ffxiv.get("Positions", {}).get("grand_company_offset").values()
+        txt_length_x, txt_length_y = draw.textsize(gc, font=font)
+        draw.text((x_txt - txt_length_x / 2 + x_gc_offset, y_txt), gc, fill='rgb(255, 255, 255)', font=font)
+
+        x_gc = x_txt - txt_length_x / 2 - x_gc_offset
+        y_gc = y_txt - txt_length_y / 2 + y_gc_offset
+        return int(x_gc), int(y_gc)
+
+    async def __add_grand_company_icon(self, image, gc, in_fc, x_gc, y_gc):
+        filename = await self.__get_gc_filename(gc)
+        if len(filename):
+            gc_icon = Image.open("resources/ffxiv/" + filename + ".png")
+            if in_fc:
+                # position gc logo differently if user is in an fc as gc name not shown in that case
+                x_gc, y_gc = self.bot.ffxiv.get("Positions", {}).get("grand_company").values()
+            image.paste(gc_icon, (x_gc, y_gc), gc_icon)
+
+    async def __add_default_text(self, ctx, draw, font, x_txt, y_txt):
+        string = await s.get_string(ctx, "ffxiv", "new_adventurer")
+        txt_length_x, txt_length_y = draw.textsize(string.string, font=font)
+        draw.text((x_txt - txt_length_x / 2, y_txt), string.string, fill='rgb(255, 255, 255)', font=font)
 
     async def __add_free_company(self, draw, character):
         # TODO add FC logo
