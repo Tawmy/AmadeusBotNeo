@@ -1,16 +1,16 @@
 {
     "Positions": {
         "grand_company": {
-            "x": 515,
-            "y": 205
+            "x": 518,
+            "y": 306
         },
         "free_company": {
-            "x": 585,
+            "x": 838,
             "y": 208
         },
         "active_job": {
-            "x": 513,
-            "y": 303
+            "x": 225,
+            "y": 39
         },
         "item_level": {
             "x": 585,
@@ -28,6 +28,18 @@
             "x": 1100,
             "y": 310
         }
+    },
+    "JobsWithBaseClass": ["PLD", "WAR", "WHM", "SCH","MNK", "DRG", "NIN", "BRD", "BLM", "SMN"],
+    "BaseClasses": {
+        "Gladiator": "GLA",
+        "Marauder": "MAR",
+        "Conjurer": "CNJ",
+        "Arcanist": "ACN",
+        "Pugilist": "PUG",
+        "Lancer": "LNC",
+        "Rogue": "ROG",
+        "Archer": "ARC",
+        "Thaumaturge": "THM"
     },
     "JobPositions": {
         "PLD": {

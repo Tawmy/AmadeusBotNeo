@@ -28,7 +28,10 @@ class FFXIV(commands.Cog):
                 return
 
             # load background image, download character image, merge them
-            image = await self.__load_images(character)
+            image = await self.__load_background()
+            await self.__load_character_portrait(image, character)
+            await self.__load_character_frame(image)
+
             draw = ImageDraw.Draw(image)
             await self.__add_text_to_image(draw, image, character)
 
@@ -72,16 +75,19 @@ class FFXIV(commands.Cog):
             return character
         return None
 
-    async def __load_images(self, character: dict):
-        template = Image.open("resources/ffxiv/ffchar.png")
-        background = Image.new('RGB', template.size, color='grey')
+    async def __load_background(self) -> Image:
+        return Image.open("resources/ffxiv/ffchar.png")
+
+    async def __load_character_portrait(self, background: Image, character: dict):
         response = requests.get(character.get("Character", {}).get("Portrait"))
-        character = Image.open(BytesIO(response.content))
-        character = character.crop((40, 0, 600, 873))
-        # portrait height is 873px, hence the 27 above
-        background.paste(character, (0, background.height - character.height))
-        background.paste(template, (0, 0), template)
-        return background
+        portrait = Image.open(BytesIO(response.content))
+        portrait = portrait.crop((63, 0, 577, 873))
+        portrait = portrait.resize((459, 780))
+        background.paste(portrait, (18, 64))
+
+    async def __load_character_frame(self, background: Image):
+        frame = Image.open("resources/ffxiv/frame.png")
+        background.paste(frame, (18, 22), frame)
 
     async def __add_character_name(self, draw: ImageDraw.Draw, character: dict):
         name = character.get("Character", {}).get("Name")
@@ -139,24 +145,39 @@ class FFXIV(commands.Cog):
         if character.get("FreeCompany") is None:
             font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
             x, y = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
-            draw.text((x, y), gc, fill='rgb(255, 255, 255)', font=font)
+            txt_length_x, txt_length_y = draw.textsize(gc, font=font)
+            draw.text((x - txt_length_x / 2, y), gc, fill='rgb(255, 255, 255)', font=font)
 
     async def __add_free_company(self, draw, character):
+        # TODO add FC logo
         if character.get("FreeCompany") is not None:
             fc_name = character.get("FreeCompany", {}).get("Name")
             fc_tag = character.get("FreeCompany", {}).get("Tag")
             fc_text = fc_name + " <" + fc_tag + ">"
             font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
             x, y = self.bot.ffxiv.get("Positions", {}).get("free_company").values()
-            draw.text((x, y), fc_text, fill='rgb(255, 255, 255)', font=font)
+            txt_length_x, txt_length_y = draw.textsize(fc_text, font=font)
+            draw.text((x - txt_length_x / 2, y), fc_text, fill='rgb(255, 255, 255)', font=font)
 
     async def __add_active_class_job(self, image, character):
         job = character.get("Character", {}).get("ActiveClassJob", {}).get("Job", {}).get("Abbreviation")
+        job_icon = None
         if job is None:
             return
-        job_icon = Image.open("resources/ffxiv/jobs/" + job + ".png")
-        x, y = self.bot.ffxiv.get("Positions", {}).get("active_job").values()
-        image.paste(job_icon, (x, y), job_icon)
+        elif job in self.bot.ffxiv.get("JobsWithBaseClass", {}):
+            job_icon = await self.__get_base_class_icon(character)
+        if job_icon is None:
+            job_icon = Image.open("resources/ffxiv/jobs/" + job + ".png")
+        if job_icon is not None:
+            x, y = self.bot.ffxiv.get("Positions", {}).get("active_job").values()
+            image.paste(job_icon, (x, y), job_icon)
+
+    async def __get_base_class_icon(self, character) -> Image:
+        full_class_name = character.get("Character", {}).get("ActiveClassJob", {}).get("UnlockedState", {}).get("Name")
+        if full_class_name is None:
+            return
+        job = self.bot.ffxiv.get("BaseClasses", {}).get(full_class_name)
+        return Image.open("resources/ffxiv/jobs/" + job + ".png") if job is not None else None
 
     async def __add_item_level(self, draw, character):
         ilvl_total = 0
