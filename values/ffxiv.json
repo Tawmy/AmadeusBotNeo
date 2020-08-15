@@ -33,18 +33,6 @@
             "y": 310
         }
     },
-    "JobsWithBaseClass": ["PLD", "WAR", "WHM", "SCH","MNK", "DRG", "NIN", "BRD", "BLM", "SMN"],
-    "BaseClasses": {
-        "Gladiator": "GLA",
-        "Marauder": "MAR",
-        "Conjurer": "CNJ",
-        "Arcanist": "ACN",
-        "Pugilist": "PUG",
-        "Lancer": "LNC",
-        "Rogue": "ROG",
-        "Archer": "ARC",
-        "Thaumaturge": "THM"
-    },
     "JobPositions": {
         "PLD": {
             "x": 550,

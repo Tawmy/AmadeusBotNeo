@@ -64,13 +64,9 @@ async def add_free_company(ctx: Context, draw: ImageDraw.Draw, character: Charac
 
 
 async def add_active_class_job(ctx: Context, image: Image, character: Character):
-    job_icon = None
     if character.job.abbreviation is None:
         return
-    elif character.job.is_base_class:
-        job_icon = await __get_base_class_icon(ctx, character)
-    if job_icon is None:
-        job_icon = Image.open("resources/ffxiv/jobs/" + character.job.abbreviation + ".png")
+    job_icon = Image.open("resources/ffxiv/jobs/" + character.job.abbreviation + ".png")
     if job_icon is not None:
         x, y = ctx.bot.ffxiv.get("Positions", {}).get("active_job").values()
         image.paste(job_icon, (x, y), job_icon)
@@ -176,11 +172,6 @@ async def __get_gc_filename(gc: str) -> str:
         elif gc == "Immortal Flames":
             return "gc_i"
     return ""
-
-
-async def __get_base_class_icon(ctx: Context, character: Character) -> Image:
-    job = ctx.bot.ffxiv.get("BaseClasses", {}).get(character.job.name)
-    return Image.open("resources/ffxiv/jobs/" + job + ".png") if job is not None else None
 
 
 async def __get_attribute_value(ctx: Context, attribute_name: str, char_attrs: list) -> str:
