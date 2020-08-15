@@ -1,13 +1,14 @@
 import datetime
-from dataclasses import dataclass
 from io import BytesIO
 
 import pyxivapi
-import requests
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 from discord import File
 from discord.ext import commands
-from helpers import ffxiv_draw as ff
+from discord.ext.commands import Context
+
+from helpers import ffxiv_draw as ffd, ffxiv_character as ffc
+from helpers.ffxiv_character import Character
 
 
 class FFXIV(commands.Cog):
@@ -15,22 +16,23 @@ class FFXIV(commands.Cog):
         self.bot = bot
 
     @commands.command(name='ffchar')
-    async def ffchar(self, ctx, first_name: str, last_name: str, server: str):
+    async def ffchar(self, ctx: Context, first_name: str, last_name: str, server: str):
         async with ctx.typing():
             character_id = await self.__find_character(first_name, last_name, server)
             if character_id is None:
                 return  # TODO show status
 
             # load character data based on ID from __find_character
-            character = await self.__request_character_data(character_id)
-            if character is None:
+            character_raw = await self.__request_character_data(character_id)
+            if character_raw is None:
                 # TODO handle this
                 print("character was none")
                 return
 
+            character = await ffc.get_character(ctx, character_raw)
             # load background image, download character image, merge them
-            image = await self.__load_background()
-            await self.__load_character_portrait(image, character)
+            image = Image.open("resources/ffxiv/ffchar.png")
+            await self.__crop_character_portrait(image, character)
             await self.__load_character_frame(image)
 
             draw = ImageDraw.Draw(image)
@@ -38,16 +40,17 @@ class FFXIV(commands.Cog):
 
             await self.__send_character_sheet(ctx, image, character)
 
-    async def __add_text_to_image(self, ctx, draw, image, character):
-        await ff.add_character_name(ctx, draw, character)
-        await ff.add_job_levels(ctx, draw, character)
-        await ff.add_grand_company(ctx, draw, image, character)
-        await ff.add_free_company(ctx, draw, character)
-        await ff.add_active_class_job(ctx, image, character)
-        await ff.add_item_level(ctx, draw, character)
-        await ff.add_mount_and_minion_percentages(ctx, draw, character)
-        await ff.add_server(ctx, draw, character)
-        await ff.add_attributes(ctx, draw, character)
+    async def __add_text_to_image(self, ctx: Context, draw: ImageDraw, image: Image, character: Character):
+        await ffd.add_character_name(ctx, draw, character)
+        await ffd.add_job_levels(ctx, draw, character)
+        await ffd.add_grand_company(ctx, draw, image, character)
+        await ffd.add_free_company(ctx, draw, character)
+        await ffd.add_active_class_job(ctx, image, character)
+        await ffd.add_item_level(ctx, draw, character)
+        await ffd.add_mount_percentage(ctx, draw, character)
+        await ffd.add_minion_percentage(ctx, draw, character)
+        await ffd.add_server(ctx, draw, character)
+        await ffd.add_attributes(ctx, draw, character)
 
     async def __find_character(self, first_name: str, last_name: str, server: str):
         client = pyxivapi.XIVAPIClient(api_key=self.bot.config["bot"]["ffxiv"]["api_key"])
@@ -76,13 +79,8 @@ class FFXIV(commands.Cog):
             return character
         return None
 
-    async def __load_background(self) -> Image:
-        return Image.open("resources/ffxiv/ffchar.png")
-
-    async def __load_character_portrait(self, background: Image, character: dict):
-        response = requests.get(character.get("Character", {}).get("Portrait"))
-        portrait = Image.open(BytesIO(response.content))
-        portrait = portrait.crop((63, 0, 577, 873))
+    async def __crop_character_portrait(self, background: Image, character: Character):
+        portrait = character.portrait.crop((63, 0, 577, 873))
         portrait = portrait.resize((459, 780))
         background.paste(portrait, (18, 64))
 
@@ -90,9 +88,9 @@ class FFXIV(commands.Cog):
         frame = Image.open("resources/ffxiv/frame.png")
         background.paste(frame, (18, 22), frame)
 
-    async def __send_character_sheet(self, ctx, image, character):
+    async def __send_character_sheet(self, ctx: Context, image: ImageDraw, character: Character):
         filename = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S") + "_"
-        filename += character.get("Character", {}).get("Name") + ".jpg"
+        filename += character.name.name + ".jpg"
         with BytesIO() as image_binary:
             image.save(image_binary, 'JPEG', quality=90)
             image_binary.seek(0)

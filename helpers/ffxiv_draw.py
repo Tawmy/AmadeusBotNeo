@@ -1,32 +1,30 @@
-import pyxivapi
 from PIL import ImageDraw, ImageFont, Image
 from discord.ext.commands import Context
 from helpers import strings as s
+from helpers.ffxiv_character import Character
 
 
-async def add_character_name(ctx: Context, draw: ImageDraw.Draw, character: dict):
-    name = character.get("Character", {}).get("Name")
-    title = character.get("Character", {}).get("Title", {}).get("Name")
+async def add_character_name(ctx: Context, draw: ImageDraw.Draw, character: Character):
 
-    if len(title) > 0:
-        if character.get("Character", {}).get("TitleTop"):
+    if len(character.name.title) > 0:
+        if character.name.position_top:
             cat = "title_top"
         else:
             cat = "title_bot"
         x_title, y_title = ctx.bot.ffxiv.get("NamePositions", {}).get(cat, {}).get("title").values()
         font = ImageFont.truetype('resources/ffxiv/Vollkorn-Regular.ttf', size=28)
-        await __add_text_centered_at_point(draw, font, title, x_title, y_title)
+        await __add_text_centered_at_point(draw, font, character.name.title, x_title, y_title)
     else:
         cat = "no_title"
 
     x_name, y_name = ctx.bot.ffxiv.get("NamePositions", {}).get(cat, {}).get("name").values()
     font = ImageFont.truetype('resources/ffxiv/Vollkorn-Regular.ttf', size=48)
-    await __add_text_centered_at_point(draw, font, name, x_name, y_name)
+    await __add_text_centered_at_point(draw, font, character.name.name, x_name, y_name)
 
 
-async def add_job_levels(ctx: Context, draw: ImageDraw.Draw, character: dict):
+async def add_job_levels(ctx: Context, draw: ImageDraw.Draw, character: Character):
     font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=26)
-    for ff_class in character.get("Character", {}).get("ClassJobs"):
+    for ff_class in character.class_jobs:
         abbr = ff_class.get("Job", {}).get("Abbreviation")
         x, y = ctx.bot.ffxiv.get("JobPositions", {}).get(abbr).values()
         level = ff_class.get("Level")
@@ -38,57 +36,52 @@ async def add_job_levels(ctx: Context, draw: ImageDraw.Draw, character: dict):
         draw.text((x - txt_length_x / 2, y - txt_length_y / 2), text, fill='rgb(255, 255, 255)', font=font)
 
 
-async def add_grand_company(ctx: Context, draw: ImageDraw.Draw, image: Image, character: dict):
+async def add_grand_company(ctx: Context, draw: ImageDraw.Draw, image: Image, character: Character):
     font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
     x_txt, y_txt = ctx.bot.ffxiv.get("Positions", {}).get("free_company").values()
-    in_fc = character.get("FreeCompany")
 
     # add "new adventurer" string if no fc either, return
-    if character.get("Character", {}).get("GrandCompany", {}).get("Company") is None:
-        if not in_fc:
+    if not character.grand_company.member_of:
+        if not character.free_company.member_of:
             await __add_default_text(ctx, draw, font, x_txt, y_txt)
         return
 
     # add grand company name if user in no free company
-    gc = character.get("Character", {}).get("GrandCompany", {}).get("Company", {}).get("Name")
     x_gc, y_gc = 0, 0
-    if not in_fc:
-        x_gc, y_gc = await __add_grand_company_name(draw, font, x_txt, y_txt, gc)
-    await __add_grand_company_icon(ctx, image, gc, in_fc, x_gc, y_gc)
+    if not character.free_company.member_of:
+        x_gc, y_gc = await __add_grand_company_name(ctx, draw, font, x_txt, y_txt, character.grand_company.name)
+    await __add_grand_company_icon(ctx, image, character.grand_company.name, character.free_company.member_of, x_gc, y_gc)
 
 
-async def add_free_company(ctx: Context, draw: ImageDraw.Draw, character: dict):
+async def add_free_company(ctx: Context, draw: ImageDraw.Draw, character: Character):
     # TODO add FC logo
-    if character.get("FreeCompany") is not None:
-        fc_name = character.get("FreeCompany", {}).get("Name")
-        fc_tag = character.get("FreeCompany", {}).get("Tag")
-        fc_text = fc_name + " <" + fc_tag + ">"
+    if character.free_company.member_of:
+        fc_text = character.free_company.name + " <" + character.free_company.tag + ">"
         font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
         x, y = ctx.bot.ffxiv.get("Positions", {}).get("free_company").values()
         txt_length_x, txt_length_y = draw.textsize(fc_text, font=font)
         draw.text((x - txt_length_x / 2, y), fc_text, fill='rgb(255, 255, 255)', font=font)
 
 
-async def add_active_class_job(ctx: Context, image: Image, character: dict):
-    job = character.get("Character", {}).get("ActiveClassJob", {}).get("Job", {}).get("Abbreviation")
+async def add_active_class_job(ctx: Context, image: Image, character: Character):
     job_icon = None
-    if job is None:
+    if character.job.abbreviation is None:
         return
-    elif job in ctx.bot.ffxiv.get("JobsWithBaseClass", {}):
+    elif character.job.is_base_class:
         job_icon = await __get_base_class_icon(ctx, character)
     if job_icon is None:
-        job_icon = Image.open("resources/ffxiv/jobs/" + job + ".png")
+        job_icon = Image.open("resources/ffxiv/jobs/" + character.job.abbreviation + ".png")
     if job_icon is not None:
         x, y = ctx.bot.ffxiv.get("Positions", {}).get("active_job").values()
         image.paste(job_icon, (x, y), job_icon)
 
 
-async def add_item_level(ctx: Context, draw: ImageDraw.Draw, character: dict):
+async def add_item_level(ctx: Context, draw: ImageDraw.Draw, character: Character):
     ilvl_total = 0
     ilvl_main_hand = 0
     has_offhand = False
 
-    for slot, piece in character.get("Character").get("GearSet", {}).get("Gear").items():
+    for slot, piece in character.gear.items():
         ilvl = piece.get("Item", {}).get("LevelItem")
         if slot == "OffHand":
             has_offhand = True
@@ -108,54 +101,37 @@ async def add_item_level(ctx: Context, draw: ImageDraw.Draw, character: dict):
     draw.text((x, y), ilvl_total, fill='rgb(255, 255, 255)', font=font)
 
 
-async def add_mount_and_minion_percentages(ctx: Context, draw: ImageDraw.Draw, character: dict):
-    values = {
-        "Mounts": {
-            "total": "Mount",
-            "character": "Mounts",
-            "json": "mount_percentage"
-        },
-        "Minions": {
-            "total": "Companion",
-            "character": "Minions",
-            "json": "minion_percentage"
-        }
-    }
-    for value in values.values():
-        client = pyxivapi.XIVAPIClient(api_key=ctx.bot.config["bot"]["ffxiv"]["api_key"])
-        url = f'https://xivapi.com/search?indexes={value.get("total")}&filters=Order%3E=0&limit=1'
-        async with client.session.get(url) as response:
-            response_json = await response.json()
-            count_total = response_json.get("Pagination", {}).get("ResultsTotal")
-        await client.session.close()
-        count_character = len(character.get(value.get("character")))
-        count_percentage = int(round(count_character / count_total * 100))
-        count_percentage = str(count_percentage) + "%"
-        font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=34)
-        x, y = ctx.bot.ffxiv.get("Positions", {}).get(value.get("json")).values()
-        txt_length_x, txt_length_y = draw.textsize(count_percentage, font=font)
-        x = x - txt_length_x
-        draw.text((x, y), count_percentage, fill='rgb(255, 255, 255)', font=font)
+async def add_mount_percentage(ctx: Context, draw: ImageDraw.Draw, character: Character):
+    font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=34)
+    x, y = ctx.bot.ffxiv.get("Positions", {}).get("mount_percentage").values()
+    percentage_text = str(character.mounts.percentage) + "%"
+    txt_length_x, txt_length_y = draw.textsize(percentage_text, font=font)
+    x = x - txt_length_x
+    draw.text((x, y), percentage_text, fill='rgb(255, 255, 255)', font=font)
 
 
-async def add_server(ctx: Context, draw: ImageDraw.Draw, character: dict):
-    server = character.get("Character", {}).get("Server")
-    if server is None:
-        return
+async def add_minion_percentage(ctx: Context, draw: ImageDraw.Draw, character: Character):
+    font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=34)
+    x, y = ctx.bot.ffxiv.get("Positions", {}).get("minion_percentage").values()
+    percentage_text = str(character.minions.percentage) + "%"
+    txt_length_x, txt_length_y = draw.textsize(percentage_text, font=font)
+    x = x - txt_length_x
+    draw.text((x, y), percentage_text, fill='rgb(255, 255, 255)', font=font)
+
+
+async def add_server(ctx: Context, draw: ImageDraw.Draw, character: Character):
     font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
     x, y = ctx.bot.ffxiv.get("Positions", {}).get("server").values()
-    txt_length_x, txt_length_y = draw.textsize(server, font=font)
+    txt_length_x, txt_length_y = draw.textsize(character.server, font=font)
     x = x - txt_length_x
-    draw.text((x, y), server, fill='rgb(255, 255, 255)', font=font)
+    draw.text((x, y), character.server, fill='rgb(255, 255, 255)', font=font)
 
 
-async def add_attributes(ctx: Context, draw: ImageDraw.Draw, character: dict):
-    job = character.get("Character", {}).get("ActiveClassJob", {}).get("Job", {}).get("Abbreviation")
-    job_attributes = ctx.bot.ffxiv.get("AttributePriorities", {}).get(job, {})
-    character_attributes = character.get("Character", {}).get("GearSet", {}).get("Attributes")
+async def add_attributes(ctx: Context, draw: ImageDraw.Draw, character: Character):
+    job_attributes = ctx.bot.ffxiv.get("AttributePriorities", {}).get(character.job.abbr_job, {})
     attribute_positions = ctx.bot.ffxiv.get("AttributePositions", {})
     for i, attribute in enumerate(job_attributes):
-        value = await __get_attribute_value(ctx, attribute, character_attributes)
+        value = await __get_attribute_value(ctx, attribute, character.attributes)
         positions = attribute_positions.get(str(i), {})
         await __draw_attribute(draw, positions, attribute, value)
 
@@ -183,7 +159,7 @@ async def __add_grand_company_name(ctx: Context, draw: ImageDraw.Draw, font: Ima
 
 async def __add_grand_company_icon(ctx: Context, image: ImageDraw, gc: str, in_fc: bool, x_gc: int, y_gc: int):
     filename = await __get_gc_filename(gc)
-    if len(filename):
+    if len(filename) > 0:
         gc_icon = Image.open("resources/ffxiv/" + filename + ".png")
         if in_fc:
             # position gc logo differently if user is in an fc as gc name not shown in that case
@@ -202,11 +178,8 @@ async def __get_gc_filename(gc: str) -> str:
     return ""
 
 
-async def __get_base_class_icon(ctx: Context, character: dict) -> Image:
-    full_class_name = character.get("Character", {}).get("ActiveClassJob", {}).get("UnlockedState", {}).get("Name")
-    if full_class_name is None:
-        return
-    job = ctx.bot.ffxiv.get("BaseClasses", {}).get(full_class_name)
+async def __get_base_class_icon(ctx: Context, character: Character) -> Image:
+    job = ctx.bot.ffxiv.get("BaseClasses", {}).get(character.job.name)
     return Image.open("resources/ffxiv/jobs/" + job + ".png") if job is not None else None
 
 
