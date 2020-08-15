@@ -34,7 +34,7 @@ class FreeCompany:
     member_of: bool = False
     name: str = None
     tag: str = None
-    # todo add logo
+    crest: Image = None
 
 
 @dataclass
@@ -111,7 +111,7 @@ async def __get_minions(ctx: Context, character_raw: dict) -> Collection:
 
 async def __get_grand_company(character_raw: dict) -> GrandCompany:
     if character_raw.get("Character", {}).get("GrandCompany", {}).get("Company") is None:
-        return GrandCompany
+        return GrandCompany()
     name = character_raw.get("Character", {}).get("GrandCompany", {}).get("Company", {}).get("Name")
     icon = await __load_grand_company_icon(name)
     return GrandCompany(True, name, icon)
@@ -119,11 +119,11 @@ async def __get_grand_company(character_raw: dict) -> GrandCompany:
 
 async def __get_free_company(character_raw: dict) -> FreeCompany:
     if character_raw.get("FreeCompany") is None:
-        return GrandCompany
+        return FreeCompany()
     name = character_raw.get("FreeCompany", {}).get("Name")
     tag = character_raw.get("FreeCompany", {}).get("Tag")
-    # todo add logo
-    return FreeCompany(True, name, tag)
+    crest = await __get_free_company_crest(character_raw)
+    return FreeCompany(True, name, tag, crest)
 
 
 async def __calc_and_create_collection(ctx: Context, character_raw: dict, value_api: str, value_char: str) -> Collection:
@@ -160,3 +160,17 @@ async def __get_grand_company_filename(name: str) -> str:
         elif name == "Immortal Flames":
             return "gc_i"
     return ""
+
+
+async def __get_free_company_crest(character_raw: dict) -> Image:
+    crest = character_raw.get("FreeCompany", {}).get("Crest")
+    response = requests.get(crest[0])
+    image1 = Image.open(BytesIO(response.content))
+    response = requests.get(crest[1])
+    image2 = Image.open(BytesIO(response.content))
+    response = requests.get(crest[2])
+    image3 = Image.open(BytesIO(response.content))
+    image1.paste(image2, (0, 0), image2)
+    image1.paste(image3, (0, 0), image3)
+    image1 = image1.resize((52, 52))
+    return image1

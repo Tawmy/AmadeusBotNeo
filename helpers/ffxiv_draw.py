@@ -53,14 +53,17 @@ async def add_grand_company(ctx: Context, draw: ImageDraw.Draw, image: Image, ch
     await __add_grand_company_icon(ctx, image, character.grand_company.name, character.free_company.member_of, x_gc, y_gc)
 
 
-async def add_free_company(ctx: Context, draw: ImageDraw.Draw, character: Character):
-    # TODO add FC logo
+async def add_free_company(ctx: Context, draw: ImageDraw.Draw, image: Image, character: Character):
     if character.free_company.member_of:
         fc_text = character.free_company.name + " <" + character.free_company.tag + ">"
         font = ImageFont.truetype('resources/ffxiv/OpenSans-Regular.ttf', size=28)
         x, y = ctx.bot.ffxiv.get("Positions", {}).get("free_company").values()
+        x_fc_offset, y_fc_offset = ctx.bot.ffxiv.get("Positions", {}).get("free_company_offset").values()
         txt_length_x, txt_length_y = draw.textsize(fc_text, font=font)
-        draw.text((x - txt_length_x / 2, y), fc_text, fill='rgb(255, 255, 255)', font=font)
+        draw.text((x - txt_length_x / 2 + x_fc_offset, y), fc_text, fill='rgb(255, 255, 255)', font=font)
+        x_crest = int(x - txt_length_x / 2 - x_fc_offset)
+        y_crest = int(y - y_fc_offset)
+        image.paste(character.free_company.crest, (x_crest, y_crest))
 
 
 async def add_active_class_job(ctx: Context, image: Image, character: Character):

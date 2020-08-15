@@ -10,7 +10,11 @@
         },
         "free_company": {
             "x": 838,
-            "y": 207
+            "y": 208
+        },
+        "free_company_offset": {
+            "x": 34,
+            "y": 5
         },
         "active_job": {
             "x": 225,

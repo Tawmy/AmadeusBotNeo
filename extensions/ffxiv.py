@@ -44,7 +44,7 @@ class FFXIV(commands.Cog):
         await ffd.add_character_name(ctx, draw, character)
         await ffd.add_job_levels(ctx, draw, character)
         await ffd.add_grand_company(ctx, draw, image, character)
-        await ffd.add_free_company(ctx, draw, character)
+        await ffd.add_free_company(ctx, draw, image, character)
         await ffd.add_active_class_job(ctx, image, character)
         await ffd.add_item_level(ctx, draw, character)
         await ffd.add_mount_percentage(ctx, draw, character)
