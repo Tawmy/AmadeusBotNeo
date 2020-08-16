@@ -21,14 +21,14 @@ class OuterScope(Enum):
 
 
 class InnerScope(Enum):
-    ROLE = 0
-    CHANNEL = 1
+    ENABLED = 0
+    ROLE = 1
+    CHANNEL = 2
 
 
 class ConfigType(Enum):
-    ENABLED = 0
-    WHITELIST = 1
-    BLACKLIST = 2
+    WHITELIST = 0
+    BLACKLIST = 1
 
 
 class EditType(Enum):

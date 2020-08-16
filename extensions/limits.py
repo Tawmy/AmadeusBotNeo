@@ -109,6 +109,8 @@ class Config(commands.Cog):
             return InnerScope.ROLE
         elif user_input in ["channel", "channels"]:
             return InnerScope.CHANNEL
+        elif user_input in ["enabled", "enable", "on"]:
+            return ConfigType.ENABLED
 
     async def get_config_type(self, user_input) -> ConfigType:
         user_input = user_input.lower()
@@ -116,8 +118,6 @@ class Config(commands.Cog):
             return ConfigType.WHITELIST
         elif user_input in ["blacklist", "black list", "bl", "deny list", "denylist", "dl"]:
             return ConfigType.BLACKLIST
-        elif user_input in ["enabled", "enable", "on"]:
-            return ConfigType.ENABLED
 
     async def get_edit_type(self, user_input) -> EditType:
         user_input = user_input.lower()
@@ -205,6 +205,9 @@ class Config(commands.Cog):
         string = await s.get_string(ctx, "limits", "select_inner_scope")
         menu = AmadeusMenu(self.bot, string.string)
         await menu.set_user_specific(True)
+        string = await s.get_string(ctx, "limits", "enabled")
+        string_desc = await s.get_string(ctx, "limits", "enabled_desc")
+        await menu.add_option(string.string, string_desc.string)
         string = await s.get_string(ctx, "limits", "role")
         await menu.add_option(string.string)
         if input_data.outer_scope != OuterScope.CATEGORY:
@@ -219,18 +222,16 @@ class Config(commands.Cog):
             input_data.limit_step = LimitStep.INNER_SCOPE
             input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
-                input_data.inner_scope = InnerScope.ROLE
+                input_data.inner_scope = InnerScope.ENABLED
             elif menu_data.reaction_index == 1:
+                input_data.inner_scope = InnerScope.ROLE
+            elif menu_data.reaction_index == 2:
                 input_data.inner_scope = InnerScope.CHANNEL
 
     async def ask_for_config_type(self, ctx, input_data: InputData):
         # TODO show current config for wl, bl, and enabled
         string = await s.get_string(ctx, "limits", "select_config_type")
         menu = AmadeusMenu(self.bot, string.string)
-
-        string = await s.get_string(ctx, "limits", "enabled")
-        string_desc = await s.get_string(ctx, "limits", "enabled_desc")
-        await menu.add_option(string.string, string_desc.string)
 
         string = await s.get_string(ctx, "limits", "whitelist")
         req_desc = ""
@@ -261,10 +262,8 @@ class Config(commands.Cog):
             input_data.limit_step = LimitStep.CONFIG_TYPE
             input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
-                input_data.config_type = ConfigType.ENABLED
-            elif menu_data.reaction_index == 1:
                 input_data.config_type = ConfigType.WHITELIST
-            elif menu_data.reaction_index == 2:
+            elif menu_data.reaction_index == 1:
                 input_data.config_type = ConfigType.BLACKLIST
 
     async def ask_for_edit_type(self, ctx, input_data):
