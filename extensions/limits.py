@@ -145,6 +145,7 @@ class Config(commands.Cog):
         string_desc = await s.get_string(ctx, "limits", "command_desc")
         await menu.add_option(string.string, string_desc.string)
 
+        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
         menu_data = await menu.show_menu(ctx, 120)
 
         if menu_data.status != AmadeusMenuStatus.SELECTED:
@@ -220,6 +221,7 @@ class Config(commands.Cog):
             string = await s.get_string(ctx, "limits", "channel_s")
             string_desc = await s.get_string(ctx, "limits", "channel_desc")
             await menu.add_option(string.string, string_desc.string)
+        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
         menu_data = await menu.show_menu(ctx, 120, input_data.message)
 
         if menu_data.status != AmadeusMenuStatus.SELECTED:
@@ -262,6 +264,7 @@ class Config(commands.Cog):
         string_desc = await s.get_string(ctx, "limits", req_desc)
         await menu.add_option(string.string, string_desc.string)
 
+        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
         menu_data = await menu.show_menu(ctx, 120, input_data.message)
 
         if menu_data.status != AmadeusMenuStatus.SELECTED:
@@ -296,6 +299,7 @@ class Config(commands.Cog):
         string_desc = await s.get_string(ctx, "limits", "reset_desc")
         await menu.add_option(string.string, string_desc.string)
 
+        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
         menu_data = await menu.show_menu(ctx, 120, input_data.message)
 
         if menu_data.status != AmadeusMenuStatus.SELECTED:
@@ -329,6 +333,7 @@ class Config(commands.Cog):
         string = await s.get_string(ctx, "limits", "disable")
         await menu.add_option(string.string)
 
+        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
         menu_data = await menu.show_menu(ctx, 120, input_data.message)
 
         if menu_data.status != AmadeusMenuStatus.SELECTED:

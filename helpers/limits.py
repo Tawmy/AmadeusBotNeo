@@ -145,3 +145,26 @@ async def set_limit(ctx: Context, input_data: InputData) -> bool:
     ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name][inner_scope_str][config_type_str] = current_list
     pass
 
+
+async def get_footer_text(ctx: Context, input_data: InputData) -> str:
+    prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
+    footer_text = prefix + ctx.command.name.lower()
+    if input_data.outer_scope is not None:
+        footer_text += " " + input_data.outer_scope.name.lower()
+    else:
+        return footer_text
+    if input_data.name is not None:
+        footer_text += " " + input_data.name.lower()
+    else:
+        return footer_text
+    if input_data.inner_scope is not None:
+        footer_text += " " + input_data.inner_scope.name.lower()
+    else:
+        return footer_text
+    if input_data.config_type is not None:
+        footer_text += " " + input_data.config_type.name.lower()
+    else:
+        return footer_text
+    if input_data.edit_type is not None:
+        footer_text += " " + input_data.edit_type.name.lower()
+    return footer_text
