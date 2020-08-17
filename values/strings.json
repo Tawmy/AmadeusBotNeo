@@ -457,6 +457,14 @@
                 "neutral": "Kategorie"
             }
         },
+        "category_desc": {
+            "en": {
+                "neutral": "Set limit for all commands in a category. Limits for a specific command override this."
+            },
+            "de": {
+                "neutral": "Limit für alle Befehle in einer Kategorie setzen. Limits für einen bestimmten Befehl überschreiben dies."
+            }
+        },
         "categories": {
             "en": {
                 "neutral": "Categories"
@@ -471,6 +479,14 @@
             },
             "de": {
                 "neutral": "Befehl"
+            }
+        },
+        "command_desc": {
+            "en": {
+                "neutral": "Set limit for a specific command. This overrides category limits."
+            },
+            "de": {
+                "neutral": "Limit für einen bestimmten Befehl setzen. Dies überschreibt Kategorie-Limits."
             }
         },
         "input_category": {
@@ -499,18 +515,50 @@
         },
         "role": {
             "en": {
+                "neutral": "Role"
+            },
+            "de": {
+                "neutral": "Rolle"
+            }
+        },
+        "role_s": {
+            "en": {
                 "neutral": "Role(s)"
             },
             "de": {
                 "neutral": "Rolle(n)"
             }
         },
+        "role_desc": {
+            "en": {
+                "neutral": "Limit on a role basis. You can require or exclude a set of roles (or both)."
+            },
+            "de": {
+                "neutral": "Auf Rollen-Basis limitieren. Es können Rollen erfordert oder ausgeschlossen werden (oder beides)."
+            }
+        },
         "channel": {
+            "en": {
+                "neutral": "Channel"
+            },
+            "de": {
+                "neutral": "Kanal"
+            }
+        },
+        "channel_s": {
             "en": {
                 "neutral": "Channel(s)"
             },
             "de": {
                 "neutral": "Kanal/Kanäle"
+            }
+        },
+        "channel_desc": {
+            "en": {
+                "neutral": "Limit on a channel basis. You can require or exclude a set of channels (or both)."
+            },
+            "de": {
+                "neutral": "Auf Kanal-Basis limitieren. Es können Kanäle erfordert oder ausgeschlossen werden (oder beides)."
             }
         },
         "select_config_type": {
@@ -595,7 +643,7 @@
         },
         "blacklist_desc_channel": {
             "en": {
-                "neutral": "Command cannot be run be run in any of these channels"
+                "neutral": "Command cannot be run in any of these channels"
             },
             "de": {
                 "neutral": "Der Befehl kann in keinem dieser Kanäle ausgeführt werden"
@@ -639,6 +687,38 @@
             },
             "de": {
                 "neutral": "Zurücksetzen"
+            }
+        },
+        "add_to": {
+            "en": {
+                "neutral": "Add to "
+            },
+            "de": {
+                "neutral": "Hinzufügen zu "
+            }
+        },
+        "remove_from": {
+            "en": {
+                "neutral": "Remove from "
+            },
+            "de": {
+                "neutral": "Entferne von "
+            }
+        },
+        "replace_list": {
+            "en": {
+                "neutral": "Replace "
+            },
+            "de": {
+                "neutral": "Ersetze "
+            }
+        },
+        "reset_list": {
+            "en": {
+                "neutral": "Reset "
+            },
+            "de": {
+                "neutral": "Leere "
             }
         },
         "add_desc": {

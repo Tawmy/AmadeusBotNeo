@@ -139,9 +139,11 @@ class Config(commands.Cog):
         await menu.set_user_specific(True)
 
         string = await s.get_string(ctx, "limits", "category")
-        await menu.add_option(string.string)
+        string_desc = await s.get_string(ctx, "limits", "category_desc")
+        await menu.add_option(string.string, string_desc.string)
         string = await s.get_string(ctx, "limits", "command")
-        await menu.add_option(string.string)
+        string_desc = await s.get_string(ctx, "limits", "command_desc")
+        await menu.add_option(string.string, string_desc.string)
 
         menu_data = await menu.show_menu(ctx, 120)
 
@@ -211,11 +213,13 @@ class Config(commands.Cog):
         string = await s.get_string(ctx, "limits", "enabled")
         string_desc = await s.get_string(ctx, "limits", "enabled_desc")
         await menu.add_option(string.string, string_desc.string)
-        string = await s.get_string(ctx, "limits", "role")
-        await menu.add_option(string.string)
+        string = await s.get_string(ctx, "limits", "role_s")
+        string_desc = await s.get_string(ctx, "limits", "role_desc")
+        await menu.add_option(string.string, string_desc.string)
         if input_data.outer_scope != OuterScope.CATEGORY:
-            string = await s.get_string(ctx, "limits", "channel")
-            await menu.add_option(string.string)
+            string = await s.get_string(ctx, "limits", "channel_s")
+            string_desc = await s.get_string(ctx, "limits", "channel_desc")
+            await menu.add_option(string.string, string_desc.string)
         menu_data = await menu.show_menu(ctx, 120, input_data.message)
 
         if menu_data.status != AmadeusMenuStatus.SELECTED:
@@ -272,13 +276,7 @@ class Config(commands.Cog):
                 input_data.config_type = ConfigType.BLACKLIST
 
     async def ask_for_edit_type(self, ctx, input_data):
-        string = None
-        if input_data.config_type == ConfigType.WHITELIST:
-            string = await s.get_string(ctx, "limits", "whitelist")
-        elif input_data.config_type == ConfigType.BLACKLIST:
-            string = await s.get_string(ctx, "limits", "blacklist")
-        connecting_string = await s.get_string(ctx, "limits", "for")
-        title_str = string.string + connecting_string.string + input_data.name
+        title_str = await self.__prepare_title(ctx, input_data)
 
         menu = AmadeusMenu(self.bot, title_str)
         await menu.set_user_specific(True)
@@ -345,28 +343,19 @@ class Config(commands.Cog):
             input_data.limit_step = LimitStep.VALUES
 
     async def ask_for_values(self, ctx: Context, input_data: InputData):
-        edit_type = None
-        if input_data.edit_type == EditType.ADD:
-            edit_type = "add"
-        elif input_data.edit_type == EditType.REMOVE:
-            edit_type = "remove"
-        elif input_data.edit_type == EditType.REPLACE:
-            edit_type = "replace"
-        elif input_data.edit_type == EditType.RESET:
-            edit_type = "reset"
-        edit_type_string = await s.get_string(ctx, "limits", edit_type) if edit_type is not None else ""
-
-        string = None
-        if input_data.config_type == ConfigType.WHITELIST:
-            string = await s.get_string(ctx, "limits", "whitelist")
-        elif input_data.config_type == ConfigType.BLACKLIST:
-            string = await s.get_string(ctx, "limits", "blacklist")
-        connecting_string = await s.get_string(ctx, "limits", "for")
-        title_str = edit_type_string.string + " " + string.string + connecting_string.string + input_data.name
-
+        title_str = await self.__prepare_title(ctx, input_data)
         prompt = AmadeusPrompt(self.bot, title_str)
-        desc_string = await s.get_string(ctx, "limits", edit_type_string.string + "_desc")
-        await prompt.set_description(desc_string.string)
+        desc_string = None
+        if input_data.edit_type == EditType.ADD:
+            desc_string = await s.get_string(ctx, "limits", "add_desc")
+        elif input_data.edit_type == EditType.REMOVE:
+            desc_string = await s.get_string(ctx, "limits", "remove_desc")
+        elif input_data.edit_type == EditType.REPLACE:
+            desc_string = await s.get_string(ctx, "limits", "replace_desc")
+        elif input_data.edit_type == EditType.RESET:
+            desc_string = await s.get_string(ctx, "limits", "reset_desc")
+        if desc_string is not None:
+            await prompt.set_description(desc_string.string)
 
         # TODO add field with current values
 
@@ -397,6 +386,63 @@ class Config(commands.Cog):
         else:
             pass  # todo show appropriate error
 
+    async def __prepare_title(self, ctx: Context, input_data: InputData) -> str:
+        title_str = await self.__add_edit_type_to_title(ctx, input_data)
+        title_str += await self.__add_inner_scope_to_title(ctx, input_data)
+        title_str += await self.__add_config_type_to_title(ctx, input_data)
+        connecting_string = await s.get_string(ctx, "limits", "for")
+        title_str += connecting_string.string + input_data.name.capitalize()
+        title_str += await self.__add_outer_scope_to_title(ctx, input_data)
+        return title_str
+
+    async def __add_edit_type_to_title(self, ctx: Context, input_data: InputData) -> str:
+        if input_data.edit_type is not None:
+            edit_type = None
+            if input_data.edit_type == EditType.ADD:
+                edit_type = "add_to"
+            elif input_data.edit_type == EditType.REMOVE:
+                edit_type = "remove_from"
+            elif input_data.edit_type == EditType.REPLACE:
+                edit_type = "replace_list"
+            elif input_data.edit_type == EditType.RESET:
+                edit_type = "reset_list"
+            if edit_type is not None:
+                string = await s.get_string(ctx, "limits", edit_type)
+                return string.string if string is not None else ""
+        return ""
+
+    async def __add_inner_scope_to_title(self, ctx: Context, input_data: InputData) -> str:
+        inner_scope_str = None
+        if input_data.inner_scope == InnerScope.ROLE:
+            inner_scope_str = await s.get_string(ctx, "limits", "role")
+        elif input_data.inner_scope == InnerScope.CHANNEL:
+            inner_scope_str = await s.get_string(ctx, "limits", "channel")
+        if inner_scope_str is not None:
+            return inner_scope_str.string
+        else:
+            return  # todo show error
+
+    async def __add_config_type_to_title(self, ctx: Context, input_data: InputData) -> str:
+        config_type_str = None
+        if input_data.config_type == ConfigType.WHITELIST:
+            config_type_str = await s.get_string(ctx, "limits", "whitelist")
+        elif input_data.config_type == ConfigType.BLACKLIST:
+            config_type_str = await s.get_string(ctx, "limits", "blacklist")
+        if config_type_str is not None:
+            return " " + config_type_str.string
+        else:
+            return  # TODO show error
+
+    async def __add_outer_scope_to_title(self, ctx: Context, input_data: InputData) -> str:
+        outer_scope_str = None
+        if input_data.outer_scope == OuterScope.CATEGORY:
+            outer_scope_str = await s.get_string(ctx, "limits", "category")
+        elif input_data.outer_scope == OuterScope.COMMAND:
+            outer_scope_str = await s.get_string(ctx, "limits", "command")
+        if outer_scope_str is not None:
+            return " " + outer_scope_str.string
+        else:
+            return  # TODO show error
 
 def setup(bot):
     bot.add_cog(Config(bot))
