@@ -537,6 +537,14 @@
                 "neutral": "Blacklist"
             }
         },
+        "enable": {
+            "en": {
+                "neutral": "Enable"
+            },
+            "de": {
+                "neutral": "Aktiviere"
+            }
+        },
         "enabled": {
             "en": {
                 "neutral": "Enabled"
@@ -551,6 +559,14 @@
             },
             "de": {
                 "neutral": "Legt fest, ob der Komponent aktiviert ist"
+            }
+        },
+        "disable": {
+            "en": {
+                "neutral": "Disable"
+            },
+            "de": {
+                "neutral": "Deaktiviere"
             }
         },
         "whitelist_desc_role": {

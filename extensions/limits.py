@@ -1,9 +1,12 @@
 from collections import defaultdict
 from discord.ext import commands
+from discord.ext.commands import Context
+
 from components import checks
 from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
-from helpers import strings as s
+from helpers import strings as s, limits
+from helpers.config import save_config
 from helpers.limits import InputData, LimitStep, OuterScope, InnerScope, EditType, ConfigType
 
 
@@ -18,7 +21,6 @@ class Config(commands.Cog):
         if len(args) > 0:
             await self.check_input(ctx, args, input_data)
         await self.collect_limits_data(ctx, input_data)
-        print(input_data)
 
     async def check_input(self, ctx, args, input_data: InputData) -> InputData:
         outer_scope = await self.get_outer_scope(args[0])
@@ -75,15 +77,16 @@ class Config(commands.Cog):
                 await self.ask_for_inner_scope(ctx, input_data)
             elif input_data.limit_step == LimitStep.INNER_SCOPE:
                 await self.ask_for_config_type(ctx, input_data)
-                return
             elif input_data.limit_step == LimitStep.CONFIG_TYPE:
                 await self.ask_for_edit_type(ctx, input_data)
-            elif input_data.limit_step == LimitStep.EDIT_TYPE:
-                # TODO
-                await self.ask_for_values()
+            elif input_data.limit_step == LimitStep.EDIT_TYPE and input_data.inner_scope != InnerScope.ENABLED:
+                await self.ask_for_values(ctx, input_data)
+            elif input_data.limit_step == LimitStep.EDIT_TYPE and input_data.inner_scope == InnerScope.ENABLED:
+                await self.ask_for_enable(ctx, input_data)
             elif input_data.limit_step == LimitStep.VALUES:
-                # TODO
-                pass
+                await self.process_input(ctx, input_data)
+            elif input_data.limit_step == LimitStep.PREPARED:
+                await self.save_limits(ctx, input_data)
 
     async def get_outer_scope(self, user_input: str):
         user_input = user_input.lower()
@@ -219,11 +222,13 @@ class Config(commands.Cog):
             input_data.limit_step = LimitStep.FINISHED
             await menu.show_result(ctx)
         else:
-            input_data.limit_step = LimitStep.INNER_SCOPE
             input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
                 input_data.inner_scope = InnerScope.ENABLED
-            elif menu_data.reaction_index == 1:
+                input_data.limit_step = LimitStep.EDIT_TYPE
+            else:
+                input_data.limit_step = LimitStep.INNER_SCOPE
+            if menu_data.reaction_index == 1:
                 input_data.inner_scope = InnerScope.ROLE
             elif menu_data.reaction_index == 2:
                 input_data.inner_scope = InnerScope.CHANNEL
@@ -309,6 +314,88 @@ class Config(commands.Cog):
                 input_data.edit_type = EditType.REPLACE
             elif menu_data.reaction_index == 3:
                 input_data.edit_type = EditType.RESET
+
+    async def ask_for_enable(self, ctx: Context, input_data: InputData):
+        string = await s.get_string(ctx, "limits", "enable")
+        title_str = string.string + " " + input_data.name
+        if input_data.outer_scope == OuterScope.CATEGORY:
+            string = await s.get_string(ctx, "limits", "category")
+        elif input_data.outer_scope == OuterScope.COMMAND:
+            string = await s.get_string(ctx, "limits", "command")
+        title_str += " " + string.string
+        menu = AmadeusMenu(self.bot, title_str)
+        await menu.set_user_specific(True)
+
+        string = await s.get_string(ctx, "limits", "enable")
+        await menu.add_option(string.string)
+        string = await s.get_string(ctx, "limits", "disable")
+        await menu.add_option(string.string)
+
+        menu_data = await menu.show_menu(ctx, 120, input_data.message)
+
+        if menu_data.status != AmadeusMenuStatus.SELECTED:
+            input_data.limit_step = LimitStep.FINISHED
+            await menu.show_result(ctx)
+        else:
+            input_data.message = menu_data.message
+            if menu_data.reaction_index == 0:
+                input_data.values = "true"
+            elif menu_data.reaction_index == 1:
+                input_data.values = "false"
+            input_data.limit_step = LimitStep.VALUES
+
+    async def ask_for_values(self, ctx: Context, input_data: InputData):
+        edit_type = None
+        if input_data.edit_type == EditType.ADD:
+            edit_type = "add"
+        elif input_data.edit_type == EditType.REMOVE:
+            edit_type = "remove"
+        elif input_data.edit_type == EditType.REPLACE:
+            edit_type = "replace"
+        elif input_data.edit_type == EditType.RESET:
+            edit_type = "reset"
+        edit_type_string = await s.get_string(ctx, "limits", edit_type) if edit_type is not None else ""
+
+        string = None
+        if input_data.config_type == ConfigType.WHITELIST:
+            string = await s.get_string(ctx, "limits", "whitelist")
+        elif input_data.config_type == ConfigType.BLACKLIST:
+            string = await s.get_string(ctx, "limits", "blacklist")
+        connecting_string = await s.get_string(ctx, "limits", "for")
+        title_str = edit_type_string.string + " " + string.string + connecting_string.string + input_data.name
+
+        prompt = AmadeusPrompt(self.bot, title_str)
+        desc_string = await s.get_string(ctx, "limits", edit_type_string.string + "_desc")
+        await prompt.set_description(desc_string.string)
+
+        # TODO add field with current values
+
+        prompt_data = await prompt.show_prompt(ctx, 120, input_data.message)
+
+        if prompt_data.status != AmadeusPromptStatus.INPUT_GIVEN:
+            input_data.limit_step = LimitStep.FINISHED
+            await prompt.show_result(ctx)
+        else:
+            input_data.message = prompt_data.message
+            input_data.values = prompt_data.input
+            input_data.limit_step = LimitStep.VALUES
+
+    async def process_input(self, ctx: Context, input_data: InputData):
+        prepared_input = await limits.prepare_input(ctx, input_data.inner_scope, input_data.values)
+        if prepared_input.successful:
+            input_data.prepared_values = prepared_input.list
+            input_data.limit_step = LimitStep.PREPARED
+        else:
+            input_data.limit_step = LimitStep.FINISHED
+            # todo show appropriate error message
+
+    async def save_limits(self, ctx: Context, input_data: InputData):
+        await limits.set_limit(ctx, input_data)
+        input_data.limit_step = LimitStep.FINISHED
+        if await save_config(ctx):
+            pass  # todo show success message
+        else:
+            pass  # todo show appropriate error
 
 
 def setup(bot):

@@ -8,8 +8,10 @@ import platform
 import asyncpg
 import discord
 from discord.ext import commands
+from discord.ext.commands import Context
+
 from components import exceptions as ex
-from helpers import strings, config
+from helpers import strings, config, general
 from helpers.strings import InsertPosition
 from extensions.changelog import save_changelog
 
@@ -43,78 +45,90 @@ async def global_check(ctx):
         raise ex.BotNotReady
 
     if ctx.command.name not in bot.config["bot"]["no_global_check"]:
-        guild_config = bot.config.get(str(ctx.guild.id), {})
+        guild_config = await general.deep_get_type(dict, bot.config, str(ctx.guild.id))
 
         # Is bot enabled on server? (set to True during setup)
-        bot_status = guild_config.get("general", {}).get("enabled")
-        if bot_status is None:
-            if str(ctx.guild.id) in bot.corrupt_configs:
-                raise ex.CorruptConfig
-            else:
-                raise ex.BotNotConfigured
-        elif bot_status is False:
-            raise ex.BotDisabled
+        await check_bot_enabled(ctx, guild_config)
 
-        guild_config_cat = guild_config.get("limits", {}).get("categories")
-        guild_config_com = guild_config.get("limits", {}).get("commands")
-        moderator_skip_enabled = bot.config[str(ctx.guild.id)].get("general", {}).get("mods_override_limits", {})
-        if discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"]):
-            user_is_moderator = True
-        else:
-            user_is_moderator = False
+        moderator_skip_enabled = await general.deep_get(bot.config, str(ctx.guild.id), "general", "mods_override_limits")
+        user_is_moderator = True if await is_moderator(ctx) else False
 
-        if guild_config_cat is not None:
-            # Is extension enabled on server?
-            if guild_config_cat.get(ctx.command.cog_name, {}).get("enabled") is False:
-                raise ex.CategoryDisabled
-
-            if moderator_skip_enabled and user_is_moderator:
-                pass
-            # Do not check for extension role limits if command has role limits specified
-            elif not await command_has_role_limits(ctx, guild_config_com):
-                # Does the extension have role limits?
-                wl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("whitelist", [])
-                bl = guild_config_cat.get(ctx.command.cog_name, {}).get("roles", {}).get("blacklist", [])
-                result = await check_role_limits(ctx, wl, bl)
-                if result[0] == 1:
-                    raise ex.CategoryNoWhitelistedRole(result[1])
-                elif result[0] == 2:
-                    raise ex.CategoryBlacklistedRole(result[1])
-
-        if guild_config_com is not None:
-            # Is command enabled on the server?
-            if guild_config_com.get(ctx.command.name, {}).get("enabled") is False:
-                raise ex.CommandDisabled
-
-            if moderator_skip_enabled and user_is_moderator:
-                pass
-            else:
-                # Does the command have channel limits?
-                wl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("whitelist", [])
-                bl = guild_config_com.get(ctx.command.name, {}).get("channels", {}).get("blacklist", [])
-                if len(wl) > 0 and ctx.channel.id not in wl:
-                    raise ex.CommandNotWhitelistedChannel
-                if ctx.channel.id in bl:
-                    raise ex.CommandBlacklistedChannel
-
-                # Does the command have role limits?
-                wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
-                bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
-                result = await check_role_limits(ctx, wl, bl)
-                if result[0] == 1:
-                    raise ex.CommandNoWhitelistedRole(result[1])
-                if result[0] == 2:
-                    raise ex.CommandBlacklistedRole(result[1])
+        await check_category_limits(ctx, guild_config, moderator_skip_enabled, user_is_moderator)
+        await check_command_limits(ctx, guild_config, moderator_skip_enabled, user_is_moderator)
 
         # TODO time limits
 
     return True
 
 
-async def command_has_role_limits(ctx, guild_config_com):
-    if guild_config_com is not None:
-        wl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("whitelist", [])
-        bl = guild_config_com.get(ctx.command.name, {}).get("roles", {}).get("blacklist", [])
+async def is_moderator(ctx: Context):
+    return discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"])
+
+
+async def check_bot_enabled(ctx: Context, guild_config: dict):
+    bot_status = await general.deep_get(guild_config, "general", "enabled")
+    if bot_status is None:
+        if str(ctx.guild.id) in bot.corrupt_configs:
+            raise ex.CorruptConfig
+        else:
+            raise ex.BotNotConfigured
+    elif bot_status is False:
+        raise ex.BotDisabled
+
+
+async def check_category_limits(ctx: Context, guild_config: dict, moderator_skip: bool, is_moderator: bool):
+    guild_config_cat = await general.deep_get(guild_config, "limits", "categories")
+    if guild_config_cat is None:
+        return
+    # Is extension enabled on server?
+    if await general.deep_get(guild_config_cat, ctx.command.cog_name.lower(), "enabled") is False:
+        raise ex.CategoryDisabled
+
+    if moderator_skip and is_moderator:
+        pass
+    # Do not check for extension role limits if command has role limits specified
+    elif not await command_has_role_limits(ctx, guild_config):
+        # Does the extension have role limits?
+        wl = await general.deep_get_type(list, guild_config_cat, ctx.command.cog_name.lower(), "roles", "whitelist")
+        bl = await general.deep_get_type(list, guild_config_cat, ctx.command.cog_name.lower(), "roles", "blacklist")
+        result = await check_role_limits(ctx, wl, bl)
+        if result[0] == 1:
+            raise ex.CategoryNoWhitelistedRole(result[1])
+        elif result[0] == 2:
+            raise ex.CategoryBlacklistedRole(result[1])
+
+
+async def check_command_limits(ctx: Context, guild_config: dict, moderator_skip: bool, is_moderator: bool):
+    guild_config_com = await general.deep_get(guild_config, "limits", "commands")
+    # Is command enabled on the server?
+    if await general.deep_get(guild_config_com, ctx.command.name, "enabled") is False:
+        raise ex.CommandDisabled
+
+    if moderator_skip and is_moderator:
+        pass
+    else:
+        # Does the command have channel limits?
+        wl = await general.deep_get_type(list, guild_config_com, ctx.command.name, "channels", "whitelist")
+        bl = await general.deep_get_type(list, guild_config_com, ctx.command.name, "channels", "blacklist")
+        if len(wl) > 0 and ctx.channel.id not in wl:
+            raise ex.CommandNotWhitelistedChannel
+        if ctx.channel.id in bl:
+            raise ex.CommandBlacklistedChannel
+
+        # Does the command have role limits?
+        wl = await general.deep_get_type(list, guild_config_com, ctx.command.name, "roles", "whitelist")
+        bl = await general.deep_get_type(list, guild_config_com, ctx.command.name, "roles", "blacklist")
+        result = await check_role_limits(ctx, wl, bl)
+        if result[0] == 1:
+            raise ex.CommandNoWhitelistedRole(result[1])
+        if result[0] == 2:
+            raise ex.CommandBlacklistedRole(result[1])
+
+
+async def command_has_role_limits(ctx: Context, guild_config: dict) -> int:
+    if guild_config is not None:
+        wl = await general.deep_get_type(list, guild_config, ctx.command.name, "limits", "commands", "roles", "whitelist")
+        bl = await general.deep_get_type(list, guild_config, ctx.command.name, "limits", "commands", "roles", "blacklist")
         return len(wl) + len(bl) > 0
     return False
 
@@ -184,26 +198,24 @@ async def on_command_error(ctx, message):
             if embed is not None:
                 await bot_channel.send(embed=embed)
     else:
+        error_config = None
         if ctx.guild is not None:
             error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
-        else:
-            error_config = None
-        if error_config is not None:
-            if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
+        if error_config is None:
+            error_config = {}
+        if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):
+            return
+        if isinstance(message, (ex.BotDisabled, ex.CategoryDisabled, ex.CommandDisabled)) and error_config.get(
+                "hide_disabled_errors"):
+            return
+        if isinstance(message,
+                      (ex.CommandNotWhitelistedChannel, ex.CommandBlacklistedChannel)) and error_config.get(
+                "hide_channel_errors"):
+            return
+        if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole, ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
+            if error_config.get("hide_role_errors"):
                 return
-            if isinstance(message, (ex.BotDisabled, ex.CategoryDisabled, ex.CommandDisabled)) and error_config.get(
-                    "hide_disabled_errors"):
-                return
-            if isinstance(message,
-                          (ex.CommandNotWhitelistedChannel, ex.CommandBlacklistedChannel)) and error_config.get(
-                    "hide_channel_errors"):
-                return
-            if isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole, ex.CategoryBlacklistedRole, ex.CommandBlacklistedRole)):
-                if error_config.get("hide_role_errors"):
-                    return
-            embed = await prepare_command_error_embed_custom(ctx, message, error_config)
-        else:
-            embed = await prepare_command_error_embed_custom(ctx, message)
+        embed = await prepare_command_error_embed_custom(ctx, message, error_config)
         await ctx.send(embed=embed)
 
 

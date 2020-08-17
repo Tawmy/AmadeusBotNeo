@@ -311,12 +311,15 @@ async def save_config(ctx: Context,) -> bool:
         save_status = False
         retries = 4
         while save_status is False and retries > 0:
-            with open(json_file, 'w') as file:
-                try:
-                    json.dump(ctx.bot.config[str(ctx.guild.id)], file, indent=4)
-                    return True
-                except Exception as e:
-                    print(e)
+            file = open(json_file, 'w')
+            try:
+                json.dump(ctx.bot.config[str(ctx.guild.id)], file, indent=4)
+                save_status = True
+            except Exception as e:
+                print(e)
+                await asyncio.sleep(1)
+            finally:
+                file.close()
             retries -= 1
-            await asyncio.sleep(1)
+        return True if save_status is True else False
     return False
