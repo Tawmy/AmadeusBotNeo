@@ -1,4 +1,6 @@
 from collections import defaultdict
+
+import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
@@ -7,7 +9,7 @@ from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 from helpers import strings as s, limits
 from helpers.config import save_config
-from helpers.limits import InputData, LimitStep, OuterScope, InnerScope, EditType, ConfigType
+from helpers.limits import InputData, LimitStep, OuterScope, InnerScope, EditType, ConfigType, LimitStatus
 
 
 class Config(commands.Cog):
@@ -186,8 +188,7 @@ class Config(commands.Cog):
                 input_data.message = prompt_data.message
                 input_data.name = name
             else:
-                pass
-                # TODO show limit status with appropriate error message
+                await self.show_limit_status(ctx, input_data, LimitStatus.NAME_NOT_FOUND)
 
     async def __add_name_prompt_details(self, ctx, outer_scope: OuterScope, prompt: AmadeusPrompt):
         cog_list = []
@@ -380,16 +381,17 @@ class Config(commands.Cog):
             input_data.prepared_values = prepared_input.list
             input_data.limit_step = LimitStep.PREPARED
         else:
-            input_data.limit_step = LimitStep.FINISHED
-            # todo show appropriate error message
+            if input_data.inner_scope == InnerScope.ROLE:
+                await self.show_limit_status(ctx, input_data, LimitStatus.ROLE_NOT_FOUND)
+            elif input_data.inner_scope == InnerScope.CHANNEL:
+                await self.show_limit_status(ctx, input_data, LimitStatus.TEXT_CHANNEL_NOT_FOUND)
 
     async def save_limits(self, ctx: Context, input_data: InputData):
         await limits.set_limit(ctx, input_data)
-        input_data.limit_step = LimitStep.FINISHED
         if await save_config(ctx):
-            pass  # todo show success message
+            await self.show_limit_status(ctx, input_data, LimitStatus.SAVE_SUCCESS)
         else:
-            pass  # todo show appropriate error
+            await self.show_limit_status(ctx, input_data, LimitStatus.SAVE_FAIL)
 
     async def __prepare_title(self, ctx: Context, input_data: InputData) -> str:
         title_str = await self.__add_edit_type_to_title(ctx, input_data)
@@ -425,7 +427,7 @@ class Config(commands.Cog):
         if inner_scope_str is not None:
             return inner_scope_str.string
         else:
-            return  # todo show error
+            await self.show_limit_status(ctx, input_data, LimitStatus.OTHER)
 
     async def __add_config_type_to_title(self, ctx: Context, input_data: InputData) -> str:
         config_type_str = None
@@ -436,7 +438,7 @@ class Config(commands.Cog):
         if config_type_str is not None:
             return " " + config_type_str.string
         else:
-            return  # TODO show error
+            await self.show_limit_status(ctx, input_data, LimitStatus.OTHER)
 
     async def __add_outer_scope_to_title(self, ctx: Context, input_data: InputData) -> str:
         outer_scope_str = None
@@ -447,7 +449,43 @@ class Config(commands.Cog):
         if outer_scope_str is not None:
             return " " + outer_scope_str.string
         else:
-            return  # TODO show error
+            await self.show_limit_status(ctx, input_data, LimitStatus.OTHER)
+
+    async def show_limit_status(self, ctx: Context, input_data: InputData, status: LimitStatus):
+        input_data.limit_step = LimitStep.FINISHED
+        embed = discord.Embed()
+        string_desc = None
+        if status == LimitStatus.NAME_NOT_FOUND:
+            string = await s.get_string(ctx, "limits_status", "NAME_NOT_FOUND")
+            if input_data.outer_scope == OuterScope.CATEGORY:
+                string_desc = await s.get_string(ctx, "limits_status", "NAME_NOT_FOUND_DESC_CATEGORY")
+            elif input_data.outer_scope == OuterScope.COMMAND:
+                string_desc = await s.get_string(ctx, "limits_status", "NAME_NOT_FOUND_DESC_COMMAND")
+        elif status == LimitStatus.TEXT_CHANNEL_NOT_FOUND:
+            string = await s.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND")
+            string_desc = await s.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND_DESC")
+        elif status == LimitStatus.ROLE_NOT_FOUND:
+            string = await s.get_string(ctx, "config_status", "ROLE_NOT_FOUND")
+            string_desc = await s.get_string(ctx, "config_status", "ROLE_NOT_FOUND_DESC")
+        elif status == LimitStatus.SAVE_SUCCESS:
+            string = await s.get_string(ctx, "limits_status", "SAVE_SUCCESS")
+        else:
+            string = await s.get_string(ctx, "config_status", "OTHER")
+        embed.title = string.string
+        if string_desc is not None and string_desc.successful:
+            embed.description = string_desc.string
+
+        # TODO this needs to be more dynamic, like set_footer in amadeusMenu
+        # it works for now because config is always user specific
+        name = ctx.author.display_name
+        avatar = ctx.author.avatar_url_as(static_format="png")
+        embed.set_footer(text=name, icon_url=avatar)
+
+        if input_data.message is not None:
+            await input_data.message.edit(embed=embed)
+        else:
+            await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Config(bot))

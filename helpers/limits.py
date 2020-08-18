@@ -44,6 +44,16 @@ class EditType(Enum):
     RESET = 3
 
 
+class LimitStatus(Enum):
+    OTHER = 0
+    NAME_NOT_FOUND = 1
+    TEXT_CHANNEL_NOT_FOUND = 2
+    ROLE_NOT_FOUND = 3
+    PREPARATION_SUCCESSFUL = 4
+    SAVE_SUCCESS = 5
+    SAVE_FAIL = 6
+
+
 @dataclass
 class InputData:
     limit_step: LimitStep = LimitStep.NO_INFO

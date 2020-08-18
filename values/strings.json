@@ -753,5 +753,47 @@
                 "neutral": "Setze die Liste komplett zurück"
             }
         }
+    },
+    "limits_status": {
+        "SAVE_SUCCESS": {
+            "en": {
+                "neutral": "Limits saved!"
+            },
+            "de": {
+                "neutral": "Limits gespeichert!"
+            }
+        },
+        "SAVE_FAIL": {
+            "en": {
+                "neutral": "Could not save limits."
+            },
+            "de": {
+                "neutral": "Limits konnten nicht gespeichert werden."
+            }
+        },
+        "NAME_NOT_FOUND": {
+            "en": {
+                "neutral": "Name not found"
+            },
+            "de": {
+                "neutral": "Name nicht gefunden"
+            }
+        },
+        "NAME_NOT_FOUND_DESC_CATEGORY": {
+            "en": {
+                "neutral": "The given category could not be found."
+            },
+            "de": {
+                "neutral": "Die gegebene Kategorie konnte nicht gefunden werden."
+            }
+        },
+        "NAME_NOT_FOUND_DESC_COMMAND": {
+            "en": {
+                "neutral": "The given command could not be found. Please make sure you have not entered a category instead."
+            },
+            "de": {
+                "neutral": "Der gegebene Befehl konnte nicht gefunden werden. Bitte sicherstellen, dass nicht fälschlicherweise eine Kategorie gegeben wurde."
+            }
+        }
     }
 }
