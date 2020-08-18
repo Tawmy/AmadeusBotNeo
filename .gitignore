@@ -125,7 +125,5 @@ dmypy.json
 .pyre/
 .idea
 
-
-
+# macOS resource files
 .DS_Store
-venv_old
