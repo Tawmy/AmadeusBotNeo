@@ -1,3 +1,4 @@
+import copy
 import shlex
 from dataclasses import dataclass, field
 from distutils.util import strtobool
@@ -96,6 +97,7 @@ async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union
         user_input = shlex.split(user_input)
     elif isinstance(user_input, bool):
         user_input = [str(user_input)]
+    user_input = copy.deepcopy(user_input)
     for i, item in enumerate(user_input):
         if type(item) == int:
             user_input[i] = str(item)
