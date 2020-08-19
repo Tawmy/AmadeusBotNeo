@@ -209,9 +209,8 @@ class Config(commands.Cog):
                 await prompt.add_field(cog_name, commands_str)
 
     async def ask_for_inner_scope(self, ctx, input_data: InputData):
-        # TODO work on strings for inner and outer scope title
-        string = await s.get_string(ctx, "limits", "select_inner_scope")
-        menu = AmadeusMenu(self.bot, string.string)
+        title = await self.__get_menu_title(ctx, input_data)
+        menu = AmadeusMenu(self.bot, title)
         await menu.set_user_specific(True)
         string = await s.get_string(ctx, "limits", "enabled")
         string_desc = await s.get_string(ctx, "limits", "enabled_desc")
@@ -245,8 +244,8 @@ class Config(commands.Cog):
                 input_data.inner_scope = InnerScope.CHANNEL
 
     async def ask_for_config_type(self, ctx, input_data: InputData):
-        string = await s.get_string(ctx, "limits", "select_config_type")
-        menu = AmadeusMenu(self.bot, string.string)
+        title = await self.__get_menu_title(ctx, input_data)
+        menu = AmadeusMenu(self.bot, title)
         await menu.set_user_specific(True)
 
         string = await s.get_string(ctx, "limits", "whitelist")
@@ -284,9 +283,9 @@ class Config(commands.Cog):
                 input_data.config_type = ConfigType.BLACKLIST
 
     async def ask_for_edit_type(self, ctx, input_data):
-        title_str = await self.__prepare_title(ctx, input_data)
+        title = await self.__get_menu_title(ctx, input_data)
 
-        menu = AmadeusMenu(self.bot, title_str)
+        menu = AmadeusMenu(self.bot, title)
         await menu.set_user_specific(True)
 
         await self.__add_current_values(ctx, input_data, menu)
@@ -323,14 +322,8 @@ class Config(commands.Cog):
                 input_data.edit_type = EditType.RESET
 
     async def ask_for_enable(self, ctx: Context, input_data: InputData):
-        string = await s.get_string(ctx, "limits", "enable")
-        title_str = string.string + " " + input_data.name
-        if input_data.outer_scope == OuterScope.CATEGORY:
-            string = await s.get_string(ctx, "limits", "category")
-        elif input_data.outer_scope == OuterScope.COMMAND:
-            string = await s.get_string(ctx, "limits", "command")
-        title_str += " " + string.string
-        menu = AmadeusMenu(self.bot, title_str)
+        title = await self.__get_menu_title(ctx, input_data)
+        menu = AmadeusMenu(self.bot, title)
         await menu.set_user_specific(True)
 
         string = await s.get_string(ctx, "limits", "enable")
@@ -353,8 +346,8 @@ class Config(commands.Cog):
             input_data.limit_step = LimitStep.VALUES
 
     async def ask_for_values(self, ctx: Context, input_data: InputData):
-        title_str = await self.__prepare_title(ctx, input_data)
-        prompt = AmadeusPrompt(self.bot, title_str)
+        title = await self.__get_menu_title(ctx, input_data)
+        prompt = AmadeusPrompt(self.bot, title)
         desc_string = None
         if input_data.edit_type == EditType.ADD:
             desc_string = await s.get_string(ctx, "limits", "add_desc")
@@ -397,14 +390,9 @@ class Config(commands.Cog):
         else:
             await self.show_limit_status(ctx, input_data, LimitStatus.SAVE_FAIL)
 
-    async def __prepare_title(self, ctx: Context, input_data: InputData) -> str:
-        title_str = await self.__add_edit_type_to_title(ctx, input_data)
-        title_str += await self.__add_inner_scope_to_title(ctx, input_data)
-        title_str += await self.__add_config_type_to_title(ctx, input_data)
-        connecting_string = await s.get_string(ctx, "limits", "for")
-        title_str += connecting_string.string + input_data.name.capitalize()
-        title_str += await self.__add_outer_scope_to_title(ctx, input_data)
-        return title_str
+    async def __get_menu_title(self, ctx: Context, input_data: InputData):
+        outer_scope_str = await s.get_string(ctx, "limits", input_data.outer_scope.name.lower())
+        return input_data.name.capitalize() + " " + outer_scope_str.string
 
     async def __add_edit_type_to_title(self, ctx: Context, input_data: InputData) -> str:
         if input_data.edit_type is not None:
