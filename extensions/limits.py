@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Union
 
 import discord
 from discord.ext import commands
@@ -7,7 +8,7 @@ from discord.ext.commands import Context
 from components import checks
 from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
-from helpers import strings as s, limits
+from helpers import strings as s, limits, general
 from helpers.config import save_config
 from helpers.limits import InputData, LimitStep, OuterScope, InnerScope, EditType, ConfigType, LimitStatus
 
@@ -223,6 +224,9 @@ class Config(commands.Cog):
             string_desc = await s.get_string(ctx, "limits", "channel_desc")
             await menu.add_option(string.string, string_desc.string)
         await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
+
+        await self.__add_current_values(ctx, input_data, menu)
+
         menu_data = await menu.show_menu(ctx, 120, input_data.message)
 
         if menu_data.status != AmadeusMenuStatus.SELECTED:
@@ -241,9 +245,9 @@ class Config(commands.Cog):
                 input_data.inner_scope = InnerScope.CHANNEL
 
     async def ask_for_config_type(self, ctx, input_data: InputData):
-        # TODO show current config for wl, bl, and enabled
         string = await s.get_string(ctx, "limits", "select_config_type")
         menu = AmadeusMenu(self.bot, string.string)
+        await menu.set_user_specific(True)
 
         string = await s.get_string(ctx, "limits", "whitelist")
         req_desc = ""
@@ -285,7 +289,7 @@ class Config(commands.Cog):
         menu = AmadeusMenu(self.bot, title_str)
         await menu.set_user_specific(True)
 
-        # TODO add field with current values
+        await self.__add_current_values(ctx, input_data, menu)
 
         string = await s.get_string(ctx, "limits", "add")
         string_desc = await s.get_string(ctx, "limits", "add_desc")
@@ -363,7 +367,7 @@ class Config(commands.Cog):
         if desc_string is not None:
             await prompt.set_description(desc_string.string)
 
-        # TODO add field with current values
+        await self.__add_current_values(ctx, input_data, prompt)
 
         prompt_data = await prompt.show_prompt(ctx, 120, input_data.message)
 
@@ -485,6 +489,41 @@ class Config(commands.Cog):
             await input_data.message.edit(embed=embed)
         else:
             await ctx.send(embed=embed)
+
+    async def __add_current_values(self, ctx: Context, input_data: InputData, menu: Union[AmadeusMenu, AmadeusPrompt]):
+        if input_data.config_type is None or input_data.inner_scope == InnerScope.ENABLED:
+            await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.ENABLED)
+        if input_data.config_type is None or input_data.inner_scope == InnerScope.CHANNEL and input_data.config_type == ConfigType.WHITELIST:
+            await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.CHANNEL, ConfigType.WHITELIST)
+        if input_data.config_type is None or input_data.inner_scope == InnerScope.CHANNEL and input_data.config_type == ConfigType.BLACKLIST:
+            await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.CHANNEL, ConfigType.BLACKLIST)
+        if input_data.config_type is None or input_data.inner_scope == InnerScope.ROLE and input_data.config_type == ConfigType.WHITELIST:
+            await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.ROLE, ConfigType.WHITELIST)
+        if input_data.config_type is None or input_data.inner_scope == InnerScope.ROLE and input_data.config_type == ConfigType.BLACKLIST:
+            await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.ROLE, ConfigType.BLACKLIST)
+
+    async def __add_field_to_menu(self, ctx: Context, input_data: InputData, menu: AmadeusMenu, inner_scope: InnerScope, config_type: ConfigType = None):
+        inner_scope_str = await s.get_string(ctx, "limits", inner_scope.name.lower())
+        if inner_scope == InnerScope.ENABLED:
+            title = inner_scope_str.string.capitalize()
+        else:
+            if config_type is None:
+                return
+            config_type_str = await s.get_string(ctx, "limits", config_type.name.lower())
+            title = inner_scope_str.string.capitalize() + " " + config_type_str.string.capitalize()
+        limit_list = await self.__get_list(ctx, input_data, inner_scope, config_type)
+        prepared_input = await limits.prepare_input(ctx, inner_scope, limit_list, True)
+        limit_list_str = '\n'.join([str(element) for element in prepared_input.list]) if len(prepared_input.list) > 0 else "-"
+        await menu.add_field(title, limit_list_str)
+
+    async def __get_list(self, ctx: Context, input_data: InputData, inner_scope: InnerScope, config_type: ConfigType) -> list:
+        outer_scope_str = await limits.get_outer_scope_str(input_data)
+        inner_scope_str = await limits.get_inner_scope_str(inner_scope)
+        config_type_str = await limits.get_config_type_str(config_type)
+        if inner_scope == InnerScope.ENABLED:
+            return await general.deep_get_type(list, ctx.bot.config, str(ctx.guild.id), "limits", outer_scope_str, input_data.name.lower(), inner_scope_str)
+        else:
+            return await general.deep_get_type(list, ctx.bot.config, str(ctx.guild.id), "limits", outer_scope_str, input_data.name.lower(), inner_scope_str, config_type_str)
 
 
 def setup(bot):

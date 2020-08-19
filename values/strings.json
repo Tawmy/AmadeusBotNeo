@@ -563,10 +563,10 @@
         },
         "select_config_type": {
             "en": {
-                "neutral": ""
+                "neutral": "Select config type"
             },
             "de": {
-                "neutral": "Kanal/Kanäle"
+                "neutral": "Konfigurationstyp wählen"
             }
         },
         "whitelist": {

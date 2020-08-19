@@ -73,7 +73,7 @@ class PreparedInput:
     list: List = field(default_factory=list)
 
 
-async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union[str, list]) -> PreparedInput:
+async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union[str, list], get_name: bool = False) -> PreparedInput:
     """
     Goes through every element and converts it to role or channel.
 
@@ -85,6 +85,8 @@ async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union
         The inner scope defining whether role or channel converter will be used
     user_input: Union(str, list)
         String is converted to list using shlex
+    get_name: bool, optional
+        Sets if returned list should include names instead of IDs
 
     Returns
     -------
@@ -92,8 +94,17 @@ async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union
     """
     if isinstance(user_input, str):
         user_input = shlex.split(user_input)
+    elif isinstance(user_input, bool):
+        user_input = [str(user_input)]
+    for i, item in enumerate(user_input):
+        if type(item) == int:
+            user_input[i] = str(item)
 
     prepared_input = PreparedInput()
+
+    if len(user_input) == 0:
+        prepared_input.successful = False
+        return prepared_input
 
     if inner_scope == InnerScope.ENABLED:
         try:
@@ -106,10 +117,16 @@ async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union
         try:
             if inner_scope == InnerScope.ROLE:
                 role = await commands.RoleConverter().convert(ctx, item)
-                prepared_input.list.append(role.id)
+                if get_name:
+                    prepared_input.list.append(role.name)
+                else:
+                    prepared_input.list.append(role.id)
             elif inner_scope == InnerScope.CHANNEL:
                 channel = await commands.TextChannelConverter().convert(ctx, item)
-                prepared_input.list.append(channel.id)
+                if get_name:
+                    prepared_input.list.append(channel.name)
+                else:
+                    prepared_input.list.append(channel.id)
         except commands.CommandError:
             prepared_input.successful = False
             return prepared_input
@@ -118,27 +135,16 @@ async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union
 
 async def set_limit(ctx: Context, input_data: InputData) -> bool:
     ctx.bot.config[str(ctx.guild.id)].setdefault("limits", {})
-    outer_scope_str = ""
-    if input_data.outer_scope == OuterScope.CATEGORY:
-        outer_scope_str = "categories"
-    elif input_data.outer_scope == OuterScope.COMMAND:
-        outer_scope_str = "commands"
+    outer_scope_str = await get_outer_scope_str(input_data)
     ctx.bot.config[str(ctx.guild.id)]["limits"].setdefault(outer_scope_str, {})
     ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str].setdefault(input_data.name, {})
-    inner_scope_str = ""
     if input_data.inner_scope == InnerScope.ENABLED:
         ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name].setdefault("enabled", input_data.prepared_values[0])
+        ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name]["enabled"] = input_data.prepared_values[0]
         return True
-    elif input_data.inner_scope == InnerScope.CHANNEL:
-        inner_scope_str = "channels"
-    elif input_data.inner_scope == InnerScope.ROLE:
-        inner_scope_str = "roles"
+    inner_scope_str = await get_inner_scope_str(input_data)
     ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name].setdefault(inner_scope_str, {})
-    config_type_str = ""
-    if input_data.config_type == ConfigType.WHITELIST:
-        config_type_str = "whitelist"
-    elif input_data.config_type == ConfigType.BLACKLIST:
-        config_type_str = "blacklist"
+    config_type_str = await get_config_type_str(input_data)
     current_list = ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name][inner_scope_str].setdefault(config_type_str, [])
     if input_data.edit_type == EditType.ADD:
         for item in input_data.prepared_values:
@@ -178,3 +184,42 @@ async def get_footer_text(ctx: Context, input_data: InputData) -> str:
     if input_data.edit_type is not None:
         footer_text += " " + input_data.edit_type.name.lower()
     return footer_text
+
+
+async def get_outer_scope_str(input_data: InputData) -> str:
+    outer_scope_str = ""
+    if input_data.outer_scope == OuterScope.CATEGORY:
+        outer_scope_str = "categories"
+    elif input_data.outer_scope == OuterScope.COMMAND:
+        outer_scope_str = "commands"
+    return outer_scope_str
+
+
+async def get_inner_scope_str(input_data: Union[InputData, InnerScope]) -> str:
+    inner_scope_str = ""
+    if type(input_data) == InputData:
+        inner_scope = input_data.inner_scope
+    else:
+        inner_scope = input_data
+
+    if inner_scope == InnerScope.ENABLED:
+        inner_scope_str = "enabled"
+    if inner_scope == InnerScope.CHANNEL:
+        inner_scope_str = "channels"
+    elif inner_scope == InnerScope.ROLE:
+        inner_scope_str = "roles"
+    return inner_scope_str
+
+
+async def get_config_type_str(input_data: Union[InputData, ConfigType]):
+    config_type_str = ""
+    if type(input_data) == InputData:
+        config_type = input_data.config_type
+    else:
+        config_type = input_data
+
+    if config_type == ConfigType.WHITELIST:
+        config_type_str = "whitelist"
+    elif config_type == ConfigType.BLACKLIST:
+        config_type_str = "blacklist"
+    return config_type_str
