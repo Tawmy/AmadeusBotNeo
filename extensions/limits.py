@@ -22,10 +22,10 @@ class Config(commands.Cog):
     async def limits(self, ctx, *args):
         input_data = InputData()
         if len(args) > 0:
-            await self.check_input(ctx, args, input_data)
+            await self.check_input(args, input_data)
         await self.collect_limits_data(ctx, input_data)
 
-    async def check_input(self, ctx, args, input_data: InputData) -> InputData:
+    async def check_input(self, args, input_data: InputData) -> InputData:
         outer_scope = await self.get_outer_scope(args[0])
         if outer_scope is not None:
             input_data.outer_scope = outer_scope
@@ -38,6 +38,10 @@ class Config(commands.Cog):
                         if inner_scope is not None:
                             input_data.inner_scope = inner_scope
                             if len(args) > 3:
+                                if input_data.inner_scope == InnerScope.ENABLED:
+                                    input_data.values = args[3]
+                                    input_data.limit_step = LimitStep.VALUES
+                                    return input_data
                                 config_type = await self.get_config_type(args[3])
                                 if config_type is not None:
                                     input_data.config_type = config_type
@@ -57,7 +61,10 @@ class Config(commands.Cog):
                                 else:
                                     input_data.limit_step = LimitStep.INNER_SCOPE
                             else:
-                                input_data.limit_step = LimitStep.INNER_SCOPE
+                                if input_data.inner_scope == InnerScope.ENABLED:
+                                    input_data.limit_step = LimitStep.EDIT_TYPE
+                                else:
+                                    input_data.limit_step = LimitStep.INNER_SCOPE
                         else:
                             input_data.limit_step = LimitStep.NAME
                     else:
@@ -116,7 +123,7 @@ class Config(commands.Cog):
         elif user_input in ["channel", "channels"]:
             return InnerScope.CHANNEL
         elif user_input in ["enabled", "enable", "on"]:
-            return ConfigType.ENABLED
+            return InnerScope.ENABLED
 
     async def get_config_type(self, user_input) -> ConfigType:
         user_input = user_input.lower()
