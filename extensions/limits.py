@@ -275,6 +275,8 @@ class Config(commands.Cog):
         string_desc = await s.get_string(ctx, "limits", req_desc)
         await menu.add_option(string.string, string_desc.string)
 
+        await self.__add_current_values(ctx, input_data, menu)
+
         await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
         menu_data = await menu.show_menu(ctx, 120, input_data.message)
 
@@ -486,16 +488,40 @@ class Config(commands.Cog):
             await ctx.send(embed=embed)
 
     async def __add_current_values(self, ctx: Context, input_data: InputData, menu: Union[AmadeusMenu, AmadeusPrompt]):
-        if input_data.config_type is None or input_data.inner_scope == InnerScope.ENABLED:
+        if await self.__check_field_enabled(input_data):
             await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.ENABLED)
-        if input_data.config_type is None or input_data.inner_scope == InnerScope.CHANNEL and input_data.config_type == ConfigType.WHITELIST:
+        if await self.__check_field_channel_whitelist(input_data):
             await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.CHANNEL, ConfigType.WHITELIST)
-        if input_data.config_type is None or input_data.inner_scope == InnerScope.CHANNEL and input_data.config_type == ConfigType.BLACKLIST:
+        if await self.__check_field_channel_blacklist(input_data):
             await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.CHANNEL, ConfigType.BLACKLIST)
-        if input_data.config_type is None or input_data.inner_scope == InnerScope.ROLE and input_data.config_type == ConfigType.WHITELIST:
+        if await self.__check_field_role_whitelist(input_data):
             await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.ROLE, ConfigType.WHITELIST)
-        if input_data.config_type is None or input_data.inner_scope == InnerScope.ROLE and input_data.config_type == ConfigType.BLACKLIST:
+        if await self.__check_field_role_blacklist(input_data):
             await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.ROLE, ConfigType.BLACKLIST)
+
+    async def __check_field_enabled(self, input_data: InputData):
+        return input_data.config_type is None and input_data.inner_scope is None\
+            or input_data.inner_scope == InnerScope.ENABLED
+
+    async def __check_field_channel_whitelist(self, input_data: InputData):
+        return input_data.config_type is None and input_data.inner_scope is None\
+            or input_data.config_type is None and input_data.inner_scope == InnerScope.CHANNEL\
+            or input_data.inner_scope == InnerScope.CHANNEL and input_data.config_type == ConfigType.WHITELIST
+
+    async def __check_field_channel_blacklist(self, input_data: InputData):
+        return input_data.config_type is None and input_data.inner_scope is None\
+            or input_data.config_type is None and input_data.inner_scope == InnerScope.CHANNEL\
+            or input_data.inner_scope == InnerScope.CHANNEL and input_data.config_type == ConfigType.BLACKLIST
+
+    async def __check_field_role_whitelist(self, input_data: InputData):
+        return input_data.config_type is None and input_data.inner_scope is None\
+            or input_data.config_type is None and input_data.inner_scope == InnerScope.ROLE\
+            or input_data.inner_scope == InnerScope.ROLE and input_data.config_type == ConfigType.WHITELIST
+
+    async def __check_field_role_blacklist(self, input_data: InputData):
+        return input_data.config_type is None and input_data.inner_scope is None\
+            or input_data.config_type is None and input_data.inner_scope == InnerScope.ROLE\
+            or input_data.inner_scope == InnerScope.ROLE and input_data.config_type == ConfigType.BLACKLIST
 
     async def __add_field_to_menu(self, ctx: Context, input_data: InputData, menu: AmadeusMenu, inner_scope: InnerScope, config_type: ConfigType = None):
         inner_scope_str = await s.get_string(ctx, "limits", inner_scope.name.lower())
