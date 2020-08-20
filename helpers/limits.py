@@ -93,14 +93,7 @@ async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union
     -------
     PreparedInput element
     """
-    if isinstance(user_input, str):
-        user_input = shlex.split(user_input)
-    elif isinstance(user_input, bool):
-        user_input = [str(user_input)]
-    user_input = copy.deepcopy(user_input)
-    for i, item in enumerate(user_input):
-        if type(item) == int:
-            user_input[i] = str(item)
+    user_input = await __convert_input_to_list(user_input)
 
     prepared_input = PreparedInput()
 
@@ -135,6 +128,18 @@ async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union
     return prepared_input
 
 
+async def __convert_input_to_list(user_input) -> list:
+    if isinstance(user_input, str):
+        user_input = shlex.split(user_input)
+    elif isinstance(user_input, bool):
+        user_input = [str(user_input)]
+    user_input = copy.deepcopy(user_input)
+    for i, item in enumerate(user_input):
+        if type(item) == int:
+            user_input[i] = str(item)
+    return user_input
+
+
 async def set_limit(ctx: Context, input_data: InputData) -> bool:
     ctx.bot.config[str(ctx.guild.id)].setdefault("limits", {})
     outer_scope_str = await get_outer_scope_str(input_data)
@@ -161,7 +166,6 @@ async def set_limit(ctx: Context, input_data: InputData) -> bool:
     elif input_data.edit_type.RESET:
         current_list = []
     ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name][inner_scope_str][config_type_str] = current_list
-    pass
 
 
 async def get_footer_text(ctx: Context, input_data: InputData) -> str:
@@ -199,7 +203,7 @@ async def get_outer_scope_str(input_data: InputData) -> str:
 
 async def get_inner_scope_str(input_data: Union[InputData, InnerScope]) -> str:
     inner_scope_str = ""
-    if type(input_data) == InputData:
+    if isinstance(input_data, InputData):
         inner_scope = input_data.inner_scope
     else:
         inner_scope = input_data
@@ -215,7 +219,7 @@ async def get_inner_scope_str(input_data: Union[InputData, InnerScope]) -> str:
 
 async def get_config_type_str(input_data: Union[InputData, ConfigType]):
     config_type_str = ""
-    if type(input_data) == InputData:
+    if isinstance(input_data, InputData):
         config_type = input_data.config_type
     else:
         config_type = input_data
