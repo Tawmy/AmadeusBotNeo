@@ -128,19 +128,15 @@ async def prepare_input(ctx: Context, inner_scope: InnerScope, user_input: Union
     return prepared_input
 
 
-async def __convert_input_to_list(user_input) -> list:
-    if isinstance(user_input, str):
-        user_input = shlex.split(user_input)
-    elif isinstance(user_input, bool):
-        user_input = [str(user_input)]
-    user_input = copy.deepcopy(user_input)
-    for i, item in enumerate(user_input):
-        if type(item) == int:
-            user_input[i] = str(item)
-    return user_input
+async def set_limit(ctx: Context, input_data: InputData):
+    """
+    Iterates config dictionaries and sets given limit.
 
-
-async def set_limit(ctx: Context, input_data: InputData) -> bool:
+    Parameters
+    ----------
+    ctx: Context
+    input_data: InputData
+    """
     ctx.bot.config[str(ctx.guild.id)].setdefault("limits", {})
     outer_scope_str = await get_outer_scope_str(input_data)
     ctx.bot.config[str(ctx.guild.id)]["limits"].setdefault(outer_scope_str, {})
@@ -148,7 +144,6 @@ async def set_limit(ctx: Context, input_data: InputData) -> bool:
     if input_data.inner_scope == InnerScope.ENABLED:
         ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name].setdefault("enabled", input_data.prepared_values[0])
         ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name]["enabled"] = input_data.prepared_values[0]
-        return True
     inner_scope_str = await get_inner_scope_str(input_data)
     ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name].setdefault(inner_scope_str, {})
     config_type_str = await get_config_type_str(input_data)
@@ -169,6 +164,21 @@ async def set_limit(ctx: Context, input_data: InputData) -> bool:
 
 
 async def get_footer_text(ctx: Context, input_data: InputData) -> str:
+    """
+    Iterates input data and creates text for footer.
+
+    This text shows exactly the command the user needs to run in the future to return to
+    this specific point in the limits configuration.
+
+    Parameters
+    ----------
+    ctx: Context
+    input_data: InputData
+
+    Returns
+    -------
+    Footer string
+    """
     prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
     footer_text = prefix + ctx.command.name.lower()
     if input_data.outer_scope is not None:
@@ -193,6 +203,13 @@ async def get_footer_text(ctx: Context, input_data: InputData) -> str:
 
 
 async def get_outer_scope_str(input_data: InputData) -> str:
+    """
+    Returns string to be used to get/set limits value
+
+    Parameters
+    ----------
+    input_data: InputData
+    """
     outer_scope_str = ""
     if input_data.outer_scope == OuterScope.CATEGORY:
         outer_scope_str = "categories"
@@ -202,6 +219,13 @@ async def get_outer_scope_str(input_data: InputData) -> str:
 
 
 async def get_inner_scope_str(input_data: Union[InputData, InnerScope]) -> str:
+    """
+    Returns string to be used to get/set limits value
+
+    Parameters
+    ----------
+    input_data: InputData
+    """
     inner_scope_str = ""
     if isinstance(input_data, InputData):
         inner_scope = input_data.inner_scope
@@ -218,6 +242,13 @@ async def get_inner_scope_str(input_data: Union[InputData, InnerScope]) -> str:
 
 
 async def get_config_type_str(input_data: Union[InputData, ConfigType]):
+    """
+    Returns string to be used to get/set limits value
+
+    Parameters
+    ----------
+    input_data: InputData
+    """
     config_type_str = ""
     if isinstance(input_data, InputData):
         config_type = input_data.config_type
@@ -229,3 +260,15 @@ async def get_config_type_str(input_data: Union[InputData, ConfigType]):
     elif config_type == ConfigType.BLACKLIST:
         config_type_str = "blacklist"
     return config_type_str
+
+
+async def __convert_input_to_list(user_input) -> list:
+    if isinstance(user_input, str):
+        user_input = shlex.split(user_input)
+    elif isinstance(user_input, bool):
+        user_input = [str(user_input)]
+    user_input = copy.deepcopy(user_input)
+    for i, item in enumerate(user_input):
+        if type(item) == int:
+            user_input[i] = str(item)
+    return user_input
