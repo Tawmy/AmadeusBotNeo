@@ -1,4 +1,11 @@
 {
+    "defaults": {
+        "config": {
+            "roles": {
+                "whitelist": ["mod_role"]
+            }
+        }
+    },
     "categories": {
         "name": "Categories",
         "description": "Limits for command categories",
