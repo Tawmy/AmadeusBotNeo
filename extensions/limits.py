@@ -10,7 +10,8 @@ from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 from helpers import strings as s, limits, general
 from helpers.config import save_config
-from helpers.limits import InputData, LimitStep, OuterScope, InnerScope, EditType, ConfigType, LimitStatus
+from helpers.limits import InputData, LimitStep, OuterScope, InnerScope, EditType, ConfigType, LimitStatus, \
+    PreparedInput
 
 
 class Config(commands.Cog):
@@ -534,8 +535,16 @@ class Config(commands.Cog):
             title = inner_scope_str.string.capitalize() + " " + config_type_str.string.capitalize()
         limit_list = await self.__get_list(ctx, input_data, inner_scope, config_type)
         prepared_input = await limits.prepare_input(ctx, inner_scope, limit_list, True)
-        limit_list_str = '\n'.join([str(element) for element in prepared_input.list]) if len(prepared_input.list) > 0 else "-"
+        limit_list_str = await self.__get_limit_string(prepared_input, inner_scope)
         await menu.add_field(title, limit_list_str)
+
+    async def __get_limit_string(self, prepared_input: PreparedInput, inner_scope: InnerScope):
+        if len(prepared_input.list) > 0:
+            return '\n'.join([str(element) for element in prepared_input.list])
+        elif inner_scope == InnerScope.ENABLED and len(prepared_input.list) == 0:
+            return "True"
+        else:
+            return "-"
 
     async def __get_list(self, ctx: Context, input_data: InputData, inner_scope: InnerScope, config_type: ConfigType) -> list:
         outer_scope_str = await limits.get_outer_scope_str(input_data)
