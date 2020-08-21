@@ -144,6 +144,7 @@ async def set_limit(ctx: Context, input_data: InputData):
     if input_data.inner_scope == InnerScope.ENABLED:
         ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name].setdefault("enabled", input_data.prepared_values[0])
         ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name]["enabled"] = input_data.prepared_values[0]
+        return
     inner_scope_str = await get_inner_scope_str(input_data)
     ctx.bot.config[str(ctx.guild.id)]["limits"][outer_scope_str][input_data.name].setdefault(inner_scope_str, {})
     config_type_str = await get_config_type_str(input_data)
