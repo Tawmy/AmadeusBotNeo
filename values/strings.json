@@ -98,6 +98,22 @@
             "de": {
                 "neutral": "Konfiguration konnte nicht gespeichert werden."
             }
+        },
+        "default_limits_description": {
+            "en": {
+                "neutral": "**The following categories have been limited by default:**"
+            },
+            "de": {
+                "neutral": "**Die folgenden Kategorien wurden standardmäßig limitiert:**"
+            }
+        },
+        "default_limits_note": {
+            "en": {
+                "neutral": ["You can check and adjust these limits using the", "command."]
+            },
+            "de": {
+                "neutral": ["Die Limits können mit dem Befehl", "geprüft und geändert werden."]
+            }
         }
     },
     "config": {

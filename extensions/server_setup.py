@@ -85,6 +85,7 @@ class ServerSetup(commands.Cog):
 
         if setup_status == SetupStatus.SUCCESSFUL:
             embed = await self.__check_bot_permissions(ctx, embed)
+            embed = await self.__add_default_limits_to_embed(ctx, embed)
         elif setup_status == SetupStatus.CANCELLED and setup_type_selection.setup_type == SetupType.REGULAR:
             self.bot.config[str(ctx.guild.id)] = backed_up_config
         await setup_type_selection.message.edit(embed=embed)
@@ -231,6 +232,20 @@ class ServerSetup(commands.Cog):
                     permissions_embed += "❌ " + permission + "\n"
             if len(permissions_embed) > 0:
                 embed.add_field(name="#" + str(channel), value=permissions_embed)
+        return embed
+
+    async def __add_default_limits_to_embed(self, ctx: Context, embed: discord.Embed) -> discord.Embed:
+        title = "\u200b"
+        description_string = await s.get_string(ctx, "server_setup", "default_limits_description")
+        description = description_string.string + "\n"
+        for name_key in ctx.bot.limits.get("defaults"):
+            description += "• " + name_key + "\n"
+        description_string_note = await s.get_string(ctx, "server_setup", "default_limits_note")
+        prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
+        description_note_command = "`" + prefix + "limits`"
+        inserted_string = await s.insert_into_string([description_note_command], description_string_note.list)
+        description += "\n" + inserted_string.string_combined
+        embed.add_field(name=title, value=description, inline=False)
         return embed
 
     async def __set_bot_enabled(self, ctx):
