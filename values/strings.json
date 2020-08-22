@@ -164,6 +164,14 @@
             "de": {
                 "neutral": "Auf Standardwert"
             }
+        },
+        "bot_enabled": {
+            "en": {
+                "neutral": "is now enabled"
+            },
+            "de": {
+                "neutral": "ist nun aktiviert"
+            }
         }
     },
     "config_status": {
