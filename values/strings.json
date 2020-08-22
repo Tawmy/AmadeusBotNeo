@@ -34,7 +34,7 @@
             }
         }
     },
-    "server_setup": {
+    "setup": {
         "setup_title": {
             "en": {
                 "neutral": "Setup"

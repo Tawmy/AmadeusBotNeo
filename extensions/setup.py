@@ -47,7 +47,7 @@ class UserInput:
     prepared_input: PreparedInput = None
 
 
-class ServerSetup(commands.Cog):
+class Setup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.setup_emoji = ["✅", "🟦", "🟥"]
@@ -91,11 +91,11 @@ class ServerSetup(commands.Cog):
         await setup_type_selection.message.edit(embed=embed)
 
     async def __prepare_setup_type_selection_menu(self, ctx) -> AmadeusMenu:
-        string = await s.get_string(ctx, "server_setup", "setup_title")
+        string = await s.get_string(ctx, "setup", "setup_title")
         string_combination = await s.insert_into_string([self.bot.app_info.name], [string.string], s.InsertPosition.LEFT)
         title = string_combination.string_combined
 
-        string = await s.get_string(ctx, "server_setup", "setup_introduction")
+        string = await s.get_string(ctx, "setup", "setup_introduction")
         string_combination = await s.insert_into_string([self.bot.app_info.name, self.bot.app_info.name], string.list)
         description = string_combination.string_combined
 
@@ -104,11 +104,11 @@ class ServerSetup(commands.Cog):
         json_file = str(ctx.guild.id) + '.json'
         if isfile('config/' + json_file):
             shutil.copy('config/' + json_file, 'config/backup/' + json_file)
-            string = await s.get_string(ctx, "server_setup", "server_configured_before")
+            string = await s.get_string(ctx, "setup", "server_configured_before")
             description += string.string
             emoji = [self.setup_emoji[1], self.setup_emoji[2]]
         else:
-            string = await s.get_string(ctx, "server_setup", "setup_confirm_ready")
+            string = await s.get_string(ctx, "setup", "setup_confirm_ready")
             description += string.string
             emoji = [self.setup_emoji[0]]
 
@@ -206,16 +206,16 @@ class ServerSetup(commands.Cog):
     async def __prepare_status_embed(self, ctx, setup_status: SetupStatus):
         embed = discord.Embed()
         if setup_status == SetupStatus.SUCCESSFUL:
-            string = await s.get_string(ctx, "server_setup", "setup_successful")
+            string = await s.get_string(ctx, "setup", "setup_successful")
             embed.title = string.string
-            string = await s.get_string(ctx, "server_setup", "setup_successful_description")
+            string = await s.get_string(ctx, "setup", "setup_successful_description")
             string_combination = await s.insert_into_string([self.bot.app_info.name], string.list)
             embed.description = string_combination.string_combined
         elif setup_status == SetupStatus.SAVE_FAILED:
-            string = await s.get_string(ctx, "server_setup", "setup_error_save_config")
+            string = await s.get_string(ctx, "setup", "setup_error_save_config")
             embed.title = string.string
         elif setup_status == SetupStatus.CANCELLED:
-            string = await s.get_string(ctx, "server_setup", "setup_cancelled")
+            string = await s.get_string(ctx, "setup", "setup_cancelled")
             embed.title = string.string
         return embed
 
@@ -236,11 +236,11 @@ class ServerSetup(commands.Cog):
 
     async def __add_default_limits_to_embed(self, ctx: Context, embed: discord.Embed) -> discord.Embed:
         title = "\u200b"
-        description_string = await s.get_string(ctx, "server_setup", "default_limits_description")
+        description_string = await s.get_string(ctx, "setup", "default_limits_description")
         description = description_string.string + "\n"
         for name_key in ctx.bot.values["limits"].get("defaults"):
             description += "• " + name_key + "\n"
-        description_string_note = await s.get_string(ctx, "server_setup", "default_limits_note")
+        description_string_note = await s.get_string(ctx, "setup", "default_limits_note")
         prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
         description_note_command = "`" + prefix + "limits`"
         inserted_string = await s.insert_into_string([description_note_command], description_string_note.list)
@@ -256,4 +256,4 @@ class ServerSetup(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(ServerSetup(bot))
+    bot.add_cog(Setup(bot))
