@@ -12,7 +12,7 @@ from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 from helpers.strings import String
 
 
-async def save_changelog(bot: discord.ext.commands.Bot):
+async def save_changelog(bot):
     json_file = 'values/changelog.json'
     retries = 4
     while retries > 0:
@@ -27,7 +27,7 @@ async def save_changelog(bot: discord.ext.commands.Bot):
 
 
 class Changelog(commands.Cog):
-    def __init__(self, bot: discord.ext.commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name='changelog')

@@ -67,7 +67,7 @@ async def is_moderator(ctx: Context):
     return discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"])
 
 
-async def check_moderator_skip(skip_enabled: bool, is_moderator: bool) -> bool:
+async def check_moderator_skip(skip_enabled: bool, is_moderator_bool: bool) -> bool:
     return True if skip_enabled and is_moderator else False
 
 

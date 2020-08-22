@@ -2,7 +2,6 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 
-from discord.ext import commands
 from discord.ext.commands import Context
 
 from helpers import general
@@ -53,14 +52,14 @@ class StringCombination:
     string_combined: str = None
 
 
-async def load_strings(bot: commands.Bot) -> list:
+async def load_strings(bot) -> list:
     """
     Loads strings and exceptions from values directory.
     Returns list with filenames that failed.
 
     Parameters
     -----------
-    bot: discord.ext.commands.bot
+    bot
         The bot object.
     """
     bot.default_language = bot.config["bot"].get("default_language", "en")
