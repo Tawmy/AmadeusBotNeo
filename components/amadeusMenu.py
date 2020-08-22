@@ -4,6 +4,11 @@ from enum import Enum
 import discord
 
 from dataclasses import dataclass
+
+from discord import Message
+from discord.ext.commands import Bot, Context
+
+from components.amadeusInput import AmadeusInput
 from helpers import strings as s
 
 
@@ -13,6 +18,7 @@ class AmadeusMenuStatus(Enum):
     CANCELLED = 2
     TIMEOUT = 3
     SELECTED = 4
+    NO_OPTIONS = 5
 
 
 @dataclass
@@ -29,137 +35,105 @@ class Option:
     value: str
 
 
-class AmadeusMenu:
-    def __init__(self, bot, prompt):
+class AmadeusMenu(AmadeusInput):
+    """
+    Menu using Discord reaction to get user input.
+
+    This menu must be configured using:
+    - add_option: For each option you want the user to select from
+
+    This menu can be customised using:
+    - set_footer_text: Define text to be shown in footer
+    - set_clear_on_timeout: Sets if reactions will be cleared if menu times out
+    - append_emoji: Adds more emoji the user will be able to select from as options
+
+    This menu can be controlled using:
+    - show_menu: Shows menu and awaits input for specified number of seconds
+    - show_result: Edits menu and shows result
+    """
+    def __init__(self, bot: Bot, title: str):
+        """
+         Parameters
+        ------------
+        bot: Bot
+            Discord bot object
+        title: str
+            Title of the menu
+        """
+        super().__init__()
         self.bot = bot
-        self.__is_user_specific = False
         self.__clear_on_timeout = True
-        self.__specified_user = None
         self.__footer_text = None
 
-        self.__embed = discord.Embed()
-        self.__embed.title = prompt
+        self.embed.title = title
 
         self.__options = []
         self.__reaction_emoji = []
 
         self.__result = AmadeusMenuResult()
 
-    async def add_option(self, name: str, description=None):
+    async def add_option(self, name: str, description: str = None):
         if name is not None:
             self.__options.append(Option(name, description))
 
-    async def add_field(self, name: str, description: str, inline=True):
-        if name is not None and description is not None:
-            self.__embed.add_field(name=name, value=description, inline=inline)
-
-    async def set_author(self, name, url="", icon_url=""):
-        """Sets the author of the amadeusMenu.
-
-        Parameters
-        -----------
-        name: :class:`str`
-            The name of the author.
-        url: :class:`str`
-            An optional url.
-        icon_url: :class:`str`
-            An optional icon url
-        """
-
-        self.__embed.set_author(name=name, url=url, icon_url=icon_url)
-
-    async def set_title(self, title):
-        self.__embed.title = title
-
-    async def set_description(self, description):
-        self.__embed.description = description
-
-    async def set_footer_text(self, text):
+    async def set_footer_text(self, text: str):
         self.__footer_text = text
 
-    async def append_description(self, description):
-        """Appends to description.
-
-        Parameters
-        -----------
-        description: :class:`str`
-            The string to append to the description.
+    async def set_clear_on_timeout(self, clear_on_timeout: bool):
         """
-
-        if self.__embed.description is not None and len(self.__embed.description) > 0:
-            self.__embed.description += description
-        else:
-            await self.set_description(description)
-
-    async def set_user_specific(self, is_user_specific, user=None):
-        """Sets if the menu should be usable by one speficic user only.
-        Defaults to context author if user is not speficied.
+        Sets if reactions should be removed on timeout.
 
         Parameters
         -----------
-        is_user_specific: :class:`bool`
-            Should menu be user specific?.
-        user: :class:`discord.User`
-            Optional user the menu should be accessible by.
-        """
-
-        self.__is_user_specific = is_user_specific
-        if user is not None:
-            self.__specified_user = user
-
-    async def set_clear_on_timeout(self, clear_on_timeout):
-        """Sets if reactions should be removed on timeout.
-
-        Parameters
-        -----------
-        clear_on_timeout: :class:`bool`
+        clear_on_timeout: bool
             Should reactions be cleared on timeout?
         """
-
         self.__clear_on_timeout = clear_on_timeout
 
-    async def append_emoji(self, emoji_list):
+    async def append_emoji(self, emoji_list: list):
         for emoji in emoji_list:
             self.__reaction_emoji.append(emoji)
 
-    async def show_menu(self, ctx, timeout_seconds, message=None):
-        """Displays the amadeusMenu and waits for user input. Edits message if specified.
-        Returns AmadeusMenuResult object.
+    async def show_menu(self, ctx: Context, timeout_seconds: int, message: Message = None) -> AmadeusMenuResult:
+        """
+        Displays the amadeusMenu and waits for user input. Edits message if specified.
 
         Parameters
         -----------
-        ctx: :class:`discord.ext.commands.Context`
+        ctx: discord.ext.commands.Context
             The invocation context.
-        timeout_seconds: :class:`int`
+        timeout_seconds: int
             Timeout in seconds.
-        message: :class:`discord.Message`
+        message: Message, optional
             Optional message. This will be edited if specified.
         """
-
         await self.__add_options(ctx)
         await self.__prepare_footer(ctx)
         if len(self.__reaction_emoji) == 0:
-            return None
+            self.__result.status = AmadeusMenuStatus.NO_OPTIONS
+            return self.__result
         else:
             if message is None:
-                message = await ctx.send(embed=self.__embed)
+                message = await ctx.send(embed=self.embed)
             else:
-                await message.edit(embed=self.__embed)
+                await message.edit(embed=self.embed)
             self.__result.status = AmadeusMenuStatus.SHOWN
             await self.__add_reactions(message)
             await self.__await_user_reaction(ctx, message, timeout_seconds)
             return self.__result
 
-    async def show_result(self, ctx):
-        """Edits menu to show result.
+    async def show_result(self, ctx: Context):
+        """
+        Edits menu to show result.
+
+        These are generic messages, you will most certainly want to write your own success messages.
 
         Parameters
         -----------
-        ctx: :class:`discord.ext.commands.Context`
+        ctx: Context
             The invocation context.
         """
-
-        self.__embed = discord.Embed()
+        self.embed = discord.Embed()
         string = None
 
         if self.__result.status == AmadeusMenuStatus.SELECTED:
@@ -173,17 +147,17 @@ class AmadeusMenu:
         elif self.__result.status == AmadeusMenuStatus.NEW:
             string = await s.get_string(ctx, "amadeusMenuStatus", "NEW")
         if string is not None:
-            self.__embed.title = string.string
+            self.embed.title = string.string
         await self.__prepare_footer(ctx)
-        self.__result.message = await self.__result.message.edit(embed=self.__embed)
+        self.__result.message = await self.__result.message.edit(embed=self.embed)
 
-    async def __prepare_footer(self, ctx):
+    async def __prepare_footer(self, ctx: Context):
         name = ""
         avatar = ""
-        if self.__is_user_specific:
-            if self.__specified_user is not None:
-                name = self.__specified_user.display_name
-                avatar = self.__specified_user.avatar_url_as(static_format="png", size=64)
+        if self.is_user_specific:
+            if self.specified_user is not None:
+                name = self.specified_user.display_name
+                avatar = self.specified_user.avatar_url_as(static_format="png", size=64)
             else:
                 name = ctx.author.display_name
                 avatar = ctx.author.avatar_url_as(static_format="png", size=64)
@@ -192,13 +166,13 @@ class AmadeusMenu:
                 name = name + " | "
             name = name + self.__footer_text
         if len(name) > 0:
-            self.__embed.set_footer(text=name, icon_url=avatar)
+            self.embed.set_footer(text=name, icon_url=avatar)
 
-    async def __add_options(self, ctx):
-        if len(self.__embed.fields) > 0:
+    async def __add_options(self, ctx: Context):
+        if len(self.embed.fields) > 0:
             string = await s.get_string(ctx, "amadeusMenu", "options")
             value = "***__" + string.string + "__***"
-            self.__embed.add_field(name="\u200b", value=value, inline=False)
+            self.embed.add_field(name="\u200b", value=value, inline=False)
 
         for i, option in enumerate(self.__options):
             name = self.bot.config["bot"]["menu_emoji"][i] + " " + option.name
@@ -207,19 +181,19 @@ class AmadeusMenu:
             else:
                 value = "\u200b"
             self.__reaction_emoji.append(self.bot.config["bot"]["menu_emoji"][i])
-            self.__embed.add_field(name=name, value=value)
+            self.embed.add_field(name=name, value=value)
 
-    async def __add_reactions(self, message):
+    async def __add_reactions(self, message: Message):
         for emoji in self.__reaction_emoji:
             await message.add_reaction(emoji=emoji)
 
-    async def __await_user_reaction(self, ctx, message, timeout_seconds):
+    async def __await_user_reaction(self, ctx: Context, message: Message, timeout_seconds: int):
         def check(reaction, user):
             result = False
             if user != message.author and reaction.message.id == message.id:
-                if self.__is_user_specific:
-                    if self.__specified_user is not None:
-                        if user == self.__specified_user:
+                if self.is_user_specific:
+                    if self.specified_user is not None:
+                        if user == self.specified_user:
                             result = True
                     elif user == ctx.author:
                         result = True

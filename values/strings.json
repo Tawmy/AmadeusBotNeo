@@ -34,7 +34,7 @@
             }
         }
     },
-    "server_setup": {
+    "setup": {
         "setup_title": {
             "en": {
                 "neutral": "Setup"
@@ -98,6 +98,22 @@
             "de": {
                 "neutral": "Konfiguration konnte nicht gespeichert werden."
             }
+        },
+        "default_limits_description": {
+            "en": {
+                "neutral": "**The following categories have been limited by default:**"
+            },
+            "de": {
+                "neutral": "**Die folgenden Kategorien wurden standardmäßig limitiert:**"
+            }
+        },
+        "default_limits_note": {
+            "en": {
+                "neutral": ["You can check and adjust these limits using the", "command."]
+            },
+            "de": {
+                "neutral": ["Die Limits können mit dem Befehl", "geprüft und geändert werden."]
+            }
         }
     },
     "config": {
@@ -147,6 +163,14 @@
             },
             "de": {
                 "neutral": "Auf Standardwert"
+            }
+        },
+        "bot_enabled": {
+            "en": {
+                "neutral": "is now enabled"
+            },
+            "de": {
+                "neutral": "ist nun aktiviert"
             }
         }
     },
@@ -437,6 +461,362 @@
             },
             "de": {
                 "neutral": "Bitte Version wählen, dessen Details angezeigt werden sollen:"
+            }
+        }
+    },
+    "limits": {
+        "select_outer_scope": {
+            "en": {
+                "neutral": "Type to modify"
+            },
+            "de": {
+                "neutral": "Zu modifizierender Typ"
+            }
+        },
+        "category": {
+            "en": {
+                "neutral": "Category"
+            },
+            "de": {
+                "neutral": "Kategorie"
+            }
+        },
+        "category_desc": {
+            "en": {
+                "neutral": "Set limit for all commands in a category. Limits for a specific command override this."
+            },
+            "de": {
+                "neutral": "Limit für alle Befehle in einer Kategorie setzen. Limits für einen bestimmten Befehl überschreiben dies."
+            }
+        },
+        "categories": {
+            "en": {
+                "neutral": "Categories"
+            },
+            "de": {
+                "neutral": "Kategorien"
+            }
+        },
+        "command": {
+            "en": {
+                "neutral": "Command"
+            },
+            "de": {
+                "neutral": "Befehl"
+            }
+        },
+        "command_desc": {
+            "en": {
+                "neutral": "Set limit for a specific command. This overrides category limits."
+            },
+            "de": {
+                "neutral": "Limit für einen bestimmten Befehl setzen. Dies überschreibt Kategorie-Limits."
+            }
+        },
+        "input_category": {
+            "en": {
+                "neutral": "Please input the category to set limits for."
+            },
+            "de": {
+                "neutral": "Bitte die Kategorie, für die Limits gesetzt werden sollen, eingeben."
+            }
+        },
+        "input_command": {
+            "en": {
+                "neutral": "Please input the command to set limits for."
+            },
+            "de": {
+                "neutral": "Bitte den Befehl, für den Limits gesetzt werden sollen, eingeben."
+            }
+        },
+        "select_inner_scope": {
+            "en": {
+                "neutral": "Type to modify"
+            },
+            "de": {
+                "neutral": "Zu modifizierender Typ"
+            }
+        },
+        "role": {
+            "en": {
+                "neutral": "Role"
+            },
+            "de": {
+                "neutral": "Rolle"
+            }
+        },
+        "role_s": {
+            "en": {
+                "neutral": "Role(s)"
+            },
+            "de": {
+                "neutral": "Rolle(n)"
+            }
+        },
+        "role_desc": {
+            "en": {
+                "neutral": "Limit on a role basis. You can require or exclude a set of roles (or both)."
+            },
+            "de": {
+                "neutral": "Auf Rollen-Basis limitieren. Es können Rollen erfordert oder ausgeschlossen werden (oder beides)."
+            }
+        },
+        "channel": {
+            "en": {
+                "neutral": "Channel"
+            },
+            "de": {
+                "neutral": "Kanal"
+            }
+        },
+        "channel_s": {
+            "en": {
+                "neutral": "Channel(s)"
+            },
+            "de": {
+                "neutral": "Kanal/Kanäle"
+            }
+        },
+        "channel_desc": {
+            "en": {
+                "neutral": "Limit on a channel basis. You can require or exclude a set of channels (or both)."
+            },
+            "de": {
+                "neutral": "Auf Kanal-Basis limitieren. Es können Kanäle erfordert oder ausgeschlossen werden (oder beides)."
+            }
+        },
+        "select_config_type": {
+            "en": {
+                "neutral": "Select config type"
+            },
+            "de": {
+                "neutral": "Konfigurationstyp wählen"
+            }
+        },
+        "whitelist": {
+            "en": {
+                "neutral": "Whitelist"
+            },
+            "de": {
+                "neutral": "Whitelist"
+            }
+        },
+        "blacklist": {
+            "en": {
+                "neutral": "Blacklist"
+            },
+            "de": {
+                "neutral": "Blacklist"
+            }
+        },
+        "enable": {
+            "en": {
+                "neutral": "Enable"
+            },
+            "de": {
+                "neutral": "Aktiviere"
+            }
+        },
+        "enabled": {
+            "en": {
+                "neutral": "Enabled"
+            },
+            "de": {
+                "neutral": "Aktiviert"
+            }
+        },
+        "enabled_desc": {
+            "en": {
+                "neutral": "Sets if component is enabled"
+            },
+            "de": {
+                "neutral": "Legt fest, ob der Komponent aktiviert ist"
+            }
+        },
+        "disable": {
+            "en": {
+                "neutral": "Disable"
+            },
+            "de": {
+                "neutral": "Deaktiviere"
+            }
+        },
+        "whitelist_desc_role": {
+            "en": {
+                "neutral": "Prevents usage if user has none of these roles"
+            },
+            "de": {
+                "neutral": "Unterbindet Nutzung, wenn Nutzer keine dieser Rollen hat"
+            }
+        },
+        "whitelist_desc_channel": {
+            "en": {
+                "neutral": "Command can only be run in any of these channels"
+            },
+            "de": {
+                "neutral": "Der Befehl kann nur in einem dieser Kanäle ausgeführt werden"
+            }
+        },
+        "blacklist_desc_role": {
+            "en": {
+                "neutral": "Prevents usage if user has none of these roles"
+            },
+            "de": {
+                "neutral": "Unterbindet Nutzung, wenn Nutzer keine dieser Rollen hat"
+            }
+        },
+        "blacklist_desc_channel": {
+            "en": {
+                "neutral": "Command cannot be run in any of these channels"
+            },
+            "de": {
+                "neutral": "Der Befehl kann in keinem dieser Kanäle ausgeführt werden"
+            }
+        },
+        "for": {
+            "en": {
+                "neutral": " for "
+            },
+            "de": {
+                "neutral": " für "
+            }
+        },
+        "add": {
+            "en": {
+                "neutral": "Add"
+            },
+            "de": {
+                "neutral": "Hinzufügen"
+            }
+        },
+        "remove": {
+            "en": {
+                "neutral": "Remove"
+            },
+            "de": {
+                "neutral": "Entfernen"
+            }
+        },
+        "replace": {
+            "en": {
+                "neutral": "Replace"
+            },
+            "de": {
+                "neutral": "Ersetzen"
+            }
+        },
+        "reset": {
+            "en": {
+                "neutral": "Reset"
+            },
+            "de": {
+                "neutral": "Zurücksetzen"
+            }
+        },
+        "add_to": {
+            "en": {
+                "neutral": "Add to "
+            },
+            "de": {
+                "neutral": "Hinzufügen zu "
+            }
+        },
+        "remove_from": {
+            "en": {
+                "neutral": "Remove from "
+            },
+            "de": {
+                "neutral": "Entferne von "
+            }
+        },
+        "replace_list": {
+            "en": {
+                "neutral": "Replace "
+            },
+            "de": {
+                "neutral": "Ersetze "
+            }
+        },
+        "reset_list": {
+            "en": {
+                "neutral": "Reset "
+            },
+            "de": {
+                "neutral": "Leere "
+            }
+        },
+        "add_desc": {
+            "en": {
+                "neutral": "Add one or multiple entries to list"
+            },
+            "de": {
+                "neutral": "Füge der Liste einen oder mehrere Einträge hinzu"
+            }
+        },
+        "remove_desc": {
+            "en": {
+                "neutral": "Remove one or multiple entries from list"
+            },
+            "de": {
+                "neutral": "Entferne einen oder mehrere Einträge von der Liste"
+            }
+        },
+        "replace_desc": {
+            "en": {
+                "neutral": "Replace all entries with one or multiple new ones"
+            },
+            "de": {
+                "neutral": "Ersetze alle Einträge mit einem oder mehreren Neuen"
+            }
+        },
+        "reset_desc": {
+            "en": {
+                "neutral": "Reset list entirely"
+            },
+            "de": {
+                "neutral": "Setze die Liste komplett zurück"
+            }
+        }
+    },
+    "limits_status": {
+        "SAVE_SUCCESS": {
+            "en": {
+                "neutral": "Limits saved!"
+            },
+            "de": {
+                "neutral": "Limits gespeichert!"
+            }
+        },
+        "SAVE_FAIL": {
+            "en": {
+                "neutral": "Could not save limits."
+            },
+            "de": {
+                "neutral": "Limits konnten nicht gespeichert werden."
+            }
+        },
+        "NAME_NOT_FOUND": {
+            "en": {
+                "neutral": "Name not found"
+            },
+            "de": {
+                "neutral": "Name nicht gefunden"
+            }
+        },
+        "NAME_NOT_FOUND_DESC_CATEGORY": {
+            "en": {
+                "neutral": "The given category could not be found."
+            },
+            "de": {
+                "neutral": "Die gegebene Kategorie konnte nicht gefunden werden."
+            }
+        },
+        "NAME_NOT_FOUND_DESC_COMMAND": {
+            "en": {
+                "neutral": "The given command could not be found. Please make sure you have not entered a category instead."
+            },
+            "de": {
+                "neutral": "Der gegebene Befehl konnte nicht gefunden werden. Bitte sicherstellen, dass nicht fälschlicherweise eine Kategorie gegeben wurde."
             }
         }
     },
