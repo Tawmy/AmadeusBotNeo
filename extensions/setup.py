@@ -203,7 +203,7 @@ class Setup(commands.Cog):
         if prepared_values.successful:
             input_data.prepared_values = prepared_values.list
 
-    async def __prepare_status_embed(self, ctx, setup_status: SetupStatus):
+    async def __prepare_status_embed(self, ctx, setup_status: SetupStatus) -> discord.Embed:
         embed = discord.Embed()
         if setup_status == SetupStatus.SUCCESSFUL:
             string = await s.get_string(ctx, "setup", "setup_successful")

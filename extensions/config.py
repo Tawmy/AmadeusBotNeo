@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Union
+from typing import Union, Any
 
 import discord
 from discord.ext import commands
@@ -48,7 +48,7 @@ class Config(commands.Cog):
         if input_data.configStep == ConfigStep.CATEGORY_OPTION_VALUE:
             await self.__check_value_data(ctx, input_data)
 
-    async def check_input(self, ctx: Context, args: tuple, input_data: InputData):
+    async def check_input(self, ctx: Context, args: tuple, input_data: InputData) -> InputData:
         category = await self.get_category(ctx, args[0])
         if category is not None:
             input_data.category = category
@@ -111,7 +111,7 @@ class Config(commands.Cog):
             input_data.message = menu_data.message
             input_data.category = category_names[menu_data.reaction_index]
 
-    async def get_category(self, ctx: Context, user_input: str):
+    async def get_category(self, ctx: Context, user_input: str) -> Union[None, str]:
         user_input = user_input.lower()
         if await general.deep_get(self.bot.values["options"], user_input) is not None:
             return user_input
@@ -121,7 +121,7 @@ class Config(commands.Cog):
                     return category_key
         return None
 
-    async def get_option(self, ctx: Context, user_input: str, category: str = None):
+    async def get_option(self, ctx: Context, user_input: str, category: str = None) -> tuple:
         user_input = user_input.lower()
         if category is not None and await general.deep_get(self.bot.values["options"], category, "list", user_input) is not None:
             return category, user_input
@@ -132,7 +132,7 @@ class Config(commands.Cog):
                     return category_key, option_key
         return None, None
 
-    async def check_value(self, ctx: Context, value: dict, user_input: str):
+    async def check_value(self, ctx: Context, value: dict, user_input: str) -> bool:
         # check for value name in server language
         lang = await s.get_guild_language(ctx)
         option = await general.deep_get(value, "name", lang)
@@ -143,7 +143,7 @@ class Config(commands.Cog):
             option = await general.deep_get(value, "name", self.bot.default_language)
             if option is not None and user_input == option.lower():
                 return True
-        return None
+        return False
 
     async def ask_for_option(self, ctx: Context, input_data: InputData):
         # prepare menu
@@ -249,14 +249,14 @@ class Config(commands.Cog):
         prepared_input = await config.set_default_config(ctx, input_data.category, input_data.option)
         await self.__show_config_status(ctx, input_data.message, prepared_input.status)
 
-    async def __convert_current_value(self, ctx: Context, category: str, option: str):
+    async def __convert_current_value(self, ctx: Context, category: str, option: str) -> Any:
         current_value = await config.get_config(ctx, category, option)
         converted_input = await config.prepare_input(ctx, category, option, current_value.value)
         if len(converted_input.list) == 1:
             return converted_input.list[0]
         return converted_input.list
 
-    async def __add_valid_field(self, ctx: Context, menu: Union[AmadeusMenu, AmadeusPrompt], category: str, option: str):
+    async def __add_valid_field(self, ctx: Context, menu: Union[AmadeusMenu, AmadeusPrompt], category: str, option: str) -> AmadeusMenu:
         valid_input = await config.get_valid_input(ctx, category, option)
 
         if valid_input.input_type == InputType.ANY:
@@ -268,6 +268,7 @@ class Config(commands.Cog):
                 valid_input.valid_list[i] = str(item)
         value = '\n'.join(valid_input.valid_list)
         await menu.add_field(title.string, value, False)
+        return menu
 
     async def __check_value_data(self, ctx: Context, input_data: InputData):
         prepared_input = await config.prepare_input(ctx, input_data.category, input_data.option, input_data.values)

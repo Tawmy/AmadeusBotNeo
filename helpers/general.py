@@ -1,7 +1,8 @@
 from functools import reduce
+from typing import Any
 
 
-async def deep_get(dictionary, *keys):
+async def deep_get(dictionary: dict, *keys) -> Any:
     """
     Gets value for nested dictionaries
 
@@ -17,7 +18,7 @@ async def deep_get(dictionary, *keys):
     return reduce(lambda d, key: d.get(key) if d else None, keys, dictionary)
 
 
-async def deep_get_type(data_type, dictionary, *keys):
+async def deep_get_type(data_type: type, dictionary: dict, *keys) -> Any:
     """
     Gets value for nested dictionaries with a fallback type
 

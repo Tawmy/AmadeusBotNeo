@@ -20,7 +20,7 @@ class Config(commands.Cog):
 
     @commands.command(name='limits')
     @commands.check(checks.block_dms)
-    async def limits(self, ctx, *args):
+    async def limits(self, ctx: Context, *args):
         input_data = InputData()
         if len(args) > 0:
             await self.check_input(args, input_data)
@@ -78,7 +78,7 @@ class Config(commands.Cog):
             input_data.limit_step = LimitStep.NO_INFO
         return input_data
 
-    async def collect_limits_data(self, ctx, input_data: InputData):
+    async def collect_limits_data(self, ctx: Context, input_data: InputData):
         while input_data.limit_step is not LimitStep.FINISHED:
             if input_data.limit_step == LimitStep.NO_INFO:
                 await self.ask_for_outer_scope(ctx, input_data)
@@ -99,13 +99,12 @@ class Config(commands.Cog):
             elif input_data.limit_step == LimitStep.PREPARED:
                 await self.save_limits(ctx, input_data)
 
-    async def get_outer_scope(self, user_input: str):
+    async def get_outer_scope(self, user_input: str) -> OuterScope:
         user_input = user_input.lower()
         if user_input in ["command", "cmd"]:
             return OuterScope.COMMAND
         elif user_input in ["category", "cat"]:
             return OuterScope.CATEGORY
-        return None
 
     async def get_name(self, outer_scope: OuterScope, user_input: str) -> str:
         if outer_scope == OuterScope.CATEGORY:
@@ -117,7 +116,7 @@ class Config(commands.Cog):
                 if user_input.lower() == str(command).lower():
                     return str(command).lower()
 
-    async def get_inner_scope(self, user_input) -> InnerScope:
+    async def get_inner_scope(self, user_input: str) -> InnerScope:
         user_input = user_input.lower()
         if user_input in ["role", "roles"]:
             return InnerScope.ROLE
@@ -126,14 +125,14 @@ class Config(commands.Cog):
         elif user_input in ["enabled", "enable", "on"]:
             return InnerScope.ENABLED
 
-    async def get_config_type(self, user_input) -> ConfigType:
+    async def get_config_type(self, user_input: str) -> ConfigType:
         user_input = user_input.lower()
         if user_input in ["whitelist", "white list", "wl", "allow list", "allowlist", "al"]:
             return ConfigType.WHITELIST
         elif user_input in ["blacklist", "black list", "bl", "deny list", "denylist", "dl"]:
             return ConfigType.BLACKLIST
 
-    async def get_edit_type(self, user_input) -> EditType:
+    async def get_edit_type(self, user_input: str) -> EditType:
         user_input = user_input.lower()
         if user_input in ["add", "append"]:
             return EditType.ADD
@@ -144,7 +143,7 @@ class Config(commands.Cog):
         elif user_input in ["reset", "default", "revert"]:
             return EditType.RESET
 
-    async def ask_for_outer_scope(self, ctx, input_data: InputData):
+    async def ask_for_outer_scope(self, ctx: Context, input_data: InputData):
         string = await s.get_string(ctx, "limits", "select_outer_scope")
         menu = AmadeusMenu(self.bot, string.string)
         await menu.set_user_specific(True)
@@ -165,7 +164,7 @@ class Config(commands.Cog):
             elif menu_data.reaction_index == 1:
                 input_data.outer_scope = OuterScope.COMMAND
 
-    async def ask_for_name(self, ctx, input_data: InputData):
+    async def ask_for_name(self, ctx: Context, input_data: InputData):
         if input_data.outer_scope == OuterScope.CATEGORY:
             req_title = "category"
             req_description = "input_category"
@@ -191,7 +190,7 @@ class Config(commands.Cog):
             else:
                 await self.show_limit_status(ctx, input_data, LimitStatus.NAME_NOT_FOUND)
 
-    async def __add_name_prompt_details(self, ctx, outer_scope: OuterScope, prompt: AmadeusPrompt):
+    async def __add_name_prompt_details(self, ctx: Context, outer_scope: OuterScope, prompt: AmadeusPrompt):
         cog_list = []
         for cog in self.bot.cogs:
             cog_list.append(cog.lower())
@@ -208,7 +207,7 @@ class Config(commands.Cog):
                 commands_str = "\n".join(commands_list)
                 await prompt.add_field(cog_name, commands_str)
 
-    async def ask_for_inner_scope(self, ctx, input_data: InputData):
+    async def ask_for_inner_scope(self, ctx: Context, input_data: InputData):
         title = await self.__get_menu_title(ctx, input_data)
         menu = AmadeusMenu(self.bot, title)
         await menu.set_user_specific(True)
@@ -237,7 +236,7 @@ class Config(commands.Cog):
             elif menu_data.reaction_index == 2:
                 input_data.inner_scope = InnerScope.CHANNEL
 
-    async def ask_for_config_type(self, ctx, input_data: InputData):
+    async def ask_for_config_type(self, ctx: Context, input_data: InputData):
         title = await self.__get_menu_title(ctx, input_data)
         menu = AmadeusMenu(self.bot, title)
         await menu.set_user_specific(True)
@@ -273,7 +272,7 @@ class Config(commands.Cog):
             elif menu_data.reaction_index == 1:
                 input_data.config_type = ConfigType.BLACKLIST
 
-    async def ask_for_edit_type(self, ctx, input_data):
+    async def ask_for_edit_type(self, ctx: Context, input_data):
         title = await self.__get_menu_title(ctx, input_data)
 
         menu = AmadeusMenu(self.bot, title)
@@ -367,7 +366,7 @@ class Config(commands.Cog):
         else:
             await self.show_limit_status(ctx, input_data, LimitStatus.SAVE_FAIL)
 
-    async def __get_menu_title(self, ctx: Context, input_data: InputData):
+    async def __get_menu_title(self, ctx: Context, input_data: InputData) -> str:
         outer_scope_str = await s.get_string(ctx, "limits", input_data.outer_scope.name.lower())
         return input_data.name.capitalize() + " " + outer_scope_str.string
 
@@ -467,26 +466,26 @@ class Config(commands.Cog):
         if await self.__check_field_role_blacklist(input_data):
             await self.__add_field_to_menu(ctx, input_data, menu, InnerScope.ROLE, ConfigType.BLACKLIST)
 
-    async def __check_field_enabled(self, input_data: InputData):
+    async def __check_field_enabled(self, input_data: InputData) -> bool:
         return input_data.config_type is None and input_data.inner_scope is None\
             or input_data.inner_scope == InnerScope.ENABLED
 
-    async def __check_field_channel_whitelist(self, input_data: InputData):
+    async def __check_field_channel_whitelist(self, input_data: InputData) -> bool:
         return input_data.config_type is None and input_data.inner_scope is None\
             or input_data.config_type is None and input_data.inner_scope == InnerScope.CHANNEL\
             or input_data.inner_scope == InnerScope.CHANNEL and input_data.config_type == ConfigType.WHITELIST
 
-    async def __check_field_channel_blacklist(self, input_data: InputData):
+    async def __check_field_channel_blacklist(self, input_data: InputData) -> bool:
         return input_data.config_type is None and input_data.inner_scope is None\
             or input_data.config_type is None and input_data.inner_scope == InnerScope.CHANNEL\
             or input_data.inner_scope == InnerScope.CHANNEL and input_data.config_type == ConfigType.BLACKLIST
 
-    async def __check_field_role_whitelist(self, input_data: InputData):
+    async def __check_field_role_whitelist(self, input_data: InputData) -> bool:
         return input_data.config_type is None and input_data.inner_scope is None\
             or input_data.config_type is None and input_data.inner_scope == InnerScope.ROLE\
             or input_data.inner_scope == InnerScope.ROLE and input_data.config_type == ConfigType.WHITELIST
 
-    async def __check_field_role_blacklist(self, input_data: InputData):
+    async def __check_field_role_blacklist(self, input_data: InputData) -> bool:
         return input_data.config_type is None and input_data.inner_scope is None\
             or input_data.config_type is None and input_data.inner_scope == InnerScope.ROLE\
             or input_data.inner_scope == InnerScope.ROLE and input_data.config_type == ConfigType.BLACKLIST
@@ -505,7 +504,7 @@ class Config(commands.Cog):
         limit_list_str = await self.__get_limit_string(prepared_input, inner_scope)
         await menu.add_field(title, limit_list_str)
 
-    async def __get_limit_string(self, prepared_input: PreparedInput, inner_scope: InnerScope):
+    async def __get_limit_string(self, prepared_input: PreparedInput, inner_scope: InnerScope) -> str:
         if len(prepared_input.list) > 0:
             return '\n'.join([str(element) for element in prepared_input.list])
         elif inner_scope == InnerScope.ENABLED and len(prepared_input.list) == 0:
@@ -536,6 +535,7 @@ class Config(commands.Cog):
             await prompt.show_result(ctx)
             return False
         return True
+
 
 def setup(bot):
     bot.add_cog(Config(bot))

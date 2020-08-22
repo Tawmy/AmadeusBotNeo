@@ -4,13 +4,15 @@ from datetime import date
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import Context
 
 from helpers import strings as s, general
 from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
+from helpers.strings import String
 
 
-async def save_changelog(bot):
+async def save_changelog(bot: discord.ext.commands.Bot):
     json_file = 'values/changelog.json'
     retries = 4
     while retries > 0:
@@ -25,11 +27,11 @@ async def save_changelog(bot):
 
 
 class Changelog(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.ext.commands.Bot):
         self.bot = bot
 
     @commands.command(name='changelog')
-    async def changelog(self, ctx, version: str = None):
+    async def changelog(self, ctx: Context, version: str = None):
         result = None
         if version is None:
             # if no version given, show version history and prompt for input
@@ -51,7 +53,7 @@ class Changelog(commands.Cog):
 
     @commands.command(name='addchangelog')
     @commands.is_owner()
-    async def addchangelog(self, ctx):
+    async def addchangelog(self, ctx: Context):
         string_version_number = await s.get_string(ctx, "changelog", "version_number")
         string_changes = await s.get_string(ctx, "changelog", "changes")
 
@@ -76,7 +78,7 @@ class Changelog(commands.Cog):
         await save_changelog(self.bot)
         await self.__show_result(ctx, True)
 
-    async def __prepare_version_list_prompt(self, ctx):
+    async def __prepare_version_list_prompt(self, ctx: Context) -> AmadeusPrompt:
         string = await s.get_string(ctx, "changelog", "version_history")
         prompt = AmadeusPrompt(self.bot, string.string)
         await prompt.set_user_specific(True)
@@ -87,7 +89,7 @@ class Changelog(commands.Cog):
         await prompt.set_description(version_list)
         return prompt
 
-    async def __prepare_version_info_embed(self, ctx, version) -> discord.Embed:
+    async def __prepare_version_info_embed(self, ctx: Context, version: str) -> discord.Embed:
         embed = discord.Embed()
         if self.bot.values["changelog"].get(version) is None:
             string = await s.get_string(ctx, "changelog", "does_not_exist")
@@ -103,7 +105,7 @@ class Changelog(commands.Cog):
             embed.add_field(name=string.string, value=changes, inline=False)
         return embed
 
-    async def __ask_for_input(self, ctx, string):
+    async def __ask_for_input(self, ctx: Context, string: String) -> str:
         prompt = AmadeusPrompt(self.bot, string.string)
         await prompt.set_user_specific(True)
         result = await prompt.show_prompt(ctx, 120)
@@ -113,7 +115,7 @@ class Changelog(commands.Cog):
             await result.message.delete()
         return result.input
 
-    async def __ask_for_confirmation(self, ctx, string_version_number, string_changes, version_number, changes):
+    async def __ask_for_confirmation(self, ctx: Context, string_version_number: String, string_changes: String, version_number: str, changes: str) -> int:
         string = await s.get_string(ctx, "changelog", "save")
         menu = AmadeusMenu(self.bot, string.string)
         await menu.set_user_specific(True)
@@ -128,13 +130,13 @@ class Changelog(commands.Cog):
             await result.message.delete()
         return result.reaction_index
 
-    async def __add_to_changelog(self, version_number, changes):
+    async def __add_to_changelog(self, version_number: str, changes: str):
         self.bot.values["changelog"].setdefault(version_number, {})
         self.bot.values["changelog"].get(version_number).setdefault("date", str(date.today()))
         self.bot.values["changelog"].get(version_number).setdefault("acknowledged", False)
         self.bot.values["changelog"].get(version_number).setdefault("changes", changes)
 
-    async def __show_result(self, ctx, added):
+    async def __show_result(self, ctx: Context, added: bool):
         embed = discord.Embed()
         if added:
             string = await s.get_string(ctx, "changelog", "added")
