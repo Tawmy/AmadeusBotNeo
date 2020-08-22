@@ -56,12 +56,12 @@ class Changelog(commands.Cog):
         string_changes = await s.get_string(ctx, "changelog", "changes")
 
         # ask for version number
-        version_number = await self.__ask_for_version_number(ctx, string_version_number)
+        version_number = await self.__ask_for_input(ctx, string_version_number)
         if version_number is None:
             return
 
         # ask for changes
-        changes = await self.__ask_for_changes(ctx, string_changes)
+        changes = await self.__ask_for_input(ctx, string_changes)
         if changes is None:
             return
 
@@ -103,18 +103,8 @@ class Changelog(commands.Cog):
             embed.add_field(name=string.string, value=changes, inline=False)
         return embed
 
-    async def __ask_for_version_number(self, ctx, string_version_number):
-        prompt = AmadeusPrompt(self.bot, string_version_number.string)
-        await prompt.set_user_specific(True)
-        result = await prompt.show_prompt(ctx, 120)
-        if result.input is None:
-            await prompt.show_result(ctx)
-        else:
-            await result.message.delete()
-        return result.input
-
-    async def __ask_for_changes(self, ctx, string_changes):
-        prompt = AmadeusPrompt(self.bot, string_changes.string)
+    async def __ask_for_input(self, ctx, string):
+        prompt = AmadeusPrompt(self.bot, string.string)
         await prompt.set_user_specific(True)
         result = await prompt.show_prompt(ctx, 120)
         if result.input is None:
