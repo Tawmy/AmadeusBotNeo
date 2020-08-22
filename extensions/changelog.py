@@ -5,7 +5,7 @@ from datetime import date
 import discord
 from discord.ext import commands
 
-from helpers import strings as s
+from helpers import strings as s, general
 from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 
@@ -95,8 +95,8 @@ class Changelog(commands.Cog):
         else:
             string = await s.get_string(ctx, "changelog", "version")
             embed.title = string.string + " " + version
-            date_changelog = self.bot.values["changelog"].get(version).get("date")
-            changes = self.bot.values["changelog"].get(version).get("changes")
+            date_changelog = await general.deep_get(self.bot.values["changelog"], version, "date")
+            changes = await general.deep_get(self.bot.values["changelog"], version, "changes")
             string = await s.get_string(ctx, "changelog", "release_date")
             embed.add_field(name=string.string, value=date_changelog)
             string = await s.get_string(ctx, "changelog", "changes")

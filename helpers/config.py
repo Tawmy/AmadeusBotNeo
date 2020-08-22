@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from helpers import strings as s
+from helpers import strings as s, general
 
 
 class ConfigStatus(Enum):
@@ -110,7 +110,7 @@ async def get_config(ctx: Context, category: str, name: str) -> Config:
         Name of the config option.
     """
     config = Config(category, name)
-    config_value = ctx.bot.config.get(str(ctx.guild.id), {}).get(category, {}).get(name)
+    config_value = await general.deep_get(ctx.bot.config, str(ctx.guild.id), category, name)
     if config_value is None:
         # TODO what if no default value
         default_value = await __get_default_config_value(ctx, category, name)
@@ -126,7 +126,7 @@ async def get_config(ctx: Context, category: str, name: str) -> Config:
 
 
 async def __get_default_config_value(ctx: Context, category: str, name: str) -> str:
-    return ctx.bot.values["options"].get(category, {}).get("list", {}).get(name, {}).get("default")
+    return await general.deep_get_type(str, ctx.bot.values["options"], category, "list", name, "default")
 
 
 async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
@@ -144,7 +144,7 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
         Name of the config option.
     """
     valid_input = ValidInput()
-    option = ctx.bot.values["options"].get(category, {}).get("list", {}).get(name, {})
+    option = await general.deep_get_type(dict, ctx.bot.values["options"], category, "list", name)
     data_type = option.get("data_type")
     valid_list = option.get("valid")
 
@@ -154,24 +154,24 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
         valid_input.input_type = InputType.AS_VALID_LIST
         valid_input.valid_list = valid_list
 
-    if data_type == "boolean":
-        valid_input.datatype = Datatype.BOOLEAN
-        valid_input.valid_list = datatype_dict.get("valid")
-    if data_type == "string":
-        valid_input.datatype = Datatype.STRING
-        if valid_input.input_type != InputType.AS_VALID_LIST:
-            valid_input.input_type = InputType.ANY
-    if data_type == "role":
-        valid_input.datatype = Datatype.ROLE
-        valid_input.input_type = InputType.TO_BE_CONVERTED
-        lang = await s.get_guild_language(ctx)
-        valid_input.valid_list = [datatype_dict.get("name_descriptive", {}).get(lang)]
-    if data_type == "channel":
-        valid_input.datatype = Datatype.TEXT_CHANNEL
-        valid_input.input_type = InputType.TO_BE_CONVERTED
-        lang = await s.get_guild_language(ctx)
-        valid_input.valid_list = [datatype_dict.get("name_descriptive", {}).get(lang)]
-
+    if data_type is not None:
+        if data_type == "boolean":
+            valid_input.datatype = Datatype.BOOLEAN
+            valid_input.valid_list = datatype_dict.get("valid")
+        if data_type == "string":
+            valid_input.datatype = Datatype.STRING
+            if valid_input.input_type != InputType.AS_VALID_LIST:
+                valid_input.input_type = InputType.ANY
+        if data_type == "role":
+            valid_input.datatype = Datatype.ROLE
+            valid_input.input_type = InputType.TO_BE_CONVERTED
+            lang = await s.get_guild_language(ctx)
+            valid_input.valid_list = [await general.deep_get(datatype_dict, "name_descriptive", lang)]
+        if data_type == "channel":
+            valid_input.datatype = Datatype.TEXT_CHANNEL
+            valid_input.input_type = InputType.TO_BE_CONVERTED
+            lang = await s.get_guild_language(ctx)
+            valid_input.valid_list = [await general.deep_get(datatype_dict, "name_descriptive", lang)]
     return valid_input
 
 
@@ -194,7 +194,7 @@ async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool 
         value = prepared_input.list[0]
     else:
         value = prepared_input.list
-    if ctx.bot.values["options"].get(prepared_input.category, {}).get("list", {}).get(prepared_input.name) is not None:
+    if await general.deep_get(ctx.bot.values["options"], prepared_input.category, "list", prepared_input.name) is not None:
         ctx.bot.config[str(ctx.guild.id)].setdefault(prepared_input.category, {})[prepared_input.name] = value
         if do_save:
             save_successful = await save_config(ctx)

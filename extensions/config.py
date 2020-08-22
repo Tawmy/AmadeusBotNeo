@@ -1,12 +1,15 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Union
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import Context
+
 from components import amadeusMenu, amadeusPrompt, checks
-from helpers import strings as s, config
-from components.amadeusMenu import AmadeusMenuStatus
-from components.amadeusPrompt import AmadeusPromptStatus
+from helpers import strings as s, config, general
+from components.amadeusMenu import AmadeusMenuStatus, AmadeusMenu
+from components.amadeusPrompt import AmadeusPromptStatus, AmadeusPrompt
 from helpers.config import ConfigStatus, InputType
 
 
@@ -37,7 +40,7 @@ class Config(commands.Cog):
 
     @commands.command(name='config')
     @commands.check(checks.block_dms)
-    async def config(self, ctx, *args):
+    async def config(self, ctx: Context, *args):
         input_data = InputData()
         if len(args) > 0:
             await self.check_input(ctx, args, input_data)
@@ -45,7 +48,7 @@ class Config(commands.Cog):
         if input_data.configStep == ConfigStep.CATEGORY_OPTION_VALUE:
             await self.__check_value_data(ctx, input_data)
 
-    async def check_input(self, ctx, args, input_data):
+    async def check_input(self, ctx: Context, args: tuple, input_data: InputData):
         category = await self.get_category(ctx, args[0])
         if category is not None:
             input_data.category = category
@@ -74,7 +77,7 @@ class Config(commands.Cog):
                     input_data.configStep = ConfigStep.OPTION
         return input_data
 
-    async def collect_config_data(self, ctx, input_data):
+    async def collect_config_data(self, ctx: Context, input_data: InputData):
         while input_data.configStep is not ConfigStep.FINISHED:
             if input_data.configStep == ConfigStep.NO_INFO:
                 await self.ask_for_category(ctx, input_data)
@@ -90,7 +93,7 @@ class Config(commands.Cog):
             elif input_data.configStep in [ConfigStep.CATEGORY_OPTION_VALUE, ConfigStep.CATEGORY_OPTION_CANCELLED]:
                 return
 
-    async def ask_for_category(self, ctx, input_data):
+    async def ask_for_category(self, ctx: Context, input_data: InputData):
         string = await s.get_string(ctx, "config", "select_category")
         menu = amadeusMenu.AmadeusMenu(self.bot, string.string)
         await menu.set_user_specific(True)
@@ -108,9 +111,9 @@ class Config(commands.Cog):
             input_data.message = menu_data.message
             input_data.category = category_names[menu_data.reaction_index]
 
-    async def get_category(self, ctx, user_input):
+    async def get_category(self, ctx: Context, user_input: str):
         user_input = user_input.lower()
-        if self.bot.values["options"].get(user_input) is not None:
+        if await general.deep_get(self.bot.values["options"], user_input) is not None:
             return user_input
         else:
             for category_key, category_val in self.bot.values["options"].items():
@@ -118,9 +121,9 @@ class Config(commands.Cog):
                     return category_key
         return None
 
-    async def get_option(self, ctx, user_input, category=None):
+    async def get_option(self, ctx: Context, user_input: str, category: str = None):
         user_input = user_input.lower()
-        if category is not None and self.bot.values["options"].get(category, {}).get("list", {}).get(user_input) is not None:
+        if category is not None and await general.deep_get(self.bot.values["options"], category, "list", user_input) is not None:
             return category, user_input
 
         for category_key, category_val in self.bot.values["options"].items():
@@ -129,22 +132,22 @@ class Config(commands.Cog):
                     return category_key, option_key
         return None, None
 
-    async def check_value(self, ctx, value, user_input):
+    async def check_value(self, ctx: Context, value: dict, user_input: str):
         # check for value name in server language
         lang = await s.get_guild_language(ctx)
-        option = value.get("name", {}).get(lang)
+        option = await general.deep_get(value, "name", lang)
         if option is not None and user_input == option.lower():
             return True
         elif lang != self.bot.default_language:
             # if value does not have a name in specified language, check against default language
-            option = value.get("name", {}).get(self.bot.default_language)
+            option = await general.deep_get(value, "name", self.bot.default_language)
             if option is not None and user_input == option.lower():
                 return True
         return None
 
-    async def ask_for_option(self, ctx, input_data):
+    async def ask_for_option(self, ctx: Context, input_data: InputData):
         # prepare menu
-        category = self.bot.values["options"].get(input_data.category)
+        category = await general.deep_get(self.bot.values["options"], input_data.category)
         category_values = await s.extract_config_option_strings(ctx, category)
         menu = amadeusMenu.AmadeusMenu(self.bot, category_values.name)
         await menu.set_description(category_values.description)
@@ -168,9 +171,9 @@ class Config(commands.Cog):
             input_data.message = menu_data.message
             input_data.option = option_names[menu_data.reaction_index]
 
-    async def show_info(self, ctx, input_data):
+    async def show_info(self, ctx: Context, input_data: InputData):
         # prepare menu
-        option_full = self.bot.values["options"].get(input_data.category).get("list").get(input_data.option)
+        option_full = await general.deep_get(self.bot.values["options"], input_data.category, "list", input_data.option)
         option_values = await s.extract_config_option_strings(ctx, option_full)
         menu = amadeusMenu.AmadeusMenu(self.bot, option_values.name)
         await menu.set_description(option_values.description)
@@ -192,7 +195,7 @@ class Config(commands.Cog):
             elif menu_data.reaction_index == 1:
                 input_data.configStep = ConfigStep.CATEGORY_OPTION_SETDEFAULT
 
-    async def __add_info_fields_to_info(self, ctx, input_data, menu, option_full):
+    async def __add_info_fields_to_info(self, ctx: Context, input_data: InputData, menu: AmadeusMenu, option_full: dict):
         # add fields to menu
         current_value = await self.__convert_current_value(ctx, input_data.category, input_data.option)
 
@@ -200,7 +203,7 @@ class Config(commands.Cog):
         await menu.add_field(string.string, current_value)
 
         string = await s.get_string(ctx, "config", "default_value")
-        default_value = option_full.get("default")
+        default_value = await general.deep_get(option_full, "default")
         if default_value is not None:
             await menu.add_field(string.string, default_value)
 
@@ -208,23 +211,23 @@ class Config(commands.Cog):
 
         await self.__add_valid_field(ctx, menu, input_data.category, input_data.option)
 
-    async def __add_options_to_info(self, ctx, menu, option_full):
+    async def __add_options_to_info(self, ctx: Context, menu: AmadeusMenu, option_full: dict):
         string = await s.get_string(ctx, "config", "option_change")
         await menu.add_option(string.string)
-        default_value = option_full.get("default")
+        default_value = await general.deep_get(option_full, "default")
         if default_value is not None:
             string = await s.get_string(ctx, "config", "option_setdefault")
             await menu.add_option(string.string)
 
-    async def __add_footer(self, ctx, input_data, menu):
+    async def __add_footer(self, ctx: Context, input_data: InputData, menu: AmadeusMenu):
         prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
         footer_text = prefix + ctx.command.name + " " + input_data.category
         if input_data.option is not None:
             footer_text = footer_text + " " + input_data.option
         await menu.set_footer_text(footer_text)
 
-    async def ask_for_value(self, ctx, input_data):
-        option_full = self.bot.values["options"].get(input_data.category).get("list").get(input_data.option)
+    async def ask_for_value(self, ctx: Context, input_data: InputData):
+        option_full = await general.deep_get(self.bot.values["options"], input_data.category, "list", input_data.option)
         option_values = await s.extract_config_option_strings(ctx, option_full)
         prompt = amadeusPrompt.AmadeusPrompt(self.bot, option_values.name)
         await prompt.set_user_specific(True)
@@ -242,18 +245,18 @@ class Config(commands.Cog):
             input_data.message = prompt_data.message
             input_data.values = prompt_data.input
 
-    async def set_default_value(self, ctx, input_data):
+    async def set_default_value(self, ctx: Context, input_data: InputData):
         prepared_input = await config.set_default_config(ctx, input_data.category, input_data.option)
         await self.__show_config_status(ctx, input_data.message, prepared_input.status)
 
-    async def __convert_current_value(self, ctx, category, option):
+    async def __convert_current_value(self, ctx: Context, category: str, option: str):
         current_value = await config.get_config(ctx, category, option)
         converted_input = await config.prepare_input(ctx, category, option, current_value.value)
         if len(converted_input.list) == 1:
             return converted_input.list[0]
         return converted_input.list
 
-    async def __add_valid_field(self, ctx, menu, category, option):
+    async def __add_valid_field(self, ctx: Context, menu: Union[AmadeusMenu, AmadeusPrompt], category: str, option: str):
         valid_input = await config.get_valid_input(ctx, category, option)
 
         if valid_input.input_type == InputType.ANY:
@@ -266,7 +269,7 @@ class Config(commands.Cog):
         value = '\n'.join(valid_input.valid_list)
         await menu.add_field(title.string, value, False)
 
-    async def __check_value_data(self, ctx, input_data):
+    async def __check_value_data(self, ctx: Context, input_data: InputData):
         prepared_input = await config.prepare_input(ctx, input_data.category, input_data.option, input_data.values)
         # if isinstance(prepared_input, ConfigStatus):
         if prepared_input.status != ConfigStatus.PREPARATION_SUCCESSFUL:
@@ -275,7 +278,7 @@ class Config(commands.Cog):
         await config.set_config(ctx, prepared_input)
         await self.__show_config_status(ctx, input_data.message, prepared_input.status)
 
-    async def __show_config_status(self, ctx, message, status):
+    async def __show_config_status(self, ctx: Context, message: discord.Message, status: ConfigStatus):
         embed = discord.Embed()
 
         string_desc = None

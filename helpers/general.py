@@ -37,4 +37,6 @@ async def deep_get_type(data_type, dictionary, *keys):
             return {}
         elif data_type == list:
             return []
+        elif data_type == str:
+            return ""
     return result

@@ -195,7 +195,7 @@ async def on_ready():
 @bot.event
 async def on_command_error(ctx, message):
     if isinstance(message, commands.CommandInvokeError):
-        bot_channel_id = bot.config.get(str(ctx.guild.id), {}).get("essential_channels", {}).get("bot_channel")
+        bot_channel_id = await general.deep_get(bot.config, str(ctx.guild.id), "essential_channels", "bot_channel")
         if bot_channel_id is not None:
             bot_channel = ctx.guild.get_channel(bot_channel_id)
             embed = await prepare_command_error_embed(ctx, message)
@@ -204,7 +204,7 @@ async def on_command_error(ctx, message):
     else:
         error_config = None
         if ctx.guild is not None:
-            error_config = bot.config.get(str(ctx.guild.id), {}).get("errors")
+            error_config = await general.deep_get(bot.config, str(ctx.guild.id), "errors")
         if error_config is None:
             error_config = {}
         if isinstance(message, commands.CommandNotFound) and error_config.get("hide_invalid_errors"):

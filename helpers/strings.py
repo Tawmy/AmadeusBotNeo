@@ -5,6 +5,8 @@ from enum import Enum
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from helpers import general
+
 
 class ReturnType(Enum):
     DEFAULT_LANGUAGE = 0
@@ -96,11 +98,11 @@ async def get_string(ctx: Context, category: str, name: str) -> String:
     string = String(category, name)
     lang = await get_guild_language(ctx, string)
     style = await get_guild_style(ctx)
-    returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(lang, {}).get(style)
+    returned_string = await general.deep_get(ctx.bot.strings, string.category, string.name, lang, style)
     # Get string in default language if nothing found for specified one
     # TODO possibly fall back to default style before falling back to default lang
     if returned_string is None and lang != ctx.bot.default_language:
-        returned_string = ctx.bot.strings.get(string.category, {}).get(string.name, {}).get(ctx.bot.default_language, {}).get(style)
+        returned_string = await general.deep_get(ctx.bot.strings, string.category, string.name, ctx.bot.default_language, style)
     if isinstance(returned_string, list):
         string.list = returned_string
     else:
@@ -124,7 +126,7 @@ async def get_guild_language(ctx: Context, string: String = None) -> str:
     """
 
     if ctx.guild is not None:
-        lang = ctx.bot.config.get(str(ctx.guild.id), {}).get("general", {}).get("language")
+        lang = await general.deep_get(ctx.bot.config, str(ctx.guild.id), "general", "language")
     else:
         lang = None
     if lang is not None:
@@ -134,7 +136,7 @@ async def get_guild_language(ctx: Context, string: String = None) -> str:
     else:
         if string is not None:
             string.return_type = ReturnType.DEFAULT_LANGUAGE
-        default_language = ctx.bot.values["options"].get("general", {}).get("list", {}).get("language", {}).get("default")
+        default_language = await general.deep_get(ctx.bot.values["options"], "general", "list", "language", "default")
         return default_language if default_language is not None else ctx.bot.default_language
 
 
@@ -150,7 +152,7 @@ async def get_guild_style(ctx: Context) -> str:
     """
 
     if ctx.guild is not None:
-        style = ctx.bot.config.get(str(ctx.guild.id), {}).get("general", {}).get("style")
+        style = await general.deep_get(ctx.bot.config, str(ctx.guild.id), "general", "style")
     else:
         style = None
     if style is not None:
@@ -175,18 +177,18 @@ async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
     ex_string = ExceptionString(ex_name)
     lang = await get_guild_language(ctx)
     style = await get_guild_style(ctx)
-    exception = ctx.bot.exception_strings.get(ex_string.name)
+    exception = await general.deep_get(ctx.bot.exception_strings, ex_string.name)
     if exception is not None:
         ex_string.successful = True
         # TODO possibly fall back to default style before falling back to default lang
-        ex_string.message = exception.get("message", {}).get(lang, {}).get(style)
+        ex_string.message = await general.deep_get(exception, "message", lang, style)
         # Get string in default language if nothing found for specified one
         if ex_string.message is None and lang != ctx.bot.default_language:
-            ex_string.message = exception.get("message", {}).get(ctx.bot.default_language, {}).get(style)
-        description = exception.get("description", {}).get(lang, {}).get(style)
+            ex_string.message = await general.deep_get(exception, "message", ctx.bot.default_language, style)
+        description = await general.deep_get(exception, "description", lang, style)
         # Get string in default language if nothing found for specified one
         if description is None and lang != ctx.bot.default_language:
-            description = exception.get("description", {}).get(ctx.bot.default_language, {}).get(style)
+            description = await general.deep_get(exception, "description", ctx.bot.default_language, style)
         ex_string.description = [description] if isinstance(description, str) else description
     return ex_string
 
@@ -205,14 +207,14 @@ async def extract_config_option_strings(ctx: Context, option_dict: dict) -> Opti
 
     option_strings = OptionStrings()
     lang = await get_guild_language(ctx)
-    option_strings.name = option_dict.get("name", {}).get(lang)
+    option_strings.name = await general.deep_get(option_dict, "name", lang)
     # Get string in default language if nothing found for specified on
     if option_strings.name is None and lang != ctx.bot.default_language:
-        option_strings.name = option_dict.get("name", {}).get(ctx.bot.default_language)
-    option_strings.description = option_dict.get("description", {}).get(lang)
+        option_strings.name = await general.deep_get(option_dict, "name", ctx.bot.default_language)
+    option_strings.description = await general.deep_get(option_dict, "description", lang)
     # Get string in default language if nothing found for specified on
     if option_strings.description is None and lang != ctx.bot.default_language:
-        option_strings.description = option_dict.get("description", {}).get(ctx.bot.default_language)
+        option_strings.description = await general.deep_get(option_dict, "description", ctx.bot.default_language)
     if option_strings.name is not None and option_strings.description is not None:
         option_strings.successful = True
     return option_strings
