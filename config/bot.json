@@ -1,8 +1,11 @@
 {
     "default_language": "en",
     "extensions": ["base", "server_setup", "config", "changelog", "limits"],
-    "no_global_check": ["setup", "enable"],
-    "no_limits": ["setup", "addchangelog", "enable"],
+    "limits": {
+        "no_global_check": ["setup"],
+        "no_enable_check": ["config", "limits"],
+        "no_limits": ["setup", "addchangelog"]
+    },
     "primary_server": {
         "id": 111111111111111111,
         "main_channel_id": 111111111111111111

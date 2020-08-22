@@ -45,11 +45,12 @@ async def global_check(ctx):
     if not bot.ready:
         raise ex.BotNotReady
 
-    if ctx.command.name not in bot.config["bot"]["no_global_check"] and ctx.guild is not None:
+    if ctx.command.name not in bot.config["bot"]["limits"]["no_global_check"] and ctx.guild is not None:
         guild_config = await general.deep_get_type(dict, bot.config, str(ctx.guild.id))
 
         # Is bot enabled on server? (set to True during setup)
-        await check_bot_enabled(ctx, guild_config)
+        if ctx.command.name not in bot.config["bot"]["limits"]["no_enable_check"]:
+            await check_bot_enabled(ctx, guild_config)
 
         moderator_skip_enabled = await general.deep_get(bot.config, str(ctx.guild.id), "general", "mods_override_limits")
 

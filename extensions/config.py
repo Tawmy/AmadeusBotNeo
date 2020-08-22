@@ -35,16 +35,6 @@ class Config(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='enable')
-    @commands.check(checks.is_guild_owner)
-    async def enable(self, ctx):
-        prepared_input = await config.prepare_input(ctx, "general", "enabled", True)
-        await config.set_config(ctx, prepared_input)
-        embed = discord.Embed()
-        string = await s.get_string(ctx, "config", "bot_enabled")
-        embed.title = self.bot.app_info.name + " " + string.string
-        await ctx.send(embed=embed)
-
     @commands.command(name='config')
     @commands.check(checks.block_dms)
     async def config(self, ctx, *args):

@@ -202,7 +202,7 @@ class Config(commands.Cog):
         if outer_scope == OuterScope.COMMAND:
             cog_with_commands_dict = defaultdict(list)
             for command in self.bot.commands:
-                if command.cog_name is not None and command.name not in self.bot.config["bot"]["no_limits"]:
+                if command.cog_name is not None and command.name not in self.bot.config["bot"]["limits"]["no_limits"]:
                     cog_with_commands_dict[command.cog_name.lower()].append(command.name.lower())
             for cog_name, commands_list in cog_with_commands_dict.items():
                 commands_str = "\n".join(commands_list)
