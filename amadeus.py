@@ -161,14 +161,18 @@ async def on_ready():
     init_message_extended = await send_init_message_extended(init_embed_extended)
 
     if init_message_extended is not None:
-        # Load extensions and update extended init message
-        failed_extensions = await load_extensions()
-        await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
-        await init_message_extended.edit(embed=init_embed_extended)
-
         # Load values
         values_status = await load_strings_and_values()
         await update_init_embed_extended("values", init_embed_extended, values_status)
+        await init_message_extended.edit(embed=init_embed_extended)
+
+        # Stop bot if any value file could not be loaded
+        if len(values_status) > 0:
+            raise SystemExit()
+
+        # Load extensions and update extended init message
+        failed_extensions = await load_extensions()
+        await update_init_embed_extended("extensions", init_embed_extended, failed_extensions)
         await init_message_extended.edit(embed=init_embed_extended)
 
         # Check changelog, add to startup embed
@@ -308,21 +312,24 @@ async def send_init_message_extended(init_message_extended):
 
 
 async def update_init_embed_extended(update_type, init_embed_extended, value):
-    if update_type == "extensions":
-        if len(value) == 0:
-            init_embed_extended.set_field_at(0, name="Extensions", value="✅ Loaded")
-        else:
-            value = ', '.join(value)
-            init_embed_extended.set_field_at(0, name="Extensions", value="⚠ Failed")
-            init_embed_extended.add_field(name="Extensions failed", value=value, inline="False")
-        init_embed_extended.set_field_at(1, name="Values", value="⌛ Loading...")
-
-    elif update_type == "values":
+    if update_type == "values":
         if len(value) > 0:
             init_embed_extended.add_field(name="Values failed", value="\n".join(value), inline=False)
-            init_embed_extended.set_field_at(1, name="Values", value="⚠ Failed")
+            init_embed_extended.set_field_at(0, name="Values", value="⚠ Failed")
+            init_embed_extended.set_field_at(1, name="Extensions", value="🛑 Cancelled")
+            init_embed_extended.set_field_at(2, name="Config", value="🛑 Cancelled")
+            init_embed_extended.set_field_at(3, name="Database", value="🛑 Cancelled")
         else:
-            init_embed_extended.set_field_at(1, name="Values", value="✅ Loaded")
+            init_embed_extended.set_field_at(0, name="Values", value="✅ Loaded")
+            init_embed_extended.set_field_at(1, name="Extensions", value="⌛ Loading...")
+
+    elif update_type == "extensions":
+        if len(value) == 0:
+            init_embed_extended.set_field_at(1, name="Extensions", value="✅ Loaded")
+        else:
+            value = ', '.join(value)
+            init_embed_extended.set_field_at(1, name="Extensions", value="⚠ Failed")
+            init_embed_extended.add_field(name="Extensions failed", value=value, inline="False")
         init_embed_extended.set_field_at(2, name="Configs", value="⌛ Loading...")
 
     elif update_type == "configs":
