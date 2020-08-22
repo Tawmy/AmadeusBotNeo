@@ -51,7 +51,7 @@ class StringCombination:
     string_combined: str = None
 
 
-async def load_strings(bot: commands.bot) -> list:
+async def load_strings(bot: commands.Bot) -> list:
     """
     Loads strings and exceptions from values directory.
     Returns list with filenames that failed.
@@ -134,7 +134,7 @@ async def get_guild_language(ctx: Context, string: String = None) -> str:
     else:
         if string is not None:
             string.return_type = ReturnType.DEFAULT_LANGUAGE
-        default_language = ctx.bot.options.get("general", {}).get("list", {}).get("language", {}).get("default")
+        default_language = ctx.bot.values["options"].get("general", {}).get("list", {}).get("language", {}).get("default")
         return default_language if default_language is not None else ctx.bot.default_language
 
 
@@ -157,7 +157,7 @@ async def get_guild_style(ctx: Context) -> str:
         return style
     else:
         # TODO change default to amadeus once those have been created
-        return ctx.bot.options["general"]["list"]["style"]["default"]
+        return ctx.bot.values["options"]["general"]["list"]["style"]["default"]
 
 
 async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
@@ -278,7 +278,7 @@ async def append_roles(string: str, roles: list) -> str:
     """
 
     roles_string = string + "\n\n**"
-    if type(roles) is list:
+    if isinstance(roles, list):
         roles_string += '**, **'.join(roles)
     else:
         roles_string += roles

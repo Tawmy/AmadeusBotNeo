@@ -16,7 +16,7 @@ async def save_changelog(bot):
     while retries > 0:
         with open(json_file, 'w') as file:
             try:
-                json.dump(bot.changelog, file, indent=4)
+                json.dump(bot.values["changelog"], file, indent=4)
                 return True
             except Exception as e:
                 print(e)
@@ -82,21 +82,21 @@ class Changelog(commands.Cog):
         await prompt.set_user_specific(True)
         string = await s.get_string(ctx, "changelog", "please_select")
         version_list = string.string + "\n\n"
-        for version_number in self.bot.changelog:
+        for version_number in self.bot.values["changelog"]:
             version_list += version_number + "\n"
         await prompt.set_description(version_list)
         return prompt
 
     async def __prepare_version_info_embed(self, ctx, version) -> discord.Embed:
         embed = discord.Embed()
-        if self.bot.changelog.get(version) is None:
+        if self.bot.values["changelog"].get(version) is None:
             string = await s.get_string(ctx, "changelog", "does_not_exist")
             embed.title = string.string
         else:
             string = await s.get_string(ctx, "changelog", "version")
             embed.title = string.string + " " + version
-            date_changelog = self.bot.changelog.get(version).get("date")
-            changes = self.bot.changelog.get(version).get("changes")
+            date_changelog = self.bot.values["changelog"].get(version).get("date")
+            changes = self.bot.values["changelog"].get(version).get("changes")
             string = await s.get_string(ctx, "changelog", "release_date")
             embed.add_field(name=string.string, value=date_changelog)
             string = await s.get_string(ctx, "changelog", "changes")
@@ -139,13 +139,10 @@ class Changelog(commands.Cog):
         return result.reaction_index
 
     async def __add_to_changelog(self, version_number, changes):
-        self.bot.changelog.setdefault(version_number, {})
-        self.bot.changelog.get(version_number).setdefault("date", str(date.today()))
-        self.bot.changelog.get(version_number).setdefault("acknowledged", False)
-        self.bot.changelog.get(version_number).setdefault("changes", changes)
-
-    async def __list_versions(self):
-        embed = discord.Embed()
+        self.bot.values["changelog"].setdefault(version_number, {})
+        self.bot.values["changelog"].get(version_number).setdefault("date", str(date.today()))
+        self.bot.values["changelog"].get(version_number).setdefault("acknowledged", False)
+        self.bot.values["changelog"].get(version_number).setdefault("changes", changes)
 
     async def __show_result(self, ctx, added):
         embed = discord.Embed()

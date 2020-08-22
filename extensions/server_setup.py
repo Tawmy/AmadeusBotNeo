@@ -138,9 +138,9 @@ class ServerSetup(commands.Cog):
 
     async def __iterate_config_options(self, ctx, setup_user: discord.User, message: discord.Message) -> bool:
         # Iterate categories
-        for category_key, category_values in self.bot.options.items():
+        for category_key in self.bot.values["options"]:
             # Iterate options in category
-            for option_key, option_values in self.bot.options[category_key]["list"].items():
+            for option_key, option_values in self.bot.values["options"][category_key]["list"].items():
                 if option_values["is_essential"]:
                     user_input = await self.__ask_for_value(ctx, category_key, option_key, option_values, setup_user, message)
                     if user_input.type == InputType.CANCELLED:
@@ -174,7 +174,7 @@ class ServerSetup(commands.Cog):
 
     async def __add_default_limits(self, ctx: Context):
         input_data = InputData(outer_scope=OuterScope.CATEGORY, edit_type=EditType.REPLACE)
-        for name_key, name_val in ctx.bot.limits.get("defaults").items():
+        for name_key, name_val in ctx.bot.values["limits"].get("defaults").items():
             input_data.name = name_key
             for inner_scope_key, inner_scope_val in name_val.items():
                 if inner_scope_key == "roles":
@@ -223,7 +223,7 @@ class ServerSetup(commands.Cog):
         for ch_key, ch_val in self.bot.config[str(ctx.guild.id)]["essential_channels"].items():
             channel = ctx.guild.get_channel(ch_val)
             permissions_have = channel.permissions_for(ctx.guild.me)
-            permissions_need = self.bot.options["essential_channels"]["list"][ch_key]["permissions"]
+            permissions_need = self.bot.values["options"]["essential_channels"]["list"][ch_key]["permissions"]
             permissions_embed = ""
             for permission in permissions_need:
                 if getattr(permissions_have, permission) is True:
@@ -238,7 +238,7 @@ class ServerSetup(commands.Cog):
         title = "\u200b"
         description_string = await s.get_string(ctx, "server_setup", "default_limits_description")
         description = description_string.string + "\n"
-        for name_key in ctx.bot.limits.get("defaults"):
+        for name_key in ctx.bot.values["limits"].get("defaults"):
             description += "• " + name_key + "\n"
         description_string_note = await s.get_string(ctx, "server_setup", "default_limits_note")
         prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]

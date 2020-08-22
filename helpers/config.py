@@ -81,39 +81,17 @@ async def load_values(bot: commands.bot) -> list:
     bot: discord.ext.commands.bot
         The bot object.
     """
+    values = ["options", "limits", "datatypes", "changelog"]
     failed = []
-    try:
-        with open("values/options.json", 'r') as json_file:
-            try:
-                bot.options = json.load(json_file)
-            except ValueError:
-                failed.append("options")
-    except FileNotFoundError as exc:
-        failed.append(exc.filename)
-    try:
-        with open("values/limits.json", 'r') as json_file:
-            try:
-                bot.limits = json.load(json_file)
-            except ValueError:
-                failed.append("limits")
-    except FileNotFoundError as exc:
-        failed.append(exc.filename)
-    try:
-        with open("values/datatypes.json", 'r') as json_file:
-            try:
-                bot.datatypes = json.load(json_file)
-            except ValueError:
-                failed.append("datatypes")
-    except FileNotFoundError as exc:
-        failed.append(exc.filename)
-    try:
-        with open("values/changelog.json", 'r') as json_file:
-            try:
-                bot.changelog = json.load(json_file)
-            except ValueError:
-                failed.append("changelog")
-    except FileNotFoundError as exc:
-        failed.append(exc.filename)
+    for value in values:
+        try:
+            with open("values/" + value + ".json", 'r') as json_file:
+                try:
+                    bot.values[value] = json.load(json_file)
+                except ValueError:
+                    failed.append(value)
+        except FileNotFoundError as exc:
+            failed.append(exc.filename)
     return failed
 
 
@@ -148,7 +126,7 @@ async def get_config(ctx: Context, category: str, name: str) -> Config:
 
 
 async def __get_default_config_value(ctx: Context, category: str, name: str) -> str:
-    return ctx.bot.options.get(category, {}).get("list", {}).get(name, {}).get("default")
+    return ctx.bot.values["options"].get(category, {}).get("list", {}).get(name, {}).get("default")
 
 
 async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
@@ -166,11 +144,11 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
         Name of the config option.
     """
     valid_input = ValidInput()
-    option = ctx.bot.options.get(category, {}).get("list", {}).get(name, {})
+    option = ctx.bot.values["options"].get(category, {}).get("list", {}).get(name, {})
     data_type = option.get("data_type")
     valid_list = option.get("valid")
 
-    datatype_dict = ctx.bot.datatypes.get(data_type)
+    datatype_dict = ctx.bot.values["datatypes"].get(data_type)
 
     if valid_list is not None:
         valid_input.input_type = InputType.AS_VALID_LIST
@@ -216,7 +194,7 @@ async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool 
         value = prepared_input.list[0]
     else:
         value = prepared_input.list
-    if ctx.bot.options.get(prepared_input.category, {}).get("list", {}).get(prepared_input.name) is not None:
+    if ctx.bot.values["options"].get(prepared_input.category, {}).get("list", {}).get(prepared_input.name) is not None:
         ctx.bot.config[str(ctx.guild.id)].setdefault(prepared_input.category, {})[prepared_input.name] = value
         if do_save:
             save_successful = await save_config(ctx)
@@ -257,14 +235,7 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
 
     prepared_input = PreparedInput(category, name)
 
-    # shlex to split string into multiple elements while keeping bracket terms intact
-    if isinstance(user_input, str):
-        user_input = shlex.split(user_input)
-    elif isinstance(user_input, tuple):
-        user_input = list(user_input)
-    elif isinstance(user_input, (bool, int)):
-        user_input = [str(user_input)]
-
+    user_input = await __convert_input_to_list(user_input)
     valid_input = await get_valid_input(ctx, category, name)
 
     prepared_input.list = []
@@ -287,18 +258,10 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
                 prepared_input.status = ConfigStatus.NOT_IN_VALID_LIST
                 return prepared_input
         elif valid_input.input_type == InputType.TO_BE_CONVERTED:
-            if valid_input.datatype == Datatype.ROLE:
-                try:
-                    prepared_input.list.append(await commands.RoleConverter().convert(ctx, user_input_item))
-                except commands.CommandError:
-                    prepared_input.status = ConfigStatus.ROLE_NOT_FOUND
-                    return prepared_input
-            elif valid_input.datatype == Datatype.TEXT_CHANNEL:
-                try:
-                    prepared_input.list.append(await commands.TextChannelConverter().convert(ctx, user_input_item))
-                except commands.CommandError:
-                    prepared_input.status = ConfigStatus.TEXT_CHANNEL_NOT_FOUND
-                    return prepared_input
+            await __discord_converter(ctx, valid_input, prepared_input, user_input_item)
+            if prepared_input.status in [ConfigStatus.ROLE_NOT_FOUND, ConfigStatus.TEXT_CHANNEL_NOT_FOUND]:
+                return prepared_input
+
     prepared_input.status = ConfigStatus.PREPARATION_SUCCESSFUL
     return prepared_input
 
@@ -329,3 +292,26 @@ async def save_config(ctx: Context,) -> bool:
             retries -= 1
         return True if save_status is True else False
     return False
+
+
+async def __convert_input_to_list(user_input) -> list:
+    # shlex to split string into multiple elements while keeping bracket terms intact
+    if isinstance(user_input, str):
+        return shlex.split(user_input)
+    elif isinstance(user_input, tuple):
+        return list(user_input)
+    elif isinstance(user_input, (bool, int)):
+        return [str(user_input)]
+
+
+async def __discord_converter(ctx, valid_input: ValidInput, prepared_input: PreparedInput, user_input_item: str):
+    if valid_input.datatype == Datatype.ROLE:
+        try:
+            prepared_input.list.append(await commands.RoleConverter().convert(ctx, user_input_item))
+        except commands.CommandError:
+            prepared_input.status = ConfigStatus.ROLE_NOT_FOUND
+    elif valid_input.datatype == Datatype.TEXT_CHANNEL:
+        try:
+            prepared_input.list.append(await commands.TextChannelConverter().convert(ctx, user_input_item))
+        except commands.CommandError:
+            prepared_input.status = ConfigStatus.TEXT_CHANNEL_NOT_FOUND

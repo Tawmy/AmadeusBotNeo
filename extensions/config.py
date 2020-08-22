@@ -95,7 +95,7 @@ class Config(commands.Cog):
         menu = amadeusMenu.AmadeusMenu(self.bot, string.string)
         await menu.set_user_specific(True)
         category_names = []
-        for category_key, category_val in self.bot.options.items():
+        for category_key, category_val in self.bot.values["options"].items():
             category_names.append(category_key)
             strings = await s.extract_config_option_strings(ctx, category_val)
             await menu.add_option(strings.name, strings.description)
@@ -110,20 +110,20 @@ class Config(commands.Cog):
 
     async def get_category(self, ctx, user_input):
         user_input = user_input.lower()
-        if self.bot.options.get(user_input) is not None:
+        if self.bot.values["options"].get(user_input) is not None:
             return user_input
         else:
-            for category_key, category_val in self.bot.options.items():
+            for category_key, category_val in self.bot.values["options"].items():
                 if await self.check_value(ctx, category_val, user_input) is True:
                     return category_key
         return None
 
     async def get_option(self, ctx, user_input, category=None):
         user_input = user_input.lower()
-        if category is not None and self.bot.options.get(category, {}).get("list", {}).get(user_input) is not None:
+        if category is not None and self.bot.values["options"].get(category, {}).get("list", {}).get(user_input) is not None:
             return category, user_input
 
-        for category_key, category_val in self.bot.options.items():
+        for category_key, category_val in self.bot.values["options"].items():
             for option_key, option_val in category_val.get("list").items():
                 if await self.check_value(ctx, option_val, user_input) is True:
                     return category_key, option_key
@@ -144,7 +144,7 @@ class Config(commands.Cog):
 
     async def ask_for_option(self, ctx, input_data):
         # prepare menu
-        category = self.bot.options.get(input_data.category)
+        category = self.bot.values["options"].get(input_data.category)
         category_values = await s.extract_config_option_strings(ctx, category)
         menu = amadeusMenu.AmadeusMenu(self.bot, category_values.name)
         await menu.set_description(category_values.description)
@@ -170,7 +170,7 @@ class Config(commands.Cog):
 
     async def show_info(self, ctx, input_data):
         # prepare menu
-        option_full = self.bot.options.get(input_data.category).get("list").get(input_data.option)
+        option_full = self.bot.values["options"].get(input_data.category).get("list").get(input_data.option)
         option_values = await s.extract_config_option_strings(ctx, option_full)
         menu = amadeusMenu.AmadeusMenu(self.bot, option_values.name)
         await menu.set_description(option_values.description)
@@ -224,7 +224,7 @@ class Config(commands.Cog):
         await menu.set_footer_text(footer_text)
 
     async def ask_for_value(self, ctx, input_data):
-        option_full = self.bot.options.get(input_data.category).get("list").get(input_data.option)
+        option_full = self.bot.values["options"].get(input_data.category).get("list").get(input_data.option)
         option_values = await s.extract_config_option_strings(ctx, option_full)
         prompt = amadeusPrompt.AmadeusPrompt(self.bot, option_values.name)
         await prompt.set_user_specific(True)

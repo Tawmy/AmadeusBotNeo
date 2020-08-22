@@ -28,9 +28,10 @@ bot.ready = False
 bot.corrupt_configs = []
 bot.app_info = None
 bot.database_pool = None
-bot.changelog = None
-
+bot.values = {}
 bot.config = {}
+
+
 with open("config/bot.json", 'r') as file:
     try:
         bot.config["bot"] = json.load(file)
@@ -414,7 +415,7 @@ async def connect_database(init_embed_extended, init_message_extended):
 
 
 async def check_changelog(init_embed, init_embed_extended):
-    values = list(bot.changelog.items())[-1]
+    values = list(bot.values["changelog"].items())[-1]
     bot.version = values[0]
     embed_title = init_embed.title + " " + bot.version
     init_embed.title = embed_title

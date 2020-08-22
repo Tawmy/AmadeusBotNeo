@@ -270,6 +270,6 @@ async def __convert_input_to_list(user_input) -> list:
         user_input = [str(user_input)]
     user_input = copy.deepcopy(user_input)
     for i, item in enumerate(user_input):
-        if type(item) == int:
+        if isinstance(item, int):
             user_input[i] = str(item)
     return user_input
