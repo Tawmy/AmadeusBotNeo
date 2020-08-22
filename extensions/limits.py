@@ -6,8 +6,8 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 from components import checks
-from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus
-from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
+from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus, AmadeusMenuResult
+from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus, AmadeusPromptResult
 from helpers import strings as s, limits, general
 from helpers.config import save_config
 from helpers.limits import InputData, LimitStep, OuterScope, InnerScope, EditType, ConfigType, LimitStatus, \
@@ -156,13 +156,8 @@ class Config(commands.Cog):
         string_desc = await s.get_string(ctx, "limits", "command_desc")
         await menu.add_option(string.string, string_desc.string)
 
-        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
-        menu_data = await menu.show_menu(ctx, 120)
-
-        if menu_data.status != AmadeusMenuStatus.SELECTED:
-            input_data.limit_step = LimitStep.FINISHED
-            await menu.show_result(ctx)
-        else:
+        menu_data = await self.__show_menu_and_check_result(ctx, menu, input_data)
+        if menu_data.status == AmadeusMenuStatus.SELECTED:
             input_data.limit_step = LimitStep.OUTER_SCOPE
             input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
@@ -187,10 +182,7 @@ class Config(commands.Cog):
 
         prompt_data = await prompt.show_prompt(ctx, 120, input_data.message)
 
-        if prompt_data.status != AmadeusPromptStatus.INPUT_GIVEN:
-            input_data.limit_step = LimitStep.FINISHED
-            await prompt.show_result(ctx)
-        else:
+        if await self.__check_prompt_result(ctx, prompt, prompt_data, input_data):
             name = await self.get_name(input_data.outer_scope, prompt_data.input)
             if name is not None:
                 input_data.limit_step = LimitStep.NAME
@@ -230,16 +222,10 @@ class Config(commands.Cog):
             string = await s.get_string(ctx, "limits", "channel_s")
             string_desc = await s.get_string(ctx, "limits", "channel_desc")
             await menu.add_option(string.string, string_desc.string)
-        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
-
         await self.__add_current_values(ctx, input_data, menu)
 
-        menu_data = await menu.show_menu(ctx, 120, input_data.message)
-
-        if menu_data.status != AmadeusMenuStatus.SELECTED:
-            input_data.limit_step = LimitStep.FINISHED
-            await menu.show_result(ctx)
-        else:
+        menu_data = await self.__show_menu_and_check_result(ctx, menu, input_data)
+        if menu_data.status == AmadeusMenuStatus.SELECTED:
             input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
                 input_data.inner_scope = InnerScope.ENABLED
@@ -278,13 +264,8 @@ class Config(commands.Cog):
 
         await self.__add_current_values(ctx, input_data, menu)
 
-        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
-        menu_data = await menu.show_menu(ctx, 120, input_data.message)
-
-        if menu_data.status != AmadeusMenuStatus.SELECTED:
-            input_data.limit_step = LimitStep.FINISHED
-            await menu.show_result(ctx)
-        else:
+        menu_data = await self.__show_menu_and_check_result(ctx, menu, input_data)
+        if menu_data.status == AmadeusMenuStatus.SELECTED:
             input_data.limit_step = LimitStep.CONFIG_TYPE
             input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
@@ -313,13 +294,8 @@ class Config(commands.Cog):
         string_desc = await s.get_string(ctx, "limits", "reset_desc")
         await menu.add_option(string.string, string_desc.string)
 
-        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
-        menu_data = await menu.show_menu(ctx, 120, input_data.message)
-
-        if menu_data.status != AmadeusMenuStatus.SELECTED:
-            input_data.limit_step = LimitStep.FINISHED
-            await menu.show_result(ctx)
-        else:
+        menu_data = await self.__show_menu_and_check_result(ctx, menu, input_data)
+        if menu_data.status == AmadeusMenuStatus.SELECTED:
             input_data.limit_step = LimitStep.EDIT_TYPE
             input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
@@ -341,13 +317,8 @@ class Config(commands.Cog):
         string = await s.get_string(ctx, "limits", "disable")
         await menu.add_option(string.string)
 
-        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
-        menu_data = await menu.show_menu(ctx, 120, input_data.message)
-
-        if menu_data.status != AmadeusMenuStatus.SELECTED:
-            input_data.limit_step = LimitStep.FINISHED
-            await menu.show_result(ctx)
-        else:
+        menu_data = await self.__show_menu_and_check_result(ctx, menu, input_data)
+        if menu_data.status == AmadeusMenuStatus.SELECTED:
             input_data.message = menu_data.message
             if menu_data.reaction_index == 0:
                 input_data.values = "true"
@@ -373,11 +344,7 @@ class Config(commands.Cog):
         await self.__add_current_values(ctx, input_data, prompt)
 
         prompt_data = await prompt.show_prompt(ctx, 120, input_data.message)
-
-        if prompt_data.status != AmadeusPromptStatus.INPUT_GIVEN:
-            input_data.limit_step = LimitStep.FINISHED
-            await prompt.show_result(ctx)
-        else:
+        if await self.__check_prompt_result(ctx, prompt, prompt_data, input_data):
             input_data.message = prompt_data.message
             input_data.values = prompt_data.input
             input_data.limit_step = LimitStep.VALUES
@@ -555,6 +522,20 @@ class Config(commands.Cog):
         else:
             return await general.deep_get_type(list, ctx.bot.config, str(ctx.guild.id), "limits", outer_scope_str, input_data.name.lower(), inner_scope_str, config_type_str)
 
+    async def __show_menu_and_check_result(self, ctx: Context, menu: AmadeusMenu, input_data: InputData) -> AmadeusMenuResult:
+        await menu.set_footer_text(await limits.get_footer_text(ctx, input_data))
+        menu_data = await menu.show_menu(ctx, 120, input_data.message)
+        if menu_data.status != AmadeusMenuStatus.SELECTED:
+            input_data.limit_step = LimitStep.FINISHED
+            await menu.show_result(ctx)
+        return menu_data
+
+    async def __check_prompt_result(self, ctx: Context, prompt: AmadeusPrompt, prompt_data: AmadeusPromptResult, input_data: InputData) -> bool:
+        if prompt_data.status != AmadeusPromptStatus.INPUT_GIVEN:
+            input_data.limit_step = LimitStep.FINISHED
+            await prompt.show_result(ctx)
+            return False
+        return True
 
 def setup(bot):
     bot.add_cog(Config(bot))
