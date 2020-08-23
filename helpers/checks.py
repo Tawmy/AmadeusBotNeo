@@ -17,7 +17,7 @@ async def global_check(ctx: Context, bot, ) -> bool:
 
         moderator_skip_enabled = await general.deep_get(bot.config, str(ctx.guild.id), "general", "mods_override_limits")
 
-        if await check_moderator_skip(moderator_skip_enabled, await is_moderator(ctx, bot)) is False:
+        if await check_moderator_skip(ctx, bot, moderator_skip_enabled) is False:
             await check_category_limits(ctx, guild_config)
             await check_command_limits(ctx, guild_config)
 
@@ -27,11 +27,12 @@ async def global_check(ctx: Context, bot, ) -> bool:
 
 
 async def is_moderator(ctx: Context, bot):
-    return discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"])
+    mod_role = discord.utils.get(ctx.author.roles, id=bot.config[str(ctx.guild.id)]["essential_roles"]["mod_role"])
+    return True if mod_role in ctx.author.roles else False
 
 
-async def check_moderator_skip(skip_enabled: bool, is_moderator_bool: bool) -> bool:
-    return True if skip_enabled and is_moderator else False
+async def check_moderator_skip(ctx, bot, skip_enabled: bool) -> bool:
+    return True if skip_enabled and await is_moderator(ctx, bot) else False
 
 
 async def check_bot_enabled(ctx: Context, bot, guild_config: dict):
