@@ -1,12 +1,16 @@
+import json
+import sys
 from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
+from sqlalchemy import create_engine
 from alembic import context
+
+# alters sys path so importing the Base actually works later on
+sys.path = ['', '..'] + sys.path[1:]
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
+
+
 config = context.config
 
 # Interpret the config file for Python logging.
@@ -17,12 +21,44 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+
+
+def get_target_metadata():
+    from database.models import Base
+    return Base.metadata
+
+
+target_metadata = get_target_metadata()
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+
+def get_url():
+    json_config = get_bot_config()
+    if json_config is None:
+        return
+    driver = json_config["database"]["driver"]
+    username = json_config["database"]["username"]
+    password = json_config["database"]["password"]
+    address = json_config["database"]["address"]
+    db_name = json_config["database"]["db_name"]
+    url = f"{driver}://{username}:{password}@{address}/{db_name}"
+    return url
+
+
+def get_bot_config():
+    json_data = None
+    with open("config/bot.json", 'r') as file:
+        try:
+            json_data = json.load(file)
+            print("Configuration file loaded successfully into alembic")
+        except ValueError as e:
+            raise SystemExit(e)
+    return json_data
 
 
 def run_migrations_offline():
@@ -37,7 +73,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = get_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -56,11 +92,7 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(get_url())
 
     with connectable.connect() as connection:
         context.configure(
@@ -75,3 +107,4 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+
