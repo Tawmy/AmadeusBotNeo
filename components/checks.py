@@ -31,7 +31,7 @@ def needs_database(ctx):
 
     Throws DatabaseNotConnected if not.
     """
-    if ctx.bot.database_pool is None:
+    if ctx.bot.db_session is None:
         raise ex.DatabaseNotConnected
     else:
         return True

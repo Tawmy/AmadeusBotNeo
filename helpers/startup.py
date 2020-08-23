@@ -6,6 +6,7 @@ import asyncio
 import discord
 from discord.ext import commands
 
+from database import base as db
 from extensions.changelog import save_changelog
 from helpers import strings, config
 
@@ -39,6 +40,8 @@ async def startup_sequence(bot):
         await init_message_extended.edit(embed=init_embed_extended)
 
         bot.ready = True
+
+        await connect_database(bot)
 
         # Send startup message on all servers
         if bot.config["bot"]["debug"] is False:
@@ -144,6 +147,12 @@ async def load_configs(bot):
             error_filenotfound_list.append(filename)
 
     return error_filenotfound_list
+
+
+async def connect_database(bot):
+    if not await db.check_if_db_up_to_date(bot):
+        await db.upgrade_database()
+    await db.init_session(bot)
 
 
 async def check_changelog(bot, init_embed, init_embed_extended):

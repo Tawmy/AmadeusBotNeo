@@ -11,13 +11,11 @@
         "main_channel_id": 111111111111111111
     },
     "database": {
-        "ip": "",
-        "name": "",
+        "driver": "postgresql",
+        "address": "",
+        "db_name": "",
         "username": "",
-        "password": "",
-        "cmd_timeout": 15,
-        "timeout": 5,
-        "retry_timeout": 10
+        "password": ""
     },
     "token": "",
     "debug": false,
