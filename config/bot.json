@@ -15,7 +15,8 @@
         "address": "",
         "db_name": "",
         "username": "",
-        "password": ""
+        "password": "",
+        "timeout": 5
     },
     "token": "",
     "debug": false,

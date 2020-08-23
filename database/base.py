@@ -1,16 +1,32 @@
+from enum import Enum
+
 from alembic import config, script
 from alembic.runtime import migration
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.scoping import ScopedSession
 
 
-async def check_if_db_up_to_date(bot):
-    engine = create_engine(await get_url(bot))
+class DatabaseVersionStatus(Enum):
+    UP_TO_DATE = 0
+    OUT_OF_DATE = 1
+    NO_CONNECTION = 2
+
+
+async def check_if_db_up_to_date(bot) -> DatabaseVersionStatus:
+    timeout = bot.config["bot"]["database"]["timeout"]
+    engine = create_engine(await get_url(bot), connect_args={'connect_timeout': timeout})
     script_ = script.ScriptDirectory.from_config(config.Config('alembic.ini'))
-    with engine.begin() as conn:
-        context = migration.MigrationContext.configure(conn)
-        return context.get_current_revision() == script_.get_current_head()
+    try:
+        with engine.begin() as conn:
+            context = migration.MigrationContext.configure(conn)
+            if context.get_current_revision() == script_.get_current_head():
+                return DatabaseVersionStatus.UP_TO_DATE
+            else:
+                return DatabaseVersionStatus.OUT_OF_DATE
+    except OperationalError:
+        return DatabaseVersionStatus.NO_CONNECTION
 
 
 async def upgrade_database():
@@ -23,10 +39,19 @@ async def upgrade_database():
 
 async def init_session(bot):
     session = ScopedSession(sessionmaker())
-    engine = create_engine(await get_url(bot))
+    timeout = bot.config["bot"]["database"]["timeout"]
+    engine = create_engine(await get_url(bot), connect_args={'connect_timeout': timeout})
     session.configure(bind=engine)
-    bot.db_session = session
-    pass
+    if await validate_session(session) is True:
+        bot.db_session = session
+
+
+async def validate_session(session):
+    try:
+        session.connection()
+        return True
+    except OperationalError:
+        return False
 
 
 async def get_url(bot):

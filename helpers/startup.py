@@ -3,12 +3,21 @@ import json
 import platform
 
 import asyncio
+from enum import Enum
+
 import discord
 from discord.ext import commands
 
 from database import base as db
+from database.base import DatabaseVersionStatus
 from extensions.changelog import save_changelog
 from helpers import strings, config
+
+
+class DatabaseStatus(Enum):
+    CONNECTED = 0
+    FAILED = 1
+    UPGRADED = 2
 
 
 async def startup_sequence(bot):
@@ -41,7 +50,9 @@ async def startup_sequence(bot):
 
         bot.ready = True
 
-        await connect_database(bot)
+        status = await connect_database(bot)
+        await update_init_embed_extended(bot, "database", init_embed_extended, status)
+        await init_message_extended.edit(embed=init_embed_extended)
 
         # Send startup message on all servers
         if bot.config["bot"]["debug"] is False:
@@ -57,6 +68,7 @@ async def prepare_init_embeds(bot):
     init_embed_extended.add_field(name="Extensions", value="⌛ Loading...")
     init_embed_extended.add_field(name="Strings", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Configs", value="⌛ Waiting...")
+    init_embed_extended.add_field(name="Database", value="⌛ Waiting...")
     init_embed_extended.add_field(name="Discord.py", value=discord.__version__)
     init_embed_extended.add_field(name="Python", value=platform.python_version())
 
@@ -106,6 +118,15 @@ async def update_init_embed_extended(bot, update_type, init_embed_extended, valu
             init_embed_extended.set_field_at(2, name="Configs", value="✅ Loaded")
         else:
             init_embed_extended.set_field_at(2, name="Configs", value="⚠ Failed")
+        init_embed_extended.set_field_at(3, name="Database", value="⌛ Connecting...")
+
+    elif update_type == "database":
+        if value == DatabaseStatus.FAILED:
+            init_embed_extended.set_field_at(3, name="Database", value="⚠ Failed")
+        elif value == DatabaseStatus.CONNECTED:
+            init_embed_extended.set_field_at(3, name="Database", value="✅ Connected")
+        elif value == DatabaseStatus.UPGRADED:
+            init_embed_extended.set_field_at(3, name="Database", value="✅ Upgraded")
 
     # TODO else clause?
 
@@ -149,10 +170,19 @@ async def load_configs(bot):
     return error_filenotfound_list
 
 
-async def connect_database(bot):
-    if not await db.check_if_db_up_to_date(bot):
-        await db.upgrade_database()
-    await db.init_session(bot)
+async def connect_database(bot) -> DatabaseStatus:
+    status = await db.check_if_db_up_to_date(bot)
+    if status != DatabaseVersionStatus.NO_CONNECTION:
+        if status == DatabaseVersionStatus.OUT_OF_DATE:
+            await db.upgrade_database()
+        await db.init_session(bot)
+        # is not None if scoped session successfully created and checked
+        if bot.db_session is not None:
+            if status == DatabaseVersionStatus.UP_TO_DATE:
+                return DatabaseStatus.CONNECTED
+            else:
+                return DatabaseStatus.UPGRADED
+    return DatabaseStatus.FAILED
 
 
 async def check_changelog(bot, init_embed, init_embed_extended):
