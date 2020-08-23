@@ -43,41 +43,7 @@ async def on_ready():
     bot.ready = False
     print("Connected to Discord")
     bot.app_info = await bot.application_info()
-
-    # prepare init embeds for both main and all other servers
-    init_embed, init_embed_extended = await startup.prepare_init_embeds(bot)
-    init_message_extended = await startup.send_init_message_extended(bot, init_embed_extended)
-
-    if init_message_extended is not None:
-        # Load values
-        values_status = await startup.load_strings_and_values(bot)
-        await startup.update_init_embed_extended(bot, "values", init_embed_extended, values_status)
-        await init_message_extended.edit(embed=init_embed_extended)
-
-        # Stop bot if any value file could not be loaded
-        if len(values_status) > 0:
-            raise SystemExit()
-
-        # Load extensions and update extended init message
-        failed_extensions = await startup.load_extensions(bot)
-        await startup.update_init_embed_extended(bot, "extensions", init_embed_extended, failed_extensions)
-        await init_message_extended.edit(embed=init_embed_extended)
-
-        # Check changelog, add to startup embed
-        await startup.check_changelog(bot, init_embed, init_embed_extended)
-
-        # Load server configurations
-        configs = await startup.load_configs(bot)
-        await startup.update_init_embed_extended(bot, "configs", init_embed_extended, configs)
-        await init_message_extended.edit(embed=init_embed_extended)
-
-        bot.ready = True
-
-        # Connect to database
-        await startup.connect_database(bot, init_embed_extended, init_message_extended)
-
-        # Send startup message on all servers
-        await startup.send_startup_message(bot, init_embed)
+    await startup.startup_sequence(bot)
 
 
 @bot.event

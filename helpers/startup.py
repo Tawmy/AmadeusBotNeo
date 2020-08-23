@@ -11,6 +11,44 @@ from extensions.changelog import save_changelog
 from helpers import strings, config
 
 
+async def startup_sequence(bot):
+    # prepare init embeds for both main and all other servers
+    init_embed, init_embed_extended = await prepare_init_embeds(bot)
+    init_message_extended = await send_init_message_extended(bot, init_embed_extended)
+
+    if init_message_extended is not None:
+        # Load values
+        values_status = await load_strings_and_values(bot)
+        await update_init_embed_extended(bot, "values", init_embed_extended, values_status)
+        await init_message_extended.edit(embed=init_embed_extended)
+
+        # Stop bot if any value file could not be loaded
+        if len(values_status) > 0:
+            raise SystemExit()
+
+        # Load extensions and update extended init message
+        failed_extensions = await load_extensions(bot)
+        await update_init_embed_extended(bot, "extensions", init_embed_extended, failed_extensions)
+        await init_message_extended.edit(embed=init_embed_extended)
+
+        # Check changelog, add to startup embed
+        await check_changelog(bot, init_embed, init_embed_extended)
+
+        # Load server configurations
+        configs = await load_configs(bot)
+        await update_init_embed_extended(bot, "configs", init_embed_extended, configs)
+        await init_message_extended.edit(embed=init_embed_extended)
+
+        bot.ready = True
+
+        # Connect to database
+        await connect_database(bot, init_embed_extended, init_message_extended)
+
+        # Send startup message on all servers
+        if bot.config["bot"]["debug"] is False:
+            await send_startup_message(bot, init_embed)
+
+
 async def prepare_init_embeds(bot):
     init_embed = discord.Embed()
     init_embed.title = bot.app_info.name
@@ -166,10 +204,9 @@ async def check_changelog(bot, init_embed, init_embed_extended):
 
 
 async def send_startup_message(bot, init_embed):
-    if bot.config["bot"]["debug"] is False:
-        for guild_id in bot.config:
-            if guild_id != "bot":
-                await asyncio.sleep(1)
-                guild = bot.get_guild(int(guild_id))
-                channel = guild.get_channel(bot.config[guild_id]["essential_channels"]["bot_channel"])
-                await channel.send(embed=init_embed)
+    for guild_id in bot.config:
+        if guild_id != "bot":
+            await asyncio.sleep(1)
+            guild = bot.get_guild(int(guild_id))
+            channel = guild.get_channel(bot.config[guild_id]["essential_channels"]["bot_channel"])
+            await channel.send(embed=init_embed)
