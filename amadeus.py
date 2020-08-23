@@ -35,6 +35,7 @@ with open("config/bot.json", 'r') as file:
 
 @bot.check
 async def global_check(ctx):
+    # entire global check in its own helper
     return await checks.global_check(ctx, bot)
 
 
@@ -43,6 +44,8 @@ async def on_ready():
     bot.ready = False
     print("Connected to Discord")
     bot.app_info = await bot.application_info()
+
+    # entire startup sequence in its own helper
     await startup.startup_sequence(bot)
 
 
