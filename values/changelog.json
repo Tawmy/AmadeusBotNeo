@@ -3,5 +3,10 @@
         "date": "2020-08-22",
         "acknowledged": true,
         "changes": "- Support for different servers\n- Support for multilingual strings\n- Basic database connection\n\n- setup\n-- required to use bot on server\n-- sets essential configuration options\n-- backs up current configuration when run again\n\n- config\n-- lets users configure every part of the bot\n\n- limits\n-- lets users limit categories and commands\n-- limits based on channels or roles\n-- limits allow for white- and blacklist"
+    },
+    "1.1.0a": {
+        "date": "2020-08-25",
+        "acknowledged": false,
+        "changes": "- New database system\n-- Based on ORM\n-- Automatically creates and upgrades database on startup"
     }
 }
