@@ -126,7 +126,7 @@ async def prepare_command_error_embed_custom(ctx, message, error_config=None):
             string_combination = await strings.insert_into_string([bot.app_info.name], ex_string.description, InsertPosition.LEFT)
             embed.description = string_combination.string_combined
         elif isinstance(message, (ex.CategoryNoWhitelistedRole, ex.CommandNoWhitelistedRole)):
-            if error_config.get("hide_whitelist_role") is not True:
+            if error_config.get("hide_whitelist_roles") is not True:
                 embed.description = await strings.append_roles(ex_string.description[0], message.roles)
             else:
                 embed.description = ex_string.description[0]
