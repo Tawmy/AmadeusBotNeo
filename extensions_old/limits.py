@@ -9,7 +9,7 @@ from components import checks
 from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus, AmadeusMenuResult
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus, AmadeusPromptResult
 from helpers import strings as s, limits, general
-from helpers.config import save_config
+from functions.config.main import save_config
 from helpers.limits import InputData, LimitStep, OuterScope, InnerScope, EditType, ConfigType, LimitStatus, \
     PreparedInput
 

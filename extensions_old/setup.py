@@ -9,10 +9,12 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 from components import checks
-from helpers import strings as s, config as c, limits, general
+from helpers import strings as s, limits, general
+from functions import config as c
 from components.amadeusMenu import AmadeusMenu, AmadeusMenuStatus
 from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
-from helpers.config import ConfigStatus, PreparedInput
+from enums.config import ConfigStatus
+from dataclasses.config import PreparedInput
 from helpers.limits import InputData, OuterScope, InnerScope, EditType, ConfigType
 
 

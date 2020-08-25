@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 import platform
 
 import asyncio
@@ -11,7 +12,8 @@ from discord.ext import commands
 from database import base as db
 from database.base import DatabaseVersionStatus
 from extensions.changelog import save_changelog
-from helpers import strings, config
+from helpers import strings
+from functions import config
 
 
 class DatabaseStatus(Enum):
@@ -135,12 +137,14 @@ async def update_init_embed_extended(bot, update_type, init_embed_extended, valu
 
 async def load_extensions(bot):
     failed = []
-    for extension in bot.config["bot"]["extensions"]:
+
+    subfolders = [f.name for f in os.scandir('extensions') if f.is_dir()]
+    for folder in subfolders:
         try:
-            bot.load_extension("extensions." + extension)
+            bot.load_extension("extensions." + folder + ".commands")
         except (commands.ExtensionNotFound, commands.ExtensionFailed, commands.NoEntryPointError) as exc:
             print(exc)
-            failed.append(extension)
+            failed.append(folder)
         except commands.ExtensionAlreadyLoaded as exc:
             print(exc)
     return failed
