@@ -14,7 +14,7 @@ from helpers import strings as s
 async def ask_for_input(ctx: Context, string: String) -> str:
     prompt = AmadeusPrompt(ctx.bot, string.string)
     await prompt.set_user_specific(True)
-    result = await prompt.show_prompt(ctx, 120)
+    result = await prompt.show_prompt(ctx, 600)
     if result.input is None:
         await prompt.show_result(ctx)
     else:

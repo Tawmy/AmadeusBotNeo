@@ -140,6 +140,8 @@ async def load_extensions(bot):
 
     subfolders = [f.name for f in os.scandir('extensions') if f.is_dir()]
     for folder in subfolders:
+        if "pycache" in folder:
+            continue
         try:
             bot.load_extension("extensions." + folder + ".commands")
         except (commands.ExtensionNotFound, commands.ExtensionFailed, commands.NoEntryPointError) as exc:
