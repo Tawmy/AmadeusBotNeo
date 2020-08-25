@@ -11,9 +11,9 @@ from discord.ext import commands
 
 from database import base as db
 from database.base import DatabaseVersionStatus
-from extensions.changelog import save_changelog
+from extensions.changelog.functions.addchangelog import save_changelog
+from extensions.config.helper import load_values
 from helpers import strings
-from functions import config
 
 
 class DatabaseStatus(Enum):
@@ -152,7 +152,7 @@ async def load_extensions(bot):
 
 async def load_strings_and_values(bot):
     failed_strings = await strings.load_strings(bot)
-    failed_strings.extend(await config.load_values(bot))
+    failed_strings.extend(await load_values(bot))
     return failed_strings
 
 
