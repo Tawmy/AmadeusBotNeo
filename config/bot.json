@@ -1,6 +1,5 @@
 {
     "default_language": "en",
-    "extensions": ["setup", "config", "limits", "changelog", "database"],
     "limits": {
         "no_global_check": ["setup"],
         "no_enable_check": ["config", "limits"],
