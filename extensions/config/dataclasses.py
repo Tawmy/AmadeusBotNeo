@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import discord
 
-from extensions.config.enums import ConfigStep, ReturnType, Datatype, InputType, ConfigStatus
+from extensions.config.enums import ConfigStep, ReturnType, Datatype, InputType, ConfigStatus, SetupType, SetupInputType
 
 
 @dataclass
@@ -35,3 +35,15 @@ class PreparedInput:
     name: str
     list: list = None
     status: ConfigStatus = None
+
+
+@dataclass
+class SetupTypeSelection:
+    message: discord.Message
+    setup_type: SetupType = None
+
+
+@dataclass
+class UserInput:
+    type: SetupInputType = SetupInputType.NONE
+    prepared_input: PreparedInput = None

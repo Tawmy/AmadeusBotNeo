@@ -47,3 +47,22 @@ class InputType(Enum):
     AS_DATATYPE = 1
     AS_VALID_LIST = 2
     TO_BE_CONVERTED = 3
+
+
+class SetupType(Enum):
+    REGULAR = 0
+    FULL_RESET = 1
+    CANCELLED = 2
+
+
+class SetupInputType(Enum):
+    NONE = 0
+    OK = 1
+    WRONG = 2
+    CANCELLED = 3
+
+
+class SetupStatus(Enum):
+    CANCELLED = 0
+    SUCCESSFUL = 1
+    SAVE_FAILED = 2

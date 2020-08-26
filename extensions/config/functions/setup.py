@@ -9,8 +9,8 @@ from components.amadeusPrompt import AmadeusPrompt, AmadeusPromptStatus
 from extensions.config.enums import ConfigStatus
 from extensions.limits.dataclasses import InputData
 from extensions.limits.enums import OuterScope, EditType, InnerScope, ConfigType
-from extensions.setup.dataclasses import SetupTypeSelection, UserInput
-from extensions.setup.enums import SetupType, InputType, SetupStatus
+from extensions.config.dataclasses import SetupTypeSelection, UserInput
+from extensions.config.enums import SetupType, SetupInputType, SetupStatus
 from helpers import strings as s, general
 from extensions.config import helper as c
 from extensions.limits import helper as limits
@@ -72,7 +72,7 @@ async def iterate_config_options(ctx: Context, setup_user: discord.User, message
         for option_key, option_values in ctx.bot.values["options"][category_key]["list"].items():
             if option_values["is_essential"]:
                 user_input = await __ask_for_value(ctx, category_key, option_key, option_values, setup_user, message)
-                if user_input.type == InputType.CANCELLED:
+                if user_input.type == SetupInputType.CANCELLED:
                     return False
                 await c.set_config(ctx, user_input.prepared_input, False)
     return True
@@ -86,20 +86,20 @@ async def __ask_for_value(ctx: Context, c_key: str, o_key: str, o_val: dict, set
     await prompt.set_description(option_strings.description)
     await prompt.set_user_specific(True, setup_user)
     while True:
-        if user_input.type == InputType.WRONG:
+        if user_input.type == SetupInputType.WRONG:
             string = await s.get_string(ctx, "prompt", "error_not_found")
             await prompt.append_description(string.string)
         prompt_data = await prompt.show_prompt(ctx, 120, message)
         if prompt_data.status in [AmadeusPromptStatus.CANCELLED, AmadeusPromptStatus.TIMEOUT]:
-            user_input.type = InputType.CANCELLED
+            user_input.type = SetupInputType.CANCELLED
             break
         prepared_input = await c.prepare_input(ctx, c_key, o_key, prompt_data.input)
         if prepared_input.status == ConfigStatus.PREPARATION_SUCCESSFUL:
             user_input.prepared_input = prepared_input
-            user_input.type = InputType.OK
+            user_input.type = SetupInputType.OK
             break
         else:
-            user_input.type = InputType.WRONG
+            user_input.type = SetupInputType.WRONG
     return user_input
 
 
