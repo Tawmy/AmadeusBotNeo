@@ -198,7 +198,7 @@ async def check_changelog(bot, init_embed, init_embed_extended):
     init_embed.title = embed_title
     init_embed_extended.title = embed_title
 
-    if values[1].get("acknowledged") is False:
+    if values[1].get("acknowledged") is False and bot.config["bot"]["debug"] is False:
         description = "**Changes:**\n"
         description += values[1].get("changes")
         init_embed.description = description
