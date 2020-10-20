@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:13
+    env_file:
+      - ./db/db.env
+    volumes:
+      - db:/var/lib/postgresql/data/
+  bot:
+    build: ./bot
+    env_file:
+      - ./db/db.env
+    environment:
+      DB_IP: db
+    secrets:
+      - bot-token
+    volumes:
+      - bot:/usr/src/app/config
+      - ./bot/src:/src
+volumes:
+  db:
+  bot:
+secrets:
+  bot-token:
+    file: ./bot/token.txt

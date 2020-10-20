@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from logging.config import fileConfig
 from sqlalchemy import create_engine
@@ -42,10 +43,10 @@ def get_url():
     if json_config is None:
         return
     driver = json_config["database"]["driver"]
-    username = json_config["database"]["username"]
-    password = json_config["database"]["password"]
-    address = json_config["database"]["address"]
-    db_name = json_config["database"]["db_name"]
+    username = os.environ['POSTGRES_USER']
+    password = os.environ['POSTGRES_PASSWORD']
+    address = os.environ['DB_IP']
+    db_name = os.environ['POSTGRES_DB']
     url = f"{driver}://{username}:{password}@{address}/{db_name}"
     return url
 
