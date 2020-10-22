@@ -57,7 +57,7 @@ async def startup_sequence(bot):
         await init_message_extended.edit(embed=init_embed_extended)
 
         # Send startup message on all servers
-        if bot.config["bot"]["debug"] is False:
+        if bot.dev_session is False:
             await send_startup_message(bot, init_embed)
 
 
@@ -198,7 +198,7 @@ async def check_changelog(bot, init_embed, init_embed_extended):
     init_embed.title = embed_title
     init_embed_extended.title = embed_title
 
-    if values[1].get("acknowledged") is False and bot.config["bot"]["debug"] is False:
+    if values[1].get("acknowledged") is False and bot.dev_session is False:
         description = "**Changes:**\n"
         description += values[1].get("changes")
         init_embed.description = description

@@ -6,17 +6,21 @@ services:
       - ./db/db.env
     volumes:
       - db:/var/lib/postgresql/data/
+    restart: always
   bot:
     build: ./bot
     env_file:
       - ./db/db.env
     environment:
       DB_IP: db
+      DEV: 0
     secrets:
       - bot-token
     volumes:
-      - bot:/usr/src/app/config
-      - ./bot/src:/src
+      - bot:/bot/src/config
+    depends_on:
+      - db
+    restart: always
 volumes:
   db:
   bot:

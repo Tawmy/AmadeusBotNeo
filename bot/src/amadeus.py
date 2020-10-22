@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+from distutils.util import strtobool
 
 import discord
 from discord.ext import commands
@@ -18,6 +19,7 @@ def get_command_prefix(amadeus, message):
 
 
 bot = commands.Bot(command_prefix=get_command_prefix)
+bot.dev_session = bool(strtobool(os.environ["DEV"]))
 bot.ready = False
 bot.corrupt_configs = []
 bot.app_info = None
