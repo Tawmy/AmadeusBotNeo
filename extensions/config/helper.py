@@ -1,74 +1,14 @@
 import json
 import asyncio
 import shlex
-from dataclasses import dataclass
 from distutils.util import strtobool
-from enum import Enum
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
 from helpers import strings as s, general
-
-
-class ConfigStatus(Enum):
-    OTHER = 0
-    OPTION_DOES_NOT_EXIST = 1
-    CONVERSION_FAILED = 2
-    NOT_IN_VALID_LIST = 3
-    UNKNOWN_DATA_TYPE = 4
-    NOT_VALID_FOR_DATA_TYPE = 5
-    TEXT_CHANNEL_NOT_FOUND = 6
-    ROLE_NOT_FOUND = 7
-    PREPARATION_SUCCESSFUL = 10
-    SAVE_SUCCESS = 11
-    SAVE_FAIL = 12
-
-
-class ReturnType(Enum):
-    DEFAULT_VALUE = 0
-    SERVER_VALUE = 1
-
-
-class Datatype(Enum):
-    CUSTOM = 0
-    BOOLEAN = 1
-    STRING = 2
-    INTEGER = 3
-    ROLE = 4
-    TEXT_CHANNEL = 5
-    VOICE_CHANNEL = 6
-
-
-class InputType(Enum):
-    ANY = 0
-    AS_DATATYPE = 1
-    AS_VALID_LIST = 2
-    TO_BE_CONVERTED = 3
-
-
-@dataclass
-class Config:
-    category: str
-    name: str
-    value: str = None
-    return_type: ReturnType = None
-
-
-@dataclass
-class ValidInput:
-    datatype: Datatype = None
-    valid_list: list = None
-    input_type: InputType = InputType.AS_DATATYPE
-
-
-@dataclass
-class PreparedInput:
-    category: str
-    name: str
-    list: list = None
-    status: ConfigStatus = None
+from extensions.config.dataclasses import PreparedInput, ReturnType, ValidInput, Datatype, Config, InputType, ConfigStatus
 
 
 async def load_values(bot: commands.bot) -> list:

@@ -149,7 +149,7 @@
                 "is_list": false,
                 "is_essential": false
             },
-            "hide_whitelist_role": {
+            "hide_whitelist_roles": {
                 "name": {
                     "en": "Hide Whitelisted Roles",
                     "de": "Verstecke Rollen (Whitelist)"
