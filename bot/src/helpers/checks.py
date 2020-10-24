@@ -12,8 +12,7 @@ async def global_check(ctx: Context, bot, ) -> bool:
         guild_config = await general.deep_get_type(dict, bot.config, str(ctx.guild.id))
 
         # Is bot enabled on server? (set to True during setup)
-        if ctx.command.name not in bot.config["bot"]["limits"]["no_enable_check"]:
-            await check_bot_enabled(ctx, bot, guild_config)
+        await check_bot_enabled(ctx, bot, guild_config)
 
         moderator_skip_enabled = await general.deep_get(bot.config, str(ctx.guild.id), "general", "mods_override_limits")
 
@@ -42,7 +41,7 @@ async def check_bot_enabled(ctx: Context, bot, guild_config: dict):
             raise ex.CorruptConfig
         else:
             raise ex.BotNotConfigured
-    elif bot_status is False:
+    elif bot_status is False and ctx.command.name not in bot.config["bot"]["limits"]["no_enable_check"]:
         raise ex.BotDisabled
 
 
