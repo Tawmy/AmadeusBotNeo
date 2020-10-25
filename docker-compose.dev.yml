@@ -3,8 +3,6 @@ services:
   bot:
     environment:
       DEV: 1
-    volumes:
-    - ./bot/src:/src
   db:
     ports:
       - "5432:5432"

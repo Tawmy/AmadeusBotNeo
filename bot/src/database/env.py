@@ -53,7 +53,7 @@ def get_url():
 
 def get_bot_config():
     json_data = None
-    with open("config/bot.json", 'r') as file:
+    with open("values/config.json", 'r') as file:
         try:
             json_data = json.load(file)
             print("Configuration file loaded successfully into alembic")

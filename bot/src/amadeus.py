@@ -28,7 +28,7 @@ bot.values = {}
 bot.config = {}
 
 
-with open("config/bot.json", 'r') as file:
+with open("values/config.json", 'r') as file:
     try:
         bot.config["bot"] = json.load(file)
         print("Configuration file loaded successfully")

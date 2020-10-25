@@ -1,6 +1,5 @@
 *
 !.gitignore
-!bot.json
 !options.json
 !limits.json
 !backup/
