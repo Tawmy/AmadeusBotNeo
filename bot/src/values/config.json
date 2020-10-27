@@ -5,15 +5,10 @@
         "no_enable_check": ["config", "limits"],
         "no_limits": ["setup", "addchangelog"]
     },
-    "primary_server": {
-        "id": 111111111111111111,
-        "main_channel_id": 111111111111111111
-    },
     "database": {
         "driver": "postgresql",
         "timeout": 5
     },
-    "debug": false,
     "menu_emoji": ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵",
                       "🇶", "🇷", "🇸", "🇹"]
 }

@@ -78,7 +78,7 @@ async def prepare_init_embeds(bot):
 
 
 async def send_init_message_extended(bot, init_message_extended):
-    channel = bot.get_channel(bot.config["bot"]["primary_server"]["main_channel_id"])
+    channel = bot.get_channel(int(os.environ['MAIN_CHANNEL_ID']))
     if channel is not None:
         try:
             return await channel.send(embed=init_message_extended)
