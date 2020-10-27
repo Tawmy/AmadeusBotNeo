@@ -147,8 +147,10 @@ token = ""
 with open("/run/secrets/bot-token") as file:
     token = file.read()
 
+intents = discord.Intents.all()
+
 if token == "":
     print("Could not read token file")
 else:
     print("Connecting to Discord...")
-    bot.run(token, bot=True, reconnect=True)
+    bot.run(token, bot=True, intents=intents, reconnect=True)
