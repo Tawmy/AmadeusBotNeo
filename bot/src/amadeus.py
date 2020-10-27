@@ -18,7 +18,9 @@ def get_command_prefix(amadeus, message):
         return "!"
 
 
-bot = commands.Bot(command_prefix=get_command_prefix)
+intents = discord.Intents.all()
+
+bot = commands.Bot(command_prefix=get_command_prefix, intents=intents)
 bot.dev_session = bool(strtobool(os.environ["DEV"]))
 bot.ready = False
 bot.corrupt_configs = []
@@ -147,10 +149,8 @@ token = ""
 with open("/run/secrets/bot-token") as file:
     token = file.read()
 
-intents = discord.Intents.all()
-
 if token == "":
     print("Could not read token file")
 else:
     print("Connecting to Discord...")
-    bot.run(token, bot=True, intents=intents, reconnect=True)
+    bot.run(token, bot=True, reconnect=True)
