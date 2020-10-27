@@ -145,9 +145,8 @@ async def prepare_command_error_embed_custom(ctx, message, error_config=None):
     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
     return embed
 
-token = ""
-with open("/run/secrets/bot-token") as file:
-    token = file.read()
+with open("/run/secrets/bot-token") as token_file:
+    token = token_file.read()
 
 if token == "":
     print("Could not read token file")
