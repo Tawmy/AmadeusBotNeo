@@ -6,7 +6,12 @@
     },
     "1.1.0a": {
         "date": "2020-08-25",
-        "acknowledged": false,
+        "acknowledged": true,
         "changes": "- New database system\n-- Based on ORM\n-- Automatically creates and upgrades database on startup"
+    },
+    "1.2.0a": {
+        "date": "2020-10-27",
+        "acknowledged": false,
+        "changes": "- Docker\n-- Docker compose\n-- Integrated Postgres database"
     }
 }
