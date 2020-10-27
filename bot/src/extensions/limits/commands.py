@@ -6,7 +6,7 @@ from extensions.limits.dataclasses import InputData
 from extensions.limits.functions import limits
 
 
-class Config(commands.Cog):
+class Limits(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -20,4 +20,4 @@ class Config(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Config(bot))
+    bot.add_cog(Limits(bot))

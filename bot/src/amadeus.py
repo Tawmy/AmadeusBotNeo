@@ -1,5 +1,7 @@
+import os
 import sys
 import json
+from distutils.util import strtobool
 
 import discord
 from discord.ext import commands
@@ -17,6 +19,7 @@ def get_command_prefix(amadeus, message):
 
 
 bot = commands.Bot(command_prefix=get_command_prefix)
+bot.dev_session = bool(strtobool(os.environ["DEV"]))
 bot.ready = False
 bot.corrupt_configs = []
 bot.app_info = None
@@ -25,7 +28,7 @@ bot.values = {}
 bot.config = {}
 
 
-with open("config/bot.json", 'r') as file:
+with open("values/config.json", 'r') as file:
     try:
         bot.config["bot"] = json.load(file)
         print("Configuration file loaded successfully")
@@ -140,6 +143,14 @@ async def prepare_command_error_embed_custom(ctx, message, error_config=None):
     embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url_as(static_format="png"))
     return embed
 
+token = ""
+with open("/run/secrets/bot-token") as file:
+    token = file.read()
 
-print("Connecting to Discord...")
-bot.run(bot.config["bot"]["token"], bot=True, reconnect=True)
+intents = discord.Intents.all()
+
+if token == "":
+    print("Could not read token file")
+else:
+    print("Connecting to Discord...")
+    bot.run(token, bot=True, intents=intents, reconnect=True)

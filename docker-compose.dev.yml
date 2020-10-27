@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  bot:
+    environment:
+      DEV: 1
+  db:
+    ports:
+      - "5432:5433"

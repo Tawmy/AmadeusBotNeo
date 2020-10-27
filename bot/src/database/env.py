@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from logging.config import fileConfig
 from sqlalchemy import create_engine
@@ -42,17 +43,17 @@ def get_url():
     if json_config is None:
         return
     driver = json_config["database"]["driver"]
-    username = json_config["database"]["username"]
-    password = json_config["database"]["password"]
-    address = json_config["database"]["address"]
-    db_name = json_config["database"]["db_name"]
+    username = os.environ['POSTGRES_USER']
+    password = os.environ['POSTGRES_PASSWORD']
+    address = os.environ['DB_IP']
+    db_name = os.environ['POSTGRES_DB']
     url = f"{driver}://{username}:{password}@{address}/{db_name}"
     return url
 
 
 def get_bot_config():
     json_data = None
-    with open("config/bot.json", 'r') as file:
+    with open("values/config.json", 'r') as file:
         try:
             json_data = json.load(file)
             print("Configuration file loaded successfully into alembic")

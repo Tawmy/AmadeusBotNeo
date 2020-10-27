@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 
 from alembic import config, script
@@ -56,9 +57,9 @@ async def validate_session(session):
 
 async def get_url(bot):
     driver = bot.config["bot"]["database"]["driver"]
-    username = bot.config["bot"]["database"]["username"]
-    password = bot.config["bot"]["database"]["password"]
-    address = bot.config["bot"]["database"]["address"]
-    db_name = bot.config["bot"]["database"]["db_name"]
+    username = os.environ['POSTGRES_USER']
+    password = os.environ['POSTGRES_PASSWORD']
+    address = os.environ['DB_IP']
+    db_name = os.environ['POSTGRES_DB']
     url = f"{driver}://{username}:{password}@{address}/{db_name}"
     return url
