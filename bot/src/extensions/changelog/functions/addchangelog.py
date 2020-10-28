@@ -38,11 +38,16 @@ async def ask_for_confirmation(ctx: Context, string_version_number: String, stri
     return result.reaction_index
 
 
-async def add_to_changelog(ctx, version_number: str, changes: str):
+async def add_to_changelog(ctx: Context, version_number: str, changes: str):
     ctx.bot.values["changelog"].setdefault(version_number, {})
     ctx.bot.values["changelog"].get(version_number).setdefault("date", str(date.today()))
     ctx.bot.values["changelog"].get(version_number).setdefault("acknowledged", False)
     ctx.bot.values["changelog"].get(version_number).setdefault("changes", changes)
+
+
+async def ack_all_entries(ctx: Context):
+    for entry in ctx.bot.values["changelog"].values():
+        entry["acknowledged"] = True
 
 
 async def show_result(ctx: Context, added: bool):

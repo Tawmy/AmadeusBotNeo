@@ -54,6 +54,7 @@ class Changelog(commands.Cog):
             return
 
         # if user selected yes, add to changelog and save to json file
+        await addchangelog.ack_all_entries(ctx)
         await addchangelog.add_to_changelog(ctx, version_number, changes)
         await addchangelog.save_changelog(ctx.bot)
         await addchangelog.show_result(ctx, True)
