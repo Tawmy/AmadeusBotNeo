@@ -82,7 +82,8 @@ async def on_command_error(ctx, message):
             if error_config.get("hide_role_errors"):
                 return
         embed = await prepare_command_error_embed_custom(ctx, message, error_config)
-        await ctx.send(embed=embed)
+        if embed is not None:
+            await ctx.send(embed=embed)
 
 
 async def prepare_command_error_embed(ctx, message):
@@ -106,6 +107,10 @@ async def prepare_command_error_embed_custom(ctx, message, error_config=None):
 
     # if exception in strings, use that, otherwise show exception itself
     if not ex_string.successful:
+        enabled_status = await general.deep_get(bot.config, str(ctx.guild.id), "general", "enabled")
+        # TODO remove this bit once CommandNotFound handled differently
+        if enabled_status is not True and ex_string.name == "CommandNotFound":
+            return None
         embed.title = str(message)
     else:
         embed.title = ex_string.message
