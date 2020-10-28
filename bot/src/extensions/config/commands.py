@@ -62,6 +62,7 @@ class Config(commands.Cog):
 
         if setup_status == SetupStatus.SUCCESSFUL:
             embed = await setup_functions.check_bot_permissions(ctx, embed)
+            embed = await setup_functions.add_configured_roles(ctx, embed)
             embed = await setup_functions.add_default_limits_to_embed(ctx, embed)
         elif setup_status == SetupStatus.CANCELLED and setup_type_selection.setup_type == SetupType.REGULAR:
             self.bot.config[str(ctx.guild.id)] = backed_up_config

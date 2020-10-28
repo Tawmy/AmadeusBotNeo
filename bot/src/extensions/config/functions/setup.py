@@ -172,6 +172,20 @@ async def check_bot_permissions(ctx: Context, embed: discord.Embed) -> discord.E
     return embed
 
 
+async def add_configured_roles(ctx: Context, embed: discord.Embed) -> discord.Embed:
+    title = "\u200b"
+    essential_channels_dict = ctx.bot.values["options"]["essential_roles"]
+    extracted_string = await s.extract_config_option_strings(ctx, essential_channels_dict)
+    embed.add_field(name=title, value="**" + extracted_string.name + "**", inline=False)
+
+    for role_key, role_val in ctx.bot.config[str(ctx.guild.id)]["essential_roles"].items():
+        opt_val = ctx.bot.values["options"]["essential_roles"]["list"][role_key]
+        option_strings = await s.extract_config_option_strings(ctx, opt_val)
+        role = ctx.guild.get_role(role_val)
+        embed.add_field(name=option_strings.name, value=role.name)
+    return embed
+
+
 async def add_default_limits_to_embed(ctx: Context, embed: discord.Embed) -> discord.Embed:
     title = "\u200b"
     description_string = await s.get_string(ctx, "setup", "default_limits_description")
