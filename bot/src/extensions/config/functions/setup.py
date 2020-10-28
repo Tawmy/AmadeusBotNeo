@@ -93,7 +93,7 @@ async def __ask_for_value(ctx: Context, c_key: str, o_key: str, o_val: dict, set
         if prompt_data.status in [AmadeusPromptStatus.CANCELLED, AmadeusPromptStatus.TIMEOUT]:
             user_input.type = SetupInputType.CANCELLED
             break
-        prepared_input = await c.prepare_input(ctx, c_key, o_key, prompt_data.input)
+        prepared_input = await c.prepare_input(ctx, c_key, o_key, prompt_data.input, True)
         if prepared_input.status == ConfigStatus.PREPARATION_SUCCESSFUL:
             user_input.prepared_input = prepared_input
             user_input.type = SetupInputType.OK

@@ -156,7 +156,7 @@ async def __convert_to_ids(prepared_input: PreparedInput):
             prepared_input.list[i] = item.id
 
 
-async def prepare_input(ctx: Context, category: str, name: str, user_input) -> PreparedInput:
+async def prepare_input(ctx: Context, category: str, name: str, user_input, no_split: bool = False) -> PreparedInput:
     """
     Checks if input matches type specified in options list.
     Eg checks if valid channel/role, or if given input is part of the option's valid_list.
@@ -171,11 +171,13 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input) -> P
         Name of the config option.
     user_input:
         Input the user provided. Can be str, tuple of strings, bool, or int.
+    no_split: bool
+        Sets whether string should be converted in its entirety rather than automatically splitting it up.
     """
 
     prepared_input = PreparedInput(category, name)
 
-    user_input = await __convert_input_to_list(user_input)
+    user_input = await __convert_input_to_list(user_input, no_split)
     valid_input = await get_valid_input(ctx, category, name)
 
     prepared_input.list = []
@@ -234,8 +236,10 @@ async def save_config(ctx: Context,) -> bool:
     return False
 
 
-async def __convert_input_to_list(user_input) -> list:
+async def __convert_input_to_list(user_input, no_split) -> list:
     # shlex to split string into multiple elements while keeping bracket terms intact
+    if no_split:
+        return [str(user_input)]
     if isinstance(user_input, str):
         return shlex.split(user_input)
     elif isinstance(user_input, tuple):
