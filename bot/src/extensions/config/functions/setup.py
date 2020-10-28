@@ -85,10 +85,12 @@ async def __ask_for_value(ctx: Context, c_key: str, o_key: str, o_val: dict, set
     prompt = AmadeusPrompt(ctx.bot, option_strings.name)
     await prompt.set_description(option_strings.description)
     await prompt.set_user_specific(True, setup_user)
+    error_added = False
     while True:
-        if user_input.type == SetupInputType.WRONG:
+        if user_input.type == SetupInputType.WRONG and error_added is False:
             string = await s.get_string(ctx, "prompt", "error_not_found")
             await prompt.append_description(string.string)
+            error_added = True
         prompt_data = await prompt.show_prompt(ctx, 120, message)
         if prompt_data.status in [AmadeusPromptStatus.CANCELLED, AmadeusPromptStatus.TIMEOUT]:
             user_input.type = SetupInputType.CANCELLED
