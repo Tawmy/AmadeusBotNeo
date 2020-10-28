@@ -11,7 +11,12 @@
     },
     "1.2.0a": {
         "date": "2020-10-27",
-        "acknowledged": false,
+        "acknowledged": true,
         "changes": "- Docker\n-- Docker compose\n-- Integrated Postgres database"
+    },
+    "1.2.1a": {
+        "date": "2020-10-28",
+        "acknowledged": false,
+        "changes": "- Show essential roles in setup result\n- Fix \"not found\" being appended to message each time during setup\n- Fix role names with spaces not being recognised during setup\n- Do not send \"command not found\" error when server not set up"
     }
 }
