@@ -227,7 +227,7 @@ async def __set_default_value(ctx: Context, input_data: InputData):
 
 
 async def __convert_current_value(ctx: Context, category: str, option: str) -> Any:
-    current_value = await helper.get_config(ctx, category, option)
+    current_value = await helper.get_config(category, option, ctx=ctx)
     converted_input = await helper.prepare_input(ctx, category, option, current_value.value)
     if len(converted_input.list) == 1:
         return converted_input.list[0]

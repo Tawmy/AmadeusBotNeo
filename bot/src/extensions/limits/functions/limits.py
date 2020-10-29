@@ -364,7 +364,7 @@ async def __process_input(ctx: Context, input_data: InputData):
 
 async def __save_limits(ctx: Context, input_data: InputData):
     await helper.set_limit(ctx, input_data)
-    if await save_config(ctx):
+    if await save_config(ctx.bot, ctx.guild.id):
         await __show_limit_status(ctx, input_data, LimitStatus.SAVE_SUCCESS)
     else:
         await __show_limit_status(ctx, input_data, LimitStatus.SAVE_FAIL)

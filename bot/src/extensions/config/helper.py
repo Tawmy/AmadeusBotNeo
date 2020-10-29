@@ -5,7 +5,7 @@ from distutils.util import strtobool
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Bot
 
 from helpers import strings as s, general
 from extensions.config.dataclasses import PreparedInput, ReturnType, ValidInput, Datatype, Config, InputType, ConfigStatus
@@ -35,10 +35,11 @@ async def load_values(bot: commands.bot) -> list:
     return failed
 
 
-async def get_config(ctx: Context, category: str, name: str) -> Config:
+async def get_config(category: str, name: str, ctx: Context = None, bot: Bot = None, guild_id: int = None) -> Config:
     """
     Returns value of config item specified for the guild from context.
     Returns default value if not set.
+    Do provide either ctx or bot and guild_id.
 
     Parameters
     -----------
@@ -48,12 +49,21 @@ async def get_config(ctx: Context, category: str, name: str) -> Config:
         Category of the config option.
     name: str
         Name of the config option.
+    bot: Bot, optional
+        Optionally provide this if ctx not available
+    guild_id: int, optional
+        Optionally provide this if ctx not available
     """
+
+    if ctx is not None:
+        bot = ctx.bot
+        guild_id = ctx.guild.id
+
     config = Config(category, name)
-    config_value = await general.deep_get(ctx.bot.config, str(ctx.guild.id), category, name)
+    config_value = await general.deep_get(bot.config, str(guild_id), category, name)
     if config_value is None:
         # TODO what if no default value
-        default_value = await __get_default_config_value(ctx, category, name)
+        default_value = await __get_default_config_value(bot, category, name)
         # Save default value to config
         loop = asyncio.get_event_loop()
         loop.create_task(set_config(ctx, PreparedInput(category, name, [default_value])))
@@ -65,8 +75,8 @@ async def get_config(ctx: Context, category: str, name: str) -> Config:
     return config
 
 
-async def __get_default_config_value(ctx: Context, category: str, name: str) -> str:
-    return await general.deep_get_type(str, ctx.bot.values["options"], category, "list", name, "default")
+async def __get_default_config_value(bot: Bot, category: str, name: str) -> str:
+    return await general.deep_get_type(str, bot.values["options"], category, "list", name, "default")
 
 
 async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
@@ -115,7 +125,7 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
     return valid_input
 
 
-async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool = True):
+async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool = True, bot: Bot = None, guild_id: int = None):
     """
     Sets config value. First checks if it exists at all, then sets it and saves to config file.
     !!! Please run the input through prepare_input first !!!
@@ -128,23 +138,32 @@ async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool 
         Prepared input from prepare_input()
     do_save: Optional[bool]
         Defines if value should be saved to file. Defaults to True.
+    bot: Bot, optional
+        Optionally provide this if ctx not available
+    guild_id: int, optional
+        Optionally provide this if ctx not available
     """
+
+    if ctx is not None:
+        bot = ctx.bot
+        guild_id = ctx.guild.id
+
     await __convert_to_ids(prepared_input)
     if len(prepared_input.list) == 1:
         value = prepared_input.list[0]
     else:
         value = prepared_input.list
-    if await general.deep_get(ctx.bot.values["options"], prepared_input.category, "list", prepared_input.name) is not None:
-        ctx.bot.config[str(ctx.guild.id)].setdefault(prepared_input.category, {})[prepared_input.name] = value
+    if await general.deep_get(bot.values["options"], prepared_input.category, "list", prepared_input.name) is not None:
+        bot.config[str(guild_id)].setdefault(prepared_input.category, {})[prepared_input.name] = value
         if do_save:
-            save_successful = await save_config(ctx)
+            save_successful = await save_config(bot=bot, guild_id=guild_id)
             prepared_input.status = ConfigStatus.SAVE_SUCCESS if save_successful else ConfigStatus.SAVE_FAIL
     else:
         prepared_input.status = ConfigStatus.OPTION_DOES_NOT_EXIST
 
 
 async def set_default_config(ctx: Context, category: str, option: str) -> PreparedInput:
-    default_value = await __get_default_config_value(ctx, category, option)
+    default_value = await __get_default_config_value(ctx.bot, category, option)
     prepared_input = PreparedInput(category, option, [default_value])
     await set_config(ctx, prepared_input)
     return prepared_input
@@ -208,23 +227,27 @@ async def prepare_input(ctx: Context, category: str, name: str, user_input, no_s
     return prepared_input
 
 
-async def save_config(ctx: Context,) -> bool:
+async def save_config(bot: Bot, guild_id) -> bool:
     """
     Saves config of guild from ctx to json file.
+    Provide either context or bot and guild.
 
     Parameters
     -----------
-    ctx: discord.ext.commands.Context
-        Invocation context, needed to determine guild.
+    bot: Bot
+        Bot object to save the config to
+    guild_id: int
+        Guild to save the config from
     """
-    if ctx.guild is not None:
-        json_file = 'config/' + str(ctx.guild.id) + '.json'
+
+    if guild_id is not None:
+        json_file = 'config/' + str(guild_id) + '.json'
         save_status = False
         retries = 4
         while save_status is False and retries > 0:
             file = open(json_file, 'w')
             try:
-                json.dump(ctx.bot.config[str(ctx.guild.id)], file, indent=4)
+                json.dump(bot.config[str(guild_id)], file, indent=4)
                 save_status = True
             except Exception as e:
                 print(e)

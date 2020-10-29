@@ -53,7 +53,7 @@ class Config(commands.Cog):
 
         if all_successful_bool:
             await setup_functions.set_bot_enabled(ctx)
-            save_successful_bool = await c.save_config(ctx)
+            save_successful_bool = await c.save_config(ctx.bot, ctx.guild.id)
             setup_status = SetupStatus.SUCCESSFUL if save_successful_bool else SetupStatus.SAVE_FAILED
         else:
             setup_status = SetupStatus.CANCELLED
