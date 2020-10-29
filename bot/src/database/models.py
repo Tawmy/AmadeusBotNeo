@@ -9,6 +9,11 @@ class MessageEventType(enum.Enum):
     EDIT = 1
 
 
+class NameType(enum.Enum):
+    USERNAME = 0
+    NICKNAME = 1
+
+
 Base = declarative_base()
 
 
@@ -41,3 +46,13 @@ class Avatar(Base):
     user_id = Column(BigInteger, nullable=False)
     set_at = Column(DateTime, nullable=False)
     path = Column(String, nullable=False)
+
+
+class Name(Base):
+    __tablename__ = "name"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, nullable=False)
+    set_at = Column(DateTime, nullable=False)
+    name_type = Column(Enum(NameType), nullable=False)
+    name_before = Column(String, nullable=False)
+    name_after = Column(String, nullable=False)
