@@ -101,10 +101,10 @@
         },
         "default_limits_description": {
             "en": {
-                "neutral": "**The following categories have been limited by default:**"
+                "neutral": "**The following command categories have been limited by default:**"
             },
             "de": {
-                "neutral": "**Die folgenden Kategorien wurden standardmäßig limitiert:**"
+                "neutral": "**Die folgenden Befehls-Kategorien wurden standardmäßig limitiert:**"
             }
         },
         "default_limits_note": {
