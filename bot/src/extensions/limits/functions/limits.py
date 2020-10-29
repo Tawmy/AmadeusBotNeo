@@ -138,15 +138,15 @@ async def __get_edit_type(user_input: str) -> EditType:
 
 
 async def __ask_for_outer_scope(ctx: Context, input_data: InputData):
-    string = await s.get_string(ctx, "limits", "select_outer_scope")
+    string = await s.get_string("limits", "select_outer_scope", ctx)
     menu = AmadeusMenu(ctx.bot, string.string)
     await menu.set_user_specific(True)
 
-    string = await s.get_string(ctx, "limits", "category")
-    string_desc = await s.get_string(ctx, "limits", "category_desc")
+    string = await s.get_string("limits", "category", ctx)
+    string_desc = await s.get_string("limits", "category_desc", ctx)
     await menu.add_option(string.string, string_desc.string)
-    string = await s.get_string(ctx, "limits", "command")
-    string_desc = await s.get_string(ctx, "limits", "command_desc")
+    string = await s.get_string("limits", "command", ctx)
+    string_desc = await s.get_string("limits", "command_desc", ctx)
     await menu.add_option(string.string, string_desc.string)
 
     menu_data = await __show_menu_and_check_result(ctx, menu, input_data)
@@ -166,8 +166,8 @@ async def __ask_for_name(ctx: Context, input_data: InputData):
     else:
         req_title = "command"
         req_description = "input_command"
-    string_title = await s.get_string(ctx, "limits", req_title)
-    string_description = await s.get_string(ctx, "limits", req_description)
+    string_title = await s.get_string("limits", req_title, ctx)
+    string_description = await s.get_string("limits", req_description, ctx)
 
     prompt = AmadeusPrompt(ctx.bot, string_title.string)
     await prompt.set_description(string_description.string)
@@ -192,7 +192,7 @@ async def __add_name_prompt_details(ctx: Context, outer_scope: OuterScope, promp
         cog_list.append(cog.lower())
     if outer_scope == OuterScope.CATEGORY:
         cog_list_str = "\n".join(cog_list)
-        string = await s.get_string(ctx, "limits", "categories")
+        string = await s.get_string("limits", "categories", ctx)
         await prompt.add_field(string.string, cog_list_str)
     if outer_scope == OuterScope.COMMAND:
         cog_with_commands_dict = defaultdict(list)
@@ -208,15 +208,15 @@ async def __ask_for_inner_scope(ctx: Context, input_data: InputData):
     title = await __get_menu_title(ctx, input_data)
     menu = AmadeusMenu(ctx.bot, title)
     await menu.set_user_specific(True)
-    string = await s.get_string(ctx, "limits", "enabled")
-    string_desc = await s.get_string(ctx, "limits", "enabled_desc")
+    string = await s.get_string("limits", "enabled", ctx)
+    string_desc = await s.get_string("limits", "enabled_desc", ctx)
     await menu.add_option(string.string, string_desc.string)
-    string = await s.get_string(ctx, "limits", "role_s")
-    string_desc = await s.get_string(ctx, "limits", "role_desc")
+    string = await s.get_string("limits", "role_s", ctx)
+    string_desc = await s.get_string("limits", "role_desc", ctx)
     await menu.add_option(string.string, string_desc.string)
     if input_data.outer_scope != OuterScope.CATEGORY:
-        string = await s.get_string(ctx, "limits", "channel_s")
-        string_desc = await s.get_string(ctx, "limits", "channel_desc")
+        string = await s.get_string("limits", "channel_s", ctx)
+        string_desc = await s.get_string("limits", "channel_desc", ctx)
         await menu.add_option(string.string, string_desc.string)
     await __add_current_values(ctx, input_data, menu)
 
@@ -239,24 +239,24 @@ async def __ask_for_config_type(ctx: Context, input_data: InputData):
     menu = AmadeusMenu(ctx.bot, title)
     await menu.set_user_specific(True)
 
-    string = await s.get_string(ctx, "limits", "whitelist")
+    string = await s.get_string("limits", "whitelist", ctx)
     req_desc = ""
     if input_data.inner_scope == InnerScope.ROLE:
         req_desc = "whitelist_desc_role"
     elif input_data.inner_scope == InnerScope.CHANNEL:
         req_desc = "whitelist_desc_channel"
     # TODO if req_desc = "" causes exception
-    string_desc = await s.get_string(ctx, "limits", req_desc)
+    string_desc = await s.get_string("limits", req_desc, ctx)
     await menu.add_option(string.string, string_desc.string)
 
-    string = await s.get_string(ctx, "limits", "blacklist")
+    string = await s.get_string("limits", "blacklist", ctx)
     req_desc = ""
     if input_data.inner_scope == InnerScope.ROLE:
         req_desc = "blacklist_desc_role"
     elif input_data.inner_scope == InnerScope.CHANNEL:
         req_desc = "blacklist_desc_channel"
     # TODO if req_desc = "" causes exception
-    string_desc = await s.get_string(ctx, "limits", req_desc)
+    string_desc = await s.get_string("limits", req_desc, ctx)
     await menu.add_option(string.string, string_desc.string)
 
     await __add_current_values(ctx, input_data, menu)
@@ -279,17 +279,17 @@ async def __ask_for_edit_type(ctx: Context, input_data):
 
     await __add_current_values(ctx, input_data, menu)
 
-    string = await s.get_string(ctx, "limits", "add")
-    string_desc = await s.get_string(ctx, "limits", "add_desc")
+    string = await s.get_string("limits", "add", ctx)
+    string_desc = await s.get_string("limits", "add_desc", ctx)
     await menu.add_option(string.string, string_desc.string)
-    string = await s.get_string(ctx, "limits", "remove")
-    string_desc = await s.get_string(ctx, "limits", "remove_desc")
+    string = await s.get_string("limits", "remove", ctx)
+    string_desc = await s.get_string("limits", "remove_desc", ctx)
     await menu.add_option(string.string, string_desc.string)
-    string = await s.get_string(ctx, "limits", "replace")
-    string_desc = await s.get_string(ctx, "limits", "replace_desc")
+    string = await s.get_string("limits", "replace", ctx)
+    string_desc = await s.get_string("limits", "replace_desc", ctx)
     await menu.add_option(string.string, string_desc.string)
-    string = await s.get_string(ctx, "limits", "reset")
-    string_desc = await s.get_string(ctx, "limits", "reset_desc")
+    string = await s.get_string("limits", "reset", ctx)
+    string_desc = await s.get_string("limits", "reset_desc", ctx)
     await menu.add_option(string.string, string_desc.string)
 
     menu_data = await __show_menu_and_check_result(ctx, menu, input_data)
@@ -311,9 +311,9 @@ async def __ask_for_enable(ctx: Context, input_data: InputData):
     menu = AmadeusMenu(ctx.bot, title)
     await menu.set_user_specific(True)
 
-    string = await s.get_string(ctx, "limits", "enable")
+    string = await s.get_string("limits", "enable", ctx)
     await menu.add_option(string.string)
-    string = await s.get_string(ctx, "limits", "disable")
+    string = await s.get_string("limits", "disable", ctx)
     await menu.add_option(string.string)
 
     menu_data = await __show_menu_and_check_result(ctx, menu, input_data)
@@ -331,13 +331,13 @@ async def __ask_for_values(ctx: Context, input_data: InputData):
     prompt = AmadeusPrompt(ctx.bot, title)
     desc_string = None
     if input_data.edit_type == EditType.ADD:
-        desc_string = await s.get_string(ctx, "limits", "add_desc")
+        desc_string = await s.get_string("limits", "add_desc", ctx)
     elif input_data.edit_type == EditType.REMOVE:
-        desc_string = await s.get_string(ctx, "limits", "remove_desc")
+        desc_string = await s.get_string("limits", "remove_desc", ctx)
     elif input_data.edit_type == EditType.REPLACE:
-        desc_string = await s.get_string(ctx, "limits", "replace_desc")
+        desc_string = await s.get_string("limits", "replace_desc", ctx)
     elif input_data.edit_type == EditType.RESET:
-        desc_string = await s.get_string(ctx, "limits", "reset_desc")
+        desc_string = await s.get_string("limits", "reset_desc", ctx)
     if desc_string is not None:
         await prompt.set_description(desc_string.string)
 
@@ -371,7 +371,7 @@ async def __save_limits(ctx: Context, input_data: InputData):
 
 
 async def __get_menu_title(ctx: Context, input_data: InputData) -> str:
-    outer_scope_str = await s.get_string(ctx, "limits", input_data.outer_scope.name.lower())
+    outer_scope_str = await s.get_string("limits", input_data.outer_scope.name.lower(), ctx)
     return input_data.name.capitalize() + " " + outer_scope_str.string
 
 
@@ -387,7 +387,7 @@ async def __add_edit_type_to_title(ctx: Context, input_data: InputData) -> str:
         elif input_data.edit_type == EditType.RESET:
             edit_type = "reset_list"
         if edit_type is not None:
-            string = await s.get_string(ctx, "limits", edit_type)
+            string = await s.get_string("limits", edit_type, ctx)
             return string.string if string is not None else ""
     return ""
 
@@ -395,9 +395,9 @@ async def __add_edit_type_to_title(ctx: Context, input_data: InputData) -> str:
 async def __add_inner_scope_to_title(ctx: Context, input_data: InputData) -> str:
     inner_scope_str = None
     if input_data.inner_scope == InnerScope.ROLE:
-        inner_scope_str = await s.get_string(ctx, "limits", "role")
+        inner_scope_str = await s.get_string("limits", "role", ctx)
     elif input_data.inner_scope == InnerScope.CHANNEL:
-        inner_scope_str = await s.get_string(ctx, "limits", "channel")
+        inner_scope_str = await s.get_string("limits", "channel", ctx)
     if inner_scope_str is not None:
         return inner_scope_str.string
     else:
@@ -407,9 +407,9 @@ async def __add_inner_scope_to_title(ctx: Context, input_data: InputData) -> str
 async def __add_config_type_to_title(ctx: Context, input_data: InputData) -> str:
     config_type_str = None
     if input_data.config_type == ConfigType.WHITELIST:
-        config_type_str = await s.get_string(ctx, "limits", "whitelist")
+        config_type_str = await s.get_string("limits", "whitelist", ctx)
     elif input_data.config_type == ConfigType.BLACKLIST:
-        config_type_str = await s.get_string(ctx, "limits", "blacklist")
+        config_type_str = await s.get_string("limits", "blacklist", ctx)
     if config_type_str is not None:
         return " " + config_type_str.string
     else:
@@ -419,9 +419,9 @@ async def __add_config_type_to_title(ctx: Context, input_data: InputData) -> str
 async def __add_outer_scope_to_title(ctx: Context, input_data: InputData) -> str:
     outer_scope_str = None
     if input_data.outer_scope == OuterScope.CATEGORY:
-        outer_scope_str = await s.get_string(ctx, "limits", "category")
+        outer_scope_str = await s.get_string("limits", "category", ctx)
     elif input_data.outer_scope == OuterScope.COMMAND:
-        outer_scope_str = await s.get_string(ctx, "limits", "command")
+        outer_scope_str = await s.get_string("limits", "command", ctx)
     if outer_scope_str is not None:
         return " " + outer_scope_str.string
     else:
@@ -433,21 +433,21 @@ async def __show_limit_status(ctx: Context, input_data: InputData, status: Limit
     embed = discord.Embed()
     string_desc = None
     if status == LimitStatus.NAME_NOT_FOUND:
-        string = await s.get_string(ctx, "limits_status", "NAME_NOT_FOUND")
+        string = await s.get_string("limits_status", "NAME_NOT_FOUND", ctx)
         if input_data.outer_scope == OuterScope.CATEGORY:
-            string_desc = await s.get_string(ctx, "limits_status", "NAME_NOT_FOUND_DESC_CATEGORY")
+            string_desc = await s.get_string("limits_status", "NAME_NOT_FOUND_DESC_CATEGORY", ctx)
         elif input_data.outer_scope == OuterScope.COMMAND:
-            string_desc = await s.get_string(ctx, "limits_status", "NAME_NOT_FOUND_DESC_COMMAND")
+            string_desc = await s.get_string("limits_status", "NAME_NOT_FOUND_DESC_COMMAND", ctx)
     elif status == LimitStatus.TEXT_CHANNEL_NOT_FOUND:
-        string = await s.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND")
-        string_desc = await s.get_string(ctx, "config_status", "TEXT_CHANNEL_NOT_FOUND_DESC")
+        string = await s.get_string("config_status", "TEXT_CHANNEL_NOT_FOUND", ctx)
+        string_desc = await s.get_string("config_status", "TEXT_CHANNEL_NOT_FOUND_DESC", ctx)
     elif status == LimitStatus.ROLE_NOT_FOUND:
-        string = await s.get_string(ctx, "config_status", "ROLE_NOT_FOUND")
-        string_desc = await s.get_string(ctx, "config_status", "ROLE_NOT_FOUND_DESC")
+        string = await s.get_string("config_status", "ROLE_NOT_FOUND", ctx)
+        string_desc = await s.get_string("config_status", "ROLE_NOT_FOUND_DESC", ctx)
     elif status == LimitStatus.SAVE_SUCCESS:
-        string = await s.get_string(ctx, "limits_status", "SAVE_SUCCESS")
+        string = await s.get_string("limits_status", "SAVE_SUCCESS", ctx)
     else:
-        string = await s.get_string(ctx, "config_status", "OTHER")
+        string = await s.get_string("config_status", "OTHER", ctx)
     embed.title = string.string
     if string_desc is not None and string_desc.successful:
         embed.description = string_desc.string
@@ -508,13 +508,13 @@ async def __check_field_role_blacklist(input_data: InputData) -> bool:
 
 async def __add_field_to_menu(ctx: Context, input_data: InputData, menu: AmadeusMenu, inner_scope: InnerScope,
                               config_type: ConfigType = None):
-    inner_scope_str = await s.get_string(ctx, "limits", inner_scope.name.lower())
+    inner_scope_str = await s.get_string("limits", inner_scope.name.lower(), ctx)
     if inner_scope == InnerScope.ENABLED:
         title = inner_scope_str.string.capitalize()
     else:
         if config_type is None:
             return
-        config_type_str = await s.get_string(ctx, "limits", config_type.name.lower())
+        config_type_str = await s.get_string("limits", config_type.name.lower(), ctx)
         title = inner_scope_str.string.capitalize() + " " + config_type_str.string.capitalize()
     limit_list = await __get_list(ctx, input_data, inner_scope, config_type)
     prepared_input = await helper.prepare_input(ctx, inner_scope, limit_list, True)

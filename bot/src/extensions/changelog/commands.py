@@ -34,8 +34,8 @@ class Changelog(commands.Cog):
     @commands.command(name='addchangelog')
     @commands.is_owner()
     async def addchangelog(self, ctx: Context):
-        string_version_number = await s.get_string(ctx, "changelog", "version_number")
-        string_changes = await s.get_string(ctx, "changelog", "changes")
+        string_version_number = await s.get_string("changelog", "version_number", ctx)
+        string_changes = await s.get_string("changelog", "changes", ctx)
 
         # ask for version number
         version_number = await addchangelog.ask_for_input(ctx, string_version_number)

@@ -23,7 +23,7 @@ async def ask_for_input(ctx: Context, string: String) -> str:
 
 
 async def ask_for_confirmation(ctx: Context, string_version_number: String, string_changes: String, version_number: str, changes: str) -> int:
-    string = await s.get_string(ctx, "changelog", "save")
+    string = await s.get_string("changelog", "save", ctx)
     menu = AmadeusMenu(ctx.bot, string.string)
     await menu.set_user_specific(True)
     await menu.add_option("Yes")
@@ -53,9 +53,9 @@ async def ack_all_entries(ctx: Context):
 async def show_result(ctx: Context, added: bool):
     embed = discord.Embed()
     if added:
-        string = await s.get_string(ctx, "changelog", "added")
+        string = await s.get_string("changelog", "added", ctx)
     else:
-        string = await s.get_string(ctx, "changelog", "not_added")
+        string = await s.get_string("changelog", "not_added", ctx)
     embed.title = string.string
     await ctx.send(embed=embed)
 

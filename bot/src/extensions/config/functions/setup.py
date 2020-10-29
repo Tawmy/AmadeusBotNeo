@@ -17,11 +17,11 @@ from extensions.limits import helper as limits
 
 
 async def prepare_setup_type_selection_menu(ctx: Context, setup_emoji: list) -> AmadeusMenu:
-    string = await s.get_string(ctx, "setup", "setup_title")
+    string = await s.get_string("setup", "setup_title", ctx)
     string_combination = await s.insert_into_string([ctx.bot.app_info.name], [string.string], s.InsertPosition.LEFT)
     title = string_combination.string_combined
 
-    string = await s.get_string(ctx, "setup", "setup_introduction")
+    string = await s.get_string("setup", "setup_introduction", ctx)
     string_combination = await s.insert_into_string([ctx.bot.app_info.name, ctx.bot.app_info.name], string.list)
     description = string_combination.string_combined
 
@@ -30,11 +30,11 @@ async def prepare_setup_type_selection_menu(ctx: Context, setup_emoji: list) -> 
     json_file = str(ctx.guild.id) + '.json'
     if isfile('config/' + json_file):
         shutil.copy('config/' + json_file, 'config/backup/' + json_file)
-        string = await s.get_string(ctx, "setup", "server_configured_before")
+        string = await s.get_string("setup", "server_configured_before", ctx)
         description += string.string
         emoji = [setup_emoji[1], setup_emoji[2]]
     else:
-        string = await s.get_string(ctx, "setup", "setup_confirm_ready")
+        string = await s.get_string("setup", "setup_confirm_ready", ctx)
         description += string.string
         emoji = [setup_emoji[0]]
 
@@ -88,7 +88,7 @@ async def __ask_for_value(ctx: Context, c_key: str, o_key: str, o_val: dict, set
     error_added = False
     while True:
         if user_input.type == SetupInputType.WRONG and error_added is False:
-            string = await s.get_string(ctx, "prompt", "error_not_found")
+            string = await s.get_string("prompt", "error_not_found", ctx)
             await prompt.append_description(string.string)
             error_added = True
         prompt_data = await prompt.show_prompt(ctx, 120, message)
@@ -142,16 +142,16 @@ async def __convert_default_limit(ctx: Context, input_data: InputData):
 async def prepare_status_embed(ctx: Context, setup_status: SetupStatus) -> discord.Embed:
     embed = discord.Embed()
     if setup_status == SetupStatus.SUCCESSFUL:
-        string = await s.get_string(ctx, "setup", "setup_successful")
+        string = await s.get_string("setup", "setup_successful", ctx)
         embed.title = string.string
-        string = await s.get_string(ctx, "setup", "setup_successful_description")
+        string = await s.get_string("setup", "setup_successful_description", ctx)
         string_combination = await s.insert_into_string([ctx.bot.app_info.name], string.list)
         embed.description = string_combination.string_combined
     elif setup_status == SetupStatus.SAVE_FAILED:
-        string = await s.get_string(ctx, "setup", "setup_error_save_config")
+        string = await s.get_string("setup", "setup_error_save_config", ctx)
         embed.title = string.string
     elif setup_status == SetupStatus.CANCELLED:
-        string = await s.get_string(ctx, "setup", "setup_cancelled")
+        string = await s.get_string("setup", "setup_cancelled", ctx)
         embed.title = string.string
     return embed
 
@@ -188,11 +188,11 @@ async def add_configured_roles(ctx: Context, embed: discord.Embed) -> discord.Em
 
 async def add_default_limits_to_embed(ctx: Context, embed: discord.Embed) -> discord.Embed:
     title = "\u200b"
-    description_string = await s.get_string(ctx, "setup", "default_limits_description")
+    description_string = await s.get_string("setup", "default_limits_description", ctx)
     description = description_string.string + "\n"
     for name_key in ctx.bot.values["limits"].get("defaults"):
         description += "• " + name_key + "\n"
-    description_string_note = await s.get_string(ctx, "setup", "default_limits_note")
+    description_string_note = await s.get_string("setup", "default_limits_note", ctx)
     prefix = ctx.bot.config[str(ctx.guild.id)]["general"]["command_prefix"]
     description_note_command = "`" + prefix + "limits`"
     inserted_string = await s.insert_into_string([description_note_command], description_string_note.list)

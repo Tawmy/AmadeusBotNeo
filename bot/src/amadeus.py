@@ -94,7 +94,7 @@ async def prepare_command_error_embed(ctx, message):
         print(message, file=sys.stderr)
         return None
     if hasattr(message.original, "code") and message.original.code == 50013:
-        string = await strings.get_string(ctx, "amadeus", "exception_forbidden")
+        string = await strings.get_string("amadeus", "exception_forbidden", ctx)
         values = [ctx.channel.mention, ctx.author.mention, ctx.command.name]
         string_combination = await strings.insert_into_string(values, string.list)
         embed.description = string_combination.string_combined

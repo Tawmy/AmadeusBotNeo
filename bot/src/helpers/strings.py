@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Bot
 
 from helpers import general
 
@@ -80,9 +80,10 @@ async def load_strings(bot) -> list:
     return failed
 
 
-async def get_string(ctx: Context, category: str, name: str) -> String:
+async def get_string(category: str, name: str, ctx: Context = None, bot: Bot = None, guild_id: int = None) -> String:
     """
     Gets string. First tries to get string in server language, falls back to default language if not found.
+    Do provide either ctx or bot and guild_id.
 
     Parameters
     -----------
@@ -92,16 +93,24 @@ async def get_string(ctx: Context, category: str, name: str) -> String:
         Category of string.
     name: str
         Name of string.
+    bot: Bot, optional
+        Optionally provide this if ctx not available
+    guild_id: int, optional
+        Optionally provide this if ctx not available
     """
 
+    if ctx is not None:
+        bot = ctx.bot
+        guild_id = ctx.guild.id
+
     string = String(category, name)
-    lang = await get_guild_language(ctx, string)
-    style = await get_guild_style(ctx)
-    returned_string = await general.deep_get(ctx.bot.strings, string.category, string.name, lang, style)
+    lang = await get_guild_language(bot=bot, guild_id=guild_id, string=string)
+    style = await get_guild_style(bot, guild_id)
+    returned_string = await general.deep_get(bot.strings, string.category, string.name, lang, style)
     # Get string in default language if nothing found for specified one
     # TODO possibly fall back to default style before falling back to default lang
-    if returned_string is None and lang != ctx.bot.default_language:
-        returned_string = await general.deep_get(ctx.bot.strings, string.category, string.name, ctx.bot.default_language, style)
+    if returned_string is None and lang != bot.default_language:
+        returned_string = await general.deep_get(bot.strings, string.category, string.name, bot.default_language, style)
     if isinstance(returned_string, list):
         string.list = returned_string
     else:
@@ -111,21 +120,30 @@ async def get_string(ctx: Context, category: str, name: str) -> String:
     return string
 
 
-async def get_guild_language(ctx: Context, string: String = None) -> str:
+async def get_guild_language(ctx: Context = None, bot: Bot = None, guild_id: int = None, string: String = None) -> str:
     """
     Gets language for guild.
     Returns default language if run outside of a guild or if guild has no language set.
+    Do provide either ctx or bot and guild_id
 
     Parameters
     -----------
-    ctx: discord.ext.commands.Context
-        Invocation context, needed to determine guild.
-    string: Optional[str]
+    ctx: Context, optional
+        Context object
+    bot: Bot, optional
+        Root bot object
+    guild_id: int, optional
+        ID of guild to get the language from
+    string: str, optional
         Optional String dataclass. If provided, return type in this dataclass object is set.
     """
 
-    if ctx.guild is not None:
-        lang = await general.deep_get(ctx.bot.config, str(ctx.guild.id), "general", "language")
+    if ctx is not None:
+        bot = ctx.bot
+        guild_id = ctx.guild.id
+
+    if guild_id is not None:
+        lang = await general.deep_get(bot.config, str(guild_id), "general", "language")
     else:
         lang = None
     if lang is not None:
@@ -135,30 +153,32 @@ async def get_guild_language(ctx: Context, string: String = None) -> str:
     else:
         if string is not None:
             string.return_type = ReturnType.DEFAULT_LANGUAGE
-        default_language = await general.deep_get(ctx.bot.values["options"], "general", "list", "language", "default")
-        return default_language if default_language is not None else ctx.bot.default_language
+        default_language = await general.deep_get(bot.values["options"], "general", "list", "language", "default")
+        return default_language if default_language is not None else bot.default_language
 
 
-async def get_guild_style(ctx: Context) -> str:
+async def get_guild_style(bot: Bot, guild_id: int) -> str:
     """
     Gets language style for guild.
     Returns default style if run outside of a guild or if guild has no language set.
 
     Parameters
     -----------
-    ctx: discord.ext.commands.Context
-        Invocation context, needed to determine guild.
+    bot: Bot
+        Root bot object
+    guild_id: int
+        ID of the guild to get the style from
     """
 
-    if ctx.guild is not None:
-        style = await general.deep_get(ctx.bot.config, str(ctx.guild.id), "general", "style")
+    if guild_id is not None:
+        style = await general.deep_get(bot.config, str(guild_id), "general", "style")
     else:
         style = None
     if style is not None:
         return style
     else:
         # TODO change default to amadeus once those have been created
-        return ctx.bot.values["options"]["general"]["list"]["style"]["default"]
+        return bot.values["options"]["general"]["list"]["style"]["default"]
 
 
 async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
@@ -175,7 +195,7 @@ async def get_exception_strings(ctx: Context, ex_name: str) -> ExceptionString:
 
     ex_string = ExceptionString(ex_name)
     lang = await get_guild_language(ctx)
-    style = await get_guild_style(ctx)
+    style = await get_guild_style(ctx.bot, ctx.guild.id)
     exception = await general.deep_get(ctx.bot.exception_strings, ex_string.name)
     if exception is not None:
         ex_string.successful = True

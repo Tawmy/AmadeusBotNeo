@@ -96,15 +96,15 @@ class AmadeusPrompt(AmadeusInput):
         string = None
 
         if self.__result.status == AmadeusPromptStatus.INPUT_GIVEN:
-            string = await s.get_string(ctx, "amadeusPromptStatus", "INPUT_GIVEN")
+            string = await s.get_string("amadeusPromptStatus", "INPUT_GIVEN", ctx)
         elif self.__result.status == AmadeusPromptStatus.TIMEOUT:
-            string = await s.get_string(ctx, "amadeusPromptStatus", "TIMEOUT")
+            string = await s.get_string("amadeusPromptStatus", "TIMEOUT", ctx)
         elif self.__result.status == AmadeusPromptStatus.CANCELLED:
-            string = await s.get_string(ctx, "amadeusPromptStatus", "CANCELLED")
+            string = await s.get_string("amadeusPromptStatus", "CANCELLED", ctx)
         elif self.__result.status == AmadeusPromptStatus.SHOWN:
-            string = await s.get_string(ctx, "amadeusPromptStatus", "SHOWN")
+            string = await s.get_string("amadeusPromptStatus", "SHOWN", ctx)
         elif self.__result.status == AmadeusPromptStatus.NEW:
-            string = await s.get_string(ctx, "amadeusPromptStatus", "NEW")
+            string = await s.get_string("amadeusPromptStatus", "NEW", ctx)
         if string is not None:
             self.embed.title = string.string
         await self.__prepare_footer(ctx)
@@ -134,7 +134,7 @@ class AmadeusPrompt(AmadeusInput):
         current_text = self.embed.footer.text
         if current_text is not None and len(current_text) > 0:
             current_text += " | "
-        string = await s.get_string(ctx, "prompt", "cancel")
+        string = await s.get_string("prompt", "cancel", ctx)
         string_combination = await s.insert_into_string(["\"" + self.__cancel_string + "\""], string.list)
         current_text += string_combination.string_combined
         self.embed.set_footer(text=current_text, icon_url=self.embed.footer.icon_url)
