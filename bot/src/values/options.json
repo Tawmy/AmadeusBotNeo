@@ -83,6 +83,209 @@
             }
         }
     },
+    "logs": {
+        "name": {
+            "en": "Logs",
+            "de": "Logs"
+        },
+        "description": {
+            "en": "Configuration regarding log depth",
+            "de": "Konfiguration bezüglich Tiefe der Logs"
+        },
+        "list": {
+            "message_delete_local": {
+                "name": {
+                    "en": "Deleted messages (in channel)",
+                    "de": "Gelöschte Nachrichten (in Kanal)"
+                },
+                "description": {
+                    "en": "Log author, channel, time, and content of deleted messages as a message in your server's log channel or a separate one.",
+                    "de": "Protolliere Autor, Kanal, Zeit, und Inhalt gelöschter Nachrichten als Nachricht im Log-Kanal oder separatem."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "message_delete_channel": {
+                "name": {
+                    "en": "Channel for deleted messages",
+                    "de": "Kanal für gelöschte Nachrichten"
+                },
+                "description": {
+                    "en": "Channel to log deleted messages in (overrides log channel)",
+                    "de": "Kanal zum Protokollieren von gelöschten Nachrichten (überschreibt Log-Kanal)"
+                },
+                "data_type": "channel",
+                "is_list": false,
+                "is_essential": false
+            },
+            "message_delete_database": {
+                "name": {
+                    "en": "Deleted messages (in database)",
+                    "de": "Gelöschte Nachrichten (in Datenbank)"
+                },
+                "description": {
+                    "en": "Log author, channel, time, and content of deleted messages in a database. You can then use advanced search functions on these.",
+                    "de": "Protolliere Autor, Kanal, Zeit, und Inhalt gelöschter Nachrichten in Datenbank. Auf diese Daten können erweiterte Suchfunktionen angewendet werden."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "message_edit_local": {
+                "name": {
+                    "en": "Edited messages (in channel)",
+                    "de": "Editierte Nachrichten (in Kanal)"
+                },
+                "description": {
+                    "en": "Log author, channel, time, and content of edited messages as a message in your server's log channel or a separate one.",
+                    "de": "Protolliere Autor, Kanal, Zeit, und Inhalt editierter Nachrichten als Nachricht im Log-Kanal oder separatem."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "message_edit_channel": {
+                "name": {
+                    "en": "Channel for edited messages",
+                    "de": "Kanal für editierter Nachrichten"
+                },
+                "description": {
+                    "en": "Channel to log edited messages in (overrides log channel)",
+                    "de": "Kanal zum Protokollieren von editierten Nachrichten (überschreibt Log-Kanal)"
+                },
+                "data_type": "channel",
+                "is_list": false,
+                "is_essential": false
+            },
+            "message_edit_database": {
+                "name": {
+                    "en": "Edited messages (in database)",
+                    "de": "Editierte Nachrichten (in Datenbank)"
+                },
+                "description": {
+                    "en": "Log author, channel, time, and content of edited messages in a database. You can then use advanced search functions on these.",
+                    "de": "Protolliere Autor, Kanal, Zeit, und Inhalt editierter Nachrichten in Datenbank. Auf diese Daten können erweiterte Suchfunktionen angewendet werden."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "name_local": {
+                "name": {
+                    "en": "Name changes (in channel)",
+                    "de": "Namensänderungen (in Kanal)"
+                },
+                "description": {
+                    "en": "Log name changes as a message in your server's log channel or a separate one.",
+                    "de": "Protolliere Namensänderungen als Nachricht im Log-Kanal oder separatem."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "name_channel": {
+                "name": {
+                    "en": "Channel for name changes",
+                    "de": "Kanal für Namensänderungen"
+                },
+                "description": {
+                    "en": "Channel to log name changes in (overrides log channel)",
+                    "de": "Kanal zur Protokollierung von Namensänderungen (überschreibt Log-Kanal)"
+                },
+                "data_type": "channel",
+                "is_list": false,
+                "is_essential": false
+            },
+            "name_database": {
+                "name": {
+                    "en": "Name changes (in database)",
+                    "de": "Namensänderungen (in Datenbank)"
+                },
+                "description": {
+                    "en": "Log name changes in a database. You can then use advanced search functions on these.",
+                    "de": "Protokolliere Namensänderungen in Datenbank. Auf diese Daten können erweiterte Suchfunktionen angewendet werden."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "member_join_local": {
+                "name": {
+                    "en": "Server joins (in channel)",
+                    "de": "Server-Beitritte (in Kanal)"
+                },
+                "description": {
+                    "en": "Log server joins as a message in your server's log channel or a separate one.",
+                    "de": "Protolliere Server-Beitritte als Nachricht im Log-Kanal oder separatem."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "member_leave_local": {
+                "name": {
+                    "en": "Server leaves (in channel)",
+                    "de": "Server-Austritte (in Kanal)"
+                },
+                "description": {
+                    "en": "Log server leaves as a message in your server's log channel or a separate one.",
+                    "de": "Protolliere Server-Austritte als Nachricht im Log-Kanal oder separatem."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "member_channel": {
+                "name": {
+                    "en": "Channel for server joins and leaves",
+                    "de": "Kanal für Server-Beitritte und -Austritte"
+                },
+                "description": {
+                    "en": "Channel to log server joins and leaves in (overrides log channel)",
+                    "de": "Kanal zur Protokollierung von Server-Beitrittenund -Austritten (überschreibt Log-Kanal)"
+                },
+                "data_type": "channel",
+                "is_list": false,
+                "is_essential": false
+            },
+            "reactions_local": {
+                "name": {
+                    "en": "Reactions (in channel)",
+                    "de": "Reaktionen (in Kanal)"
+                },
+                "description": {
+                    "en": "Log reactions as a message in your server's log channel or a separate one.",
+                    "de": "Protolliere Reaktionen als Nachricht im Log-Kanal oder separatem."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "reactions_channel": {
+                "name": {
+                    "en": "Channel for reactions",
+                    "de": "Kanal für Reaktionen"
+                },
+                "description": {
+                    "en": "Channel to log reactions in (overrides log channel)",
+                    "de": "Kanal zur Protokollierung von Reaktionen (überschreibt Log-Kanal)"
+                },
+                "data_type": "channel",
+                "is_list": false,
+                "is_essential": false
+            }
+        }
+    },
     "errors": {
         "name": {
             "en": "Error Settings",
