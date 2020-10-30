@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Union
 
 import discord
 
@@ -18,7 +19,7 @@ class InputData:
 class Config:
     category: str
     name: str
-    value: str = None
+    value: Union[str, int] = None
     return_type: ReturnType = None
 
 

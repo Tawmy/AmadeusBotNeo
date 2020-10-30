@@ -819,5 +819,71 @@
                 "neutral": "Der gegebene Befehl konnte nicht gefunden werden. Bitte sicherstellen, dass nicht fälschlicherweise eine Kategorie gegeben wurde."
             }
         }
+    },
+    "logs": {
+        "message_deleted": {
+            "en": {
+                "neutral": "Message deleted"
+            },
+            "de": {
+                "neutral": "Nachricht gelöscht"
+            }
+        },
+        "user": {
+            "en": {
+                "neutral": "User"
+            },
+            "de": {
+                "neutral": "Benutzer"
+            }
+        },
+        "channel": {
+            "en": {
+                "neutral": "Channel"
+            },
+            "de": {
+                "neutral": "Kanal"
+            }
+        },
+        "content": {
+            "en": {
+                "neutral": "Content"
+            },
+            "de": {
+                "neutral": "Inhalt"
+            }
+        },
+        "attachments": {
+            "en": {
+                "neutral": "Attachments"
+            },
+            "de": {
+                "neutral": "Anhänge"
+            }
+        },
+        "embeds": {
+            "en": {
+                "neutral": "Embeds"
+            },
+            "de": {
+                "neutral": "Embeds"
+            }
+        },
+        "mentions": {
+            "en": {
+                "neutral": "Mentions"
+            },
+            "de": {
+                "neutral": "Erwähnungen"
+            }
+        },
+        "attachment_list": {
+            "en": {
+                "neutral": "Attachments list"
+            },
+            "de": {
+                "neutral": "Liste von Anhängen"
+            }
+        }
     }
 }
