@@ -39,8 +39,8 @@ async def __log_cached_local(bot: Bot, payload: RawMessageDeleteEvent, log_chann
     embed = Embed()
     embed = await __add_title(bot, payload, embed)
     embed = await __add_channel(bot, payload, embed)
-    embed = await __add_content(bot, payload, embed)
-    embed = await __add_counts(bot, payload, embed)
+    embed = await __add_content_local(bot, payload, embed)
+    embed = await __add_counts_local(bot, payload, embed)
     embed = await __add_mentions(bot, payload, embed)
     embed = await __add_attachment_list_and_image(bot, payload, embed)
     embed = await __add_footer(payload, embed)
@@ -56,28 +56,12 @@ async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
     db_entry.user_id = payload.cached_message.author.id
     db_entry.created_at = payload.cached_message.created_at
 
-    if payload.cached_message.content is not None and len(payload.cached_message.content) > 0:
-        db_entry.content = payload.cached_message.content
-    else:
-        db_entry.content = str()
-
-    if payload.cached_message.mentions is not None and len(payload.cached_message.mentions) > 0:
-        db_entry.count_mentions = len(payload.cached_message.mentions)
-    else:
-        db_entry.count_mentions = 0
-
-    if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
-        db_entry.count_attachments = len(payload.cached_message.attachments)
-    else:
-        db_entry.count_attachments = 0
-
-    if payload.cached_message.embeds is not None and len(payload.cached_message.embeds) > 0:
-        db_entry.count_embeds = len(payload.cached_message.embeds)
-    else:
-        db_entry.count_embeds = 0
+    db_entry = await __add_content_database(payload, db_entry)
+    db_entry = await __add_counts_database(payload, db_entry)
 
     db_entry.event_type = MessageEventType.DELETE
     db_entry.event_at = datetime.utcnow()
+
     await helper.add_user(bot, payload.cached_message.author.id)
     bot.db_session.add(db_entry)
     bot.db_session.commit()
@@ -101,14 +85,22 @@ async def __add_channel(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) 
     return embed
 
 
-async def __add_content(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
+async def __add_content_local(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
     if payload.cached_message.content is not None and len(payload.cached_message.content) > 0:
         content_title = await s.get_string("logs", "content", bot=bot, guild_id=payload.guild_id)
         embed.add_field(name=content_title.string, value=payload.cached_message.content, inline=False)
     return embed
 
 
-async def __add_counts(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
+async def __add_content_database(payload: RawMessageDeleteEvent, db_entry: Message) -> Message:
+    if payload.cached_message.content is not None and len(payload.cached_message.content) > 0:
+        db_entry.content = payload.cached_message.content
+    else:
+        db_entry.content = str()
+    return db_entry
+
+
+async def __add_counts_local(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
     if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
         attachment_title = await s.get_string("logs", "attachments", bot=bot, guild_id=payload.guild_id)
         embed.add_field(name=attachment_title.string, value=str(len(payload.cached_message.attachments)))
@@ -116,6 +108,22 @@ async def __add_counts(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -
         embeds_title = await s.get_string("logs", "embeds", bot=bot, guild_id=payload.guild_id)
         embed.add_field(name=embeds_title.string, value=str(len(payload.cached_message.embeds)))
     return embed
+
+
+async def __add_counts_database(payload: RawMessageDeleteEvent, db_entry: Message) -> Message:
+    if payload.cached_message.mentions is not None and len(payload.cached_message.mentions) > 0:
+        db_entry.count_mentions = len(payload.cached_message.mentions)
+    else:
+        db_entry.count_mentions = 0
+    if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
+        db_entry.count_attachments = len(payload.cached_message.attachments)
+    else:
+        db_entry.count_attachments = 0
+    if payload.cached_message.embeds is not None and len(payload.cached_message.embeds) > 0:
+        db_entry.count_embeds = len(payload.cached_message.embeds)
+    else:
+        db_entry.count_embeds = 0
+    return db_entry
 
 
 async def __add_mentions(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
