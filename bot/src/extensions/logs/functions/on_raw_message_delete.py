@@ -2,7 +2,8 @@ from datetime import datetime
 from os.path import basename
 from urllib.parse import urlparse
 
-from discord import RawMessageDeleteEvent, TextChannel, Embed
+import discord
+from discord import RawMessageDeleteEvent, TextChannel, Embed, NotFound
 from discord.ext.commands import Bot
 
 from database.models import Message, MessageEventType, Attachment
@@ -64,9 +65,9 @@ async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
     db_entry.event_at = datetime.utcnow()
 
     await helper.add_user(bot, payload.cached_message.author.id)
+    bot.db_session.add(db_entry)
     if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
         await __log_attachments(bot, payload)
-    bot.db_session.add(db_entry)
     bot.db_session.commit()
 
 
@@ -177,4 +178,21 @@ async def __log_attachments(bot: Bot, payload: RawMessageDeleteEvent):
         parsed_url = urlparse(attachment.proxy_url)
         db_entry.filename = basename(parsed_url.path)
         bot.db_session.add(db_entry)
-        # TODO save to file system
+        bot.db_session.flush()
+        await __save_attachment(attachment, db_entry)
+        # TODO handle errors (maybe output message in log channel)
+
+
+async def __save_attachment(attachment: discord.Attachment, db_entry: Attachment) -> bool:
+    path = "files/attachments/" + str(db_entry.id)
+    try:
+        await attachment.save(path, use_cached=True)
+        return True
+    except NotFound:
+        pass
+    try:
+        await attachment.save(path)
+        return True
+    except NotFound:
+        pass
+    return False
