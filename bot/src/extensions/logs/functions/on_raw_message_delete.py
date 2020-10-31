@@ -78,6 +78,7 @@ async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
 
     db_entry.event_type = MessageEventType.DELETE
     db_entry.event_at = datetime.utcnow()
+    await helper.add_user(bot, payload.cached_message.author.id)
     bot.db_session.add(db_entry)
     bot.db_session.commit()
 

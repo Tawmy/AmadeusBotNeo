@@ -85,7 +85,6 @@ async def __get_default_config_value(bot: Bot, category: str, name: str, guild_i
         return str()
 
 
-
 async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
     """
     Checks what type of input and if applicable which specific input must be provided. (eg ["en", "de"] for language)
