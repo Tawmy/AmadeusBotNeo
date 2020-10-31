@@ -1,9 +1,11 @@
 from datetime import datetime
+from os.path import basename
+from urllib.parse import urlparse
 
 from discord import RawMessageDeleteEvent, TextChannel, Embed
 from discord.ext.commands import Bot
 
-from database.models import Message, MessageEventType
+from database.models import Message, MessageEventType, Attachment
 from extensions.config import helper as c
 from extensions.logs import helper
 from helpers import strings as s
@@ -48,7 +50,6 @@ async def __log_cached_local(bot: Bot, payload: RawMessageDeleteEvent, log_chann
 
 
 async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
-    # TODO log attachments sepratately
     db_entry = Message()
     db_entry.id = payload.cached_message.id
     db_entry.guild_id = payload.guild_id
@@ -63,6 +64,8 @@ async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
     db_entry.event_at = datetime.utcnow()
 
     await helper.add_user(bot, payload.cached_message.author.id)
+    if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
+        await __log_attachments(bot, payload)
     bot.db_session.add(db_entry)
     bot.db_session.commit()
 
@@ -165,3 +168,13 @@ async def __add_footer(payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
     icon_url = "https://i.imgur.com/FkOFUCC.png"
     embed.set_footer(text=text, icon_url=icon_url)
     return embed
+
+
+async def __log_attachments(bot: Bot, payload: RawMessageDeleteEvent):
+    for attachment in payload.cached_message.attachments:
+        db_entry = Attachment()
+        db_entry.message_id = payload.cached_message.id
+        parsed_url = urlparse(attachment.proxy_url)
+        db_entry.filename = basename(parsed_url.path)
+        bot.db_session.add(db_entry)
+        # TODO save to file system
