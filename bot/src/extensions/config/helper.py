@@ -63,7 +63,7 @@ async def get_config(category: str, name: str, ctx: Context = None, bot: Bot = N
     config_value = await general.deep_get(bot.config, str(guild_id), category, name)
     if config_value is None:
         # TODO what if no default value
-        default_value = await __get_default_config_value(bot, category, name)
+        default_value = await __get_default_config_value(bot, category, name, guild_id)
         # Save default value to config
         loop = asyncio.get_event_loop()
         loop.create_task(set_config(PreparedInput(category, name, [default_value]), bot=bot, guild_id=guild_id))
@@ -75,8 +75,15 @@ async def get_config(category: str, name: str, ctx: Context = None, bot: Bot = N
     return config
 
 
-async def __get_default_config_value(bot: Bot, category: str, name: str) -> str:
-    return await general.deep_get_type(str, bot.values["options"], category, "list", name, "default")
+async def __get_default_config_value(bot: Bot, category: str, name: str, guild_id: int) -> str:
+    option = await general.deep_get(bot.values["options"], category, "list", name)
+    if option["data_type"] == "channel":
+        return await general.deep_get_type(str, bot.config, str(guild_id), "essential_channels", option["default"])
+    elif option["data_type"] == "role":
+        return await general.deep_get_type(str, bot.config, str(guild_id), "essential_roles", option["default"])
+    else:
+        return str()
+
 
 
 async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:

@@ -116,6 +116,7 @@
                     "en": "Channel to log deleted messages in (overrides log channel)",
                     "de": "Kanal zum Protokollieren von gelöschten Nachrichten (überschreibt Log-Kanal)"
                 },
+                "default": "log_channel",
                 "data_type": "channel",
                 "is_list": false,
                 "is_essential": false
@@ -157,6 +158,7 @@
                     "en": "Channel to log edited messages in (overrides log channel)",
                     "de": "Kanal zum Protokollieren von editierten Nachrichten (überschreibt Log-Kanal)"
                 },
+                "default": "log_channel",
                 "data_type": "channel",
                 "is_list": false,
                 "is_essential": false
@@ -198,6 +200,7 @@
                     "en": "Channel to log name changes in (overrides log channel)",
                     "de": "Kanal zur Protokollierung von Namensänderungen (überschreibt Log-Kanal)"
                 },
+                "default": "log_channel",
                 "data_type": "channel",
                 "is_list": false,
                 "is_essential": false
@@ -253,6 +256,7 @@
                     "en": "Channel to log server joins and leaves in (overrides log channel)",
                     "de": "Kanal zur Protokollierung von Server-Beitrittenund -Austritten (überschreibt Log-Kanal)"
                 },
+                "default": "log_channel",
                 "data_type": "channel",
                 "is_list": false,
                 "is_essential": false
@@ -280,6 +284,7 @@
                     "en": "Channel to log reactions in (overrides log channel)",
                     "de": "Kanal zur Protokollierung von Reaktionen (überschreibt Log-Kanal)"
                 },
+                "default": "log_channel",
                 "data_type": "channel",
                 "is_list": false,
                 "is_essential": false
