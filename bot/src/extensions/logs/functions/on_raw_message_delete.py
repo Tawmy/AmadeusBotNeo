@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from discord import RawMessageDeleteEvent, TextChannel, Embed
 from discord.ext.commands import Bot
 
+from database.models import Message, MessageEventType
 from extensions.config import helper as c
 from extensions.logs import helper
 from helpers import strings as s
@@ -45,7 +48,38 @@ async def __log_cached_local(bot: Bot, payload: RawMessageDeleteEvent, log_chann
 
 
 async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
-    pass
+    # TODO log attachments sepratately
+    db_entry = Message()
+    db_entry.id = payload.cached_message.id
+    db_entry.guild_id = payload.guild_id
+    db_entry.channel_id = payload.channel_id
+    db_entry.user_id = payload.cached_message.author.id
+    db_entry.created_at = payload.cached_message.created_at
+
+    if payload.cached_message.content is not None and len(payload.cached_message.content) > 0:
+        db_entry.content = payload.cached_message.content
+    else:
+        db_entry.content = str()
+
+    if payload.cached_message.mentions is not None and len(payload.cached_message.mentions) > 0:
+        db_entry.count_mentions = len(payload.cached_message.mentions)
+    else:
+        db_entry.count_mentions = 0
+
+    if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
+        db_entry.count_attachments = len(payload.cached_message.attachments)
+    else:
+        db_entry.count_attachments = 0
+
+    if payload.cached_message.embeds is not None and len(payload.cached_message.embeds) > 0:
+        db_entry.count_embeds = len(payload.cached_message.embeds)
+    else:
+        db_entry.count_embeds = 0
+
+    db_entry.event_type = MessageEventType.DELETE
+    db_entry.event_at = datetime.utcnow()
+    bot.db_session.add(db_entry)
+    bot.db_session.commit()
 
 
 async def __get_log_channel(bot: Bot, payload: RawMessageDeleteEvent) -> TextChannel:
