@@ -66,7 +66,7 @@ async def get_config(category: str, name: str, ctx: Context = None, bot: Bot = N
         default_value = await __get_default_config_value(bot, category, name)
         # Save default value to config
         loop = asyncio.get_event_loop()
-        loop.create_task(set_config(ctx, PreparedInput(category, name, [default_value])))
+        loop.create_task(set_config(PreparedInput(category, name, [default_value]), bot=bot, guild_id=guild_id))
         config.value = default_value
         config.return_type = ReturnType.DEFAULT_VALUE
     else:
@@ -125,19 +125,20 @@ async def get_valid_input(ctx: Context, category: str, name: str) -> ValidInput:
     return valid_input
 
 
-async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool = True, bot: Bot = None, guild_id: int = None):
+async def set_config(prepared_input: PreparedInput, do_save: bool = True, ctx: Context = None, bot: Bot = None, guild_id: int = None):
     """
     Sets config value. First checks if it exists at all, then sets it and saves to config file.
     !!! Please run the input through prepare_input first !!!
+    Do provide either ctx or bot and guild_id.
 
     Parameters
     -----------
-    ctx: discord.ext.commands.Context
-        The invocation context.
     prepared_input: PreparedInput
         Prepared input from prepare_input()
     do_save: Optional[bool]
         Defines if value should be saved to file. Defaults to True.
+    ctx: discord.ext.commands.Context, optional
+        The invocation context.
     bot: Bot, optional
         Optionally provide this if ctx not available
     guild_id: int, optional
@@ -163,9 +164,9 @@ async def set_config(ctx: Context, prepared_input: PreparedInput, do_save: bool 
 
 
 async def set_default_config(ctx: Context, category: str, option: str) -> PreparedInput:
-    default_value = await __get_default_config_value(ctx.bot, category, option)
+    default_value = await __get_default_config_value(ctx.bot, category, option, ctx.guild.id)
     prepared_input = PreparedInput(category, option, [default_value])
-    await set_config(ctx, prepared_input)
+    await set_config(prepared_input, ctx=ctx)
     return prepared_input
 
 

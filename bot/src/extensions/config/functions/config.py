@@ -256,7 +256,7 @@ async def check_value_data(ctx: Context, input_data: InputData):
     if prepared_input.status != ConfigStatus.PREPARATION_SUCCESSFUL:
         await __show_config_status(ctx, input_data.message, prepared_input.status)
         return
-    await helper.set_config(ctx, prepared_input)
+    await helper.set_config(prepared_input, ctx=ctx)
     await __show_config_status(ctx, input_data.message, prepared_input.status)
 
 

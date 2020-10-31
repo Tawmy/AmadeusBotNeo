@@ -74,7 +74,7 @@ async def iterate_config_options(ctx: Context, setup_user: discord.User, message
                 user_input = await __ask_for_value(ctx, category_key, option_key, option_values, setup_user, message)
                 if user_input.type == SetupInputType.CANCELLED:
                     return False
-                await c.set_config(ctx, user_input.prepared_input, False)
+                await c.set_config(user_input.prepared_input, False, ctx)
     return True
 
 
@@ -205,4 +205,4 @@ async def set_bot_enabled(ctx: Context):
     prepared_input = await c.prepare_input(ctx, "general", "enabled", True)
     if str(ctx.guild.id) in ctx.bot.corrupt_configs:
         ctx.bot.corrupt_configs.remove(str(ctx.guild.id))
-    await c.set_config(ctx, prepared_input, False)
+    await c.set_config(prepared_input, False, ctx)
