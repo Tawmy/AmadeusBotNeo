@@ -7,12 +7,9 @@ from helpers import strings as s
 
 
 async def log(bot: Bot, payload: RawMessageDeleteEvent):
-    if not await c.get_config("logs", "message_delete", bot=bot, guild_id=payload.guild_id):
-        return
-
     if await c.get_config("logs", "message_delete_local", bot=bot, guild_id=payload.guild_id):
-        channel_config = await c.get_config("logs", "message_delete_chafnnel", bot=bot, guild_id=payload.guild_id)
-        if channel_config.value is not None and len(channel_config.value) > 0:
+        channel_config = await c.get_config("logs", "message_delete_channel", bot=bot, guild_id=payload.guild_id)
+        if channel_config.value is not None:
             channel = bot.get_channel(int(channel_config.value))
             if channel is None:
                 # fall back to log channel if configured channel not found
@@ -26,8 +23,9 @@ async def log(bot: Bot, payload: RawMessageDeleteEvent):
             else:
                 await __log_not_cached(bot, payload, channel)
 
-    if await c.get_config("logs", "message_delete_database", bot=bot, guild_id=payload.guild_id):
-        await __log_cached_database(bot, payload)
+    if payload.cached_message is not None:
+        if await c.get_config("logs", "message_delete_database", bot=bot, guild_id=payload.guild_id):
+            await __log_cached_database(bot, payload)
 
 
 async def __log_not_cached(bot: Bot, payload: RawMessageDeleteEvent, channel):
@@ -36,19 +34,13 @@ async def __log_not_cached(bot: Bot, payload: RawMessageDeleteEvent, channel):
 
 async def __log_cached_local(bot: Bot, payload: RawMessageDeleteEvent, log_channel: TextChannel):
     embed = Embed()
-    title = await s.get_string("logs", "message_deleted", bot=bot, guild_id=payload.guild_id)
-    embed.title = title.string
-
-    channel_title = await s.get_string("logs", "channel", bot=bot, guild_id=payload.guild_id)
-    channel = bot.get_channel(payload.channel_id)
-    embed.add_field(name=channel_title.string, value=channel.mention)
-
+    embed = await __add_title(bot, payload, embed)
+    embed = await __add_channel(bot, payload, embed)
+    embed = await __add_content(bot, payload, embed)
     embed = await __add_counts(bot, payload, embed)
     embed = await __add_mentions(bot, payload, embed)
     embed = await __add_attachment_list_and_image(bot, payload, embed)
-
-    embed.set_footer(text=payload.cached_message.created_at.replace(microsecond=0), icon_url="https://i.imgur.com/FkOFUCC.png")
-
+    embed = await __add_footer(payload, embed)
     await log_channel.send(embed=embed)
 
 
@@ -61,10 +53,27 @@ async def __get_log_channel(bot: Bot, payload: RawMessageDeleteEvent) -> TextCha
     return bot.get_channel(log_channel_id.value)
 
 
-async def __add_counts(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
+async def __add_title(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
+    title = await s.get_string("logs", "message_deleted", bot=bot, guild_id=payload.guild_id)
+    embed.title = title.string
+    return embed
+
+
+async def __add_channel(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
+    channel_title = await s.get_string("logs", "channel", bot=bot, guild_id=payload.guild_id)
+    channel = bot.get_channel(payload.channel_id)
+    embed.add_field(name=channel_title.string, value=channel.mention)
+    return embed
+
+
+async def __add_content(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
     if payload.cached_message.content is not None and len(payload.cached_message.content) > 0:
         content_title = await s.get_string("logs", "content", bot=bot, guild_id=payload.guild_id)
         embed.add_field(name=content_title.string, value=payload.cached_message.content, inline=False)
+    return embed
+
+
+async def __add_counts(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
     if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
         attachment_title = await s.get_string("logs", "attachments", bot=bot, guild_id=payload.guild_id)
         embed.add_field(name=attachment_title.string, value=str(len(payload.cached_message.attachments)))
@@ -105,4 +114,11 @@ async def __add_attachment_list_and_image(bot: Bot, payload: RawMessageDeleteEve
                 image_url = inner_embed.url
     if image_is_set:
         embed.set_image(url=image_url)
+    return embed
+
+
+async def __add_footer(payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
+    text = payload.cached_message.created_at.replace(microsecond=0)
+    icon_url = "https://i.imgur.com/FkOFUCC.png"
+    embed.set_footer(text=text, icon_url=icon_url)
     return embed
