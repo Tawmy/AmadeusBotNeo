@@ -16,26 +16,34 @@ async def log(bot: Bot, payload: RawMessageDeleteEvent):
     if await c.get_config("logs", "message_delete_local", bot=bot, guild_id=payload.guild_id):
         channel_config = await c.get_config("logs", "message_delete_channel", bot=bot, guild_id=payload.guild_id)
         if channel_config.value is not None:
-            channel = bot.get_channel(int(channel_config.value))
-            if channel is None:
+            log_channel = bot.get_channel(int(channel_config.value))
+            if log_channel is None:
                 # fall back to log channel if configured channel not found
-                channel = await __get_log_channel(bot, payload)
+                log_channel = await __get_log_channel(bot, payload)
         else:
-            channel = await __get_log_channel(bot, payload)
+            log_channel = await __get_log_channel(bot, payload)
 
-        if channel is not None:
+        if log_channel is not None:
             if payload.cached_message is not None:
-                await __log_cached_local(bot, payload, channel)
+                await __log_cached_local(bot, payload, log_channel)
             else:
-                await __log_not_cached(bot, payload, channel)
+                await __log_not_cached(bot, payload, log_channel)
 
     if payload.cached_message is not None:
         if await c.get_config("logs", "message_delete_database", bot=bot, guild_id=payload.guild_id):
             await __log_cached_database(bot, payload)
 
 
-async def __log_not_cached(bot: Bot, payload: RawMessageDeleteEvent, channel):
-    pass
+async def __log_not_cached(bot: Bot, payload: RawMessageDeleteEvent, log_channel: TextChannel):
+    embed = Embed()
+    title = await s.get_string("logs", "message_deleted", bot=bot, guild_id=payload.guild_id)
+    embed.title = title.string
+    description = await s.get_string("logs", "message_deleted_unknown_description", bot=bot, guild_id=payload.guild_id)
+    embed.description = description.string
+    channel = bot.get_channel(payload.channel_id)
+    channel_title = await s.get_string("logs", "channel", bot=bot, guild_id=payload.guild_id)
+    embed.add_field(name=channel_title.string, value=channel.mention)
+    await log_channel.send(embed=embed)
 
 
 async def __log_cached_local(bot: Bot, payload: RawMessageDeleteEvent, log_channel: TextChannel):

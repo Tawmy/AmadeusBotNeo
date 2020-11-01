@@ -829,6 +829,14 @@
                 "neutral": "Nachricht gelöscht"
             }
         },
+        "message_deleted_unknown_description": {
+            "en": {
+                "neutral": "A non-cached message has been deleted. This means no details about it are available. This tends to happen for older messages."
+            },
+            "de": {
+                "neutral": "Eine nicht zwischengespeicherte Nachricht wurde gelöscht, weswegen keine Details über diese verfügbar sind. Dies passiert für gewöhnlich bei älteren Nachrichten."
+            }
+        },
         "user": {
             "en": {
                 "neutral": "User"
