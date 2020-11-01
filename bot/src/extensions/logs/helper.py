@@ -1,6 +1,13 @@
+from discord import TextChannel
 from discord.ext.commands import Bot
 
 from database.models import User
+from extensions.config import helper as c
+
+
+async def get_log_channel(bot: Bot, guild_id: int) -> TextChannel:
+    log_channel_id = await c.get_config("essential_channels", "log_channel", bot=bot, guild_id=guild_id)
+    return bot.get_channel(log_channel_id.value)
 
 
 async def is_image(url) -> bool:

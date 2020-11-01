@@ -19,9 +19,9 @@ async def log(bot: Bot, payload: RawMessageDeleteEvent):
             log_channel = bot.get_channel(int(channel_config.value))
             if log_channel is None:
                 # fall back to log channel if configured channel not found
-                log_channel = await __get_log_channel(bot, payload)
+                log_channel = await helper.get_log_channel(bot, payload.guild_id)
         else:
-            log_channel = await __get_log_channel(bot, payload)
+            log_channel = await helper.get_log_channel(bot, payload.guild_id)
 
         if log_channel is not None:
             if payload.cached_message is not None:
@@ -49,6 +49,7 @@ async def __log_not_cached(bot: Bot, payload: RawMessageDeleteEvent, log_channel
 async def __log_cached_local(bot: Bot, payload: RawMessageDeleteEvent, log_channel: TextChannel):
     embed = Embed()
     embed = await __add_title(bot, payload, embed)
+    embed = await __add_author(bot, payload, embed)
     embed = await __add_channel(bot, payload, embed)
     embed = await __add_content_local(bot, payload, embed)
     embed = await __add_counts_local(bot, payload, embed)
@@ -79,14 +80,15 @@ async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
     bot.db_session.commit()
 
 
-async def __get_log_channel(bot: Bot, payload: RawMessageDeleteEvent) -> TextChannel:
-    log_channel_id = await c.get_config("essential_channels", "log_channel", bot=bot, guild_id=payload.guild_id)
-    return bot.get_channel(log_channel_id.value)
-
-
 async def __add_title(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
     title = await s.get_string("logs", "message_deleted", bot=bot, guild_id=payload.guild_id)
     embed.title = title.string
+    return embed
+
+
+async def __add_author(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed):
+    title = await s.get_string("logs", "user", bot=bot, guild_id=payload.guild_id)
+    embed.add_field(name=title.string, value=payload.cached_message.author.mention)
     return embed
 
 
