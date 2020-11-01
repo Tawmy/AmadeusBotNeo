@@ -3,8 +3,10 @@ from discord.ext.commands import Bot
 from database.models import User
 
 
-async def is_image(url: str) -> bool:
+async def is_image(url) -> bool:
     # TODO check which image types are supported
+    if not isinstance(url, str):
+        return False
     if url[-4:] in [".jpg", ".png"]:
         return True
     if url[-5:] in [".jpeg", ".webp"]:
