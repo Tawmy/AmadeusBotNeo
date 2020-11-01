@@ -837,6 +837,14 @@
                 "neutral": "Eine nicht zwischengespeicherte Nachricht wurde gelöscht, weswegen keine Details über diese verfügbar sind. Dies passiert für gewöhnlich bei älteren Nachrichten."
             }
         },
+        "message_edited": {
+            "en": {
+                "neutral": "Message edited"
+            },
+            "de": {
+                "neutral": "Nachricht bearbeitet"
+            }
+        },
         "user": {
             "en": {
                 "neutral": "User"
@@ -891,6 +899,38 @@
             },
             "de": {
                 "neutral": "Liste von Anhängen"
+            }
+        },
+        "message": {
+            "en": {
+                "neutral": "Message"
+            },
+            "de": {
+                "neutral": "Nachricht"
+            }
+        },
+        "link": {
+            "en": {
+                "neutral": "Link"
+            },
+            "de": {
+                "neutral": "Link"
+            }
+        },
+        "content_new": {
+            "en": {
+                "neutral": "Content (after)"
+            },
+            "de": {
+                "neutral": "Inhalt (nach)"
+            }
+        },
+        "content_old": {
+            "en": {
+                "neutral": "Content (before)"
+            },
+            "de": {
+                "neutral": "Inhalt (vor)"
             }
         }
     }
