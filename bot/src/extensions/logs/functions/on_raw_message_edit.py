@@ -1,7 +1,11 @@
+from datetime import datetime
+
+import discord
 from ciso8601 import parse_datetime
-from discord import RawMessageUpdateEvent, TextChannel, Embed, Message
+from discord import RawMessageUpdateEvent, TextChannel, Embed
 from discord.ext.commands import Bot
 
+from database.models import Message, MessageEventType
 from extensions.config import helper as c
 from extensions.logs import helper
 from helpers import strings as s
@@ -21,6 +25,8 @@ async def log(bot: Bot, payload: RawMessageUpdateEvent):
 
         if log_channel is not None:
             await __log_local(bot, payload, log_channel, guild_id)
+    if await c.get_config("logs", "message_edit_database", bot=bot, guild_id=guild_id):
+        await __log_database(bot, payload, guild_id)
 
 
 async def __log_local(bot: Bot, payload: RawMessageUpdateEvent, log_channel: TextChannel, guild_id: int):
@@ -36,7 +42,28 @@ async def __log_local(bot: Bot, payload: RawMessageUpdateEvent, log_channel: Tex
     await log_channel.send(embed=embed)
 
 
-async def __fetch_message(bot: Bot, payload: RawMessageUpdateEvent) -> Message:
+async def __log_database(bot: Bot, payload: RawMessageUpdateEvent, guild_id: int):
+    db_entry = Message()
+    db_entry = await __add_general_data_database(payload, db_entry)
+
+    if payload.cached_message is not None:
+        db_entry = await __add_cached_data_database(payload, db_entry)
+    else:
+        status, db_entry = await __add_dict_data_database(payload, db_entry)
+        if status is False:
+            return
+
+    status, db_entry = await __add_counts_from_dict_database(payload, db_entry)
+    if status is False:
+        return
+
+    await helper.add_user_to_db(bot, db_entry.user_id)
+    # TODO modify if already exist
+    bot.db_session.add(db_entry)
+    bot.db_session.commit()
+
+
+async def __fetch_message(bot: Bot, payload: RawMessageUpdateEvent) -> discord.Message:
     message = None
     if payload.cached_message is None:
         message_id = payload.data.get("id")
@@ -97,3 +124,61 @@ async def __add_footer(payload: RawMessageUpdateEvent, embed: Embed):
             icon_url = "https://i.imgur.com/FkOFUCC.png"
             embed.set_footer(text=str(text), icon_url=icon_url)
     return embed
+
+
+async def __add_general_data_database(payload: RawMessageUpdateEvent, db_entry: Message) -> Message:
+    db_entry.id = payload.message_id
+    db_entry.channel_id = payload.channel_id
+    db_entry.event_type = MessageEventType.EDIT
+    db_entry.event_at = datetime.utcnow()
+    return db_entry
+
+
+async def __add_cached_data_database(payload: RawMessageUpdateEvent, db_entry: Message) -> Message:
+    db_entry.guild_id = payload.cached_message.guild.id
+    user_id = payload.cached_message.author.id
+    db_entry.user_id = user_id
+    db_entry.created_at = payload.cached_message.created_at
+    db_entry.count_mentions = len(payload.cached_message.mentions) if payload.cached_message.mentions is not None else 0
+    db_entry.count_attachments = len(
+        payload.cached_message.attachments) if payload.cached_message.attachments is not None else 0
+    db_entry.count_embeds = len(payload.cached_message.embeds) if payload.cached_message.embeds is not None else 0
+    db_entry.before = payload.cached_message.content if payload.cached_message.content is not None else str()
+    return db_entry
+
+
+async def __add_dict_data_database(payload: RawMessageUpdateEvent, db_entry: Message) -> [bool, Message]:
+    if payload.data.get("guild_id") is not None:
+        db_entry.guild_id = payload.data["guild_id"]
+    else:
+        return False, db_entry
+    if payload.data.get("author", {}).get("id") is not None:
+        user_id = payload.data["author"]["id"]
+        db_entry.user_id = user_id
+    else:
+        return False, db_entry
+    if payload.data.get("timestamp") is not None:
+        db_entry.created_at = parse_datetime(payload.data["timestamp"])
+    else:
+        return False, db_entry
+    return True, db_entry
+
+
+async def __add_counts_from_dict_database(payload: RawMessageUpdateEvent, db_entry: Message) -> [bool, Message]:
+    if payload.data.get("content") is not None:
+        db_entry.content = payload.data["content"]
+    else:
+        return False, db_entry
+    if payload.data.get("mentions") is not None:
+        db_entry.count_mentions = len(payload.data["mentions"])
+    elif db_entry.count_mentions is None:
+        return False, db_entry
+    if payload.data.get("attachments") is not None:
+        db_entry.count_attachments = len(payload.data["attachments"])
+    elif db_entry.count_attachments is None:
+        return False, db_entry
+    if payload.data.get("embeds") is not None:
+        db_entry.count_embeds = len(payload.data["embeds"])
+    elif db_entry.count_embeds is None:
+        return False
+    return True, db_entry

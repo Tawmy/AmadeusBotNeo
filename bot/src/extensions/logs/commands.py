@@ -21,7 +21,6 @@ class Logs(commands.Cog):
             author_id = payload.data.get("author", {}).get("id")
             if author_id is not None and int(author_id) == self.bot.app_info.id:
                 return
-
         if self.bot.ready and "guild_id" in payload.data and payload.data["guild_id"] is not None and len(payload.data["guild_id"]) > 0:
             await on_raw_message_edit.log(self.bot, payload)
 
