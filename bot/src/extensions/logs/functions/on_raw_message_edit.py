@@ -58,9 +58,7 @@ async def __log_database(bot: Bot, payload: RawMessageUpdateEvent, guild_id: int
         return
 
     await helper.add_user_to_db(bot, db_entry.user_id)
-    # TODO modify if already exist
-    bot.db_session.add(db_entry)
-    bot.db_session.commit()
+    await __save_to_database(bot, db_entry)
 
 
 async def __fetch_message(bot: Bot, payload: RawMessageUpdateEvent) -> discord.Message:
@@ -182,3 +180,17 @@ async def __add_counts_from_dict_database(payload: RawMessageUpdateEvent, db_ent
     elif db_entry.count_embeds is None:
         return False
     return True, db_entry
+
+
+async def __save_to_database(bot: Bot, db_entry: Message):
+    db_object = bot.db_session.query(Message).filter_by(id=db_entry.id).first()
+    if db_object:
+        db_object.before = db_entry.before if db_entry.before is not None else db_object.content
+        db_object.content = db_entry.content
+        db_object.count_mentions = db_entry.count_mentions
+        db_object.count_attachments = db_entry.count_attachments
+        db_object.count_embeds = db_entry.count_embeds
+        db_object.event_at = db_entry.event_at
+    else:
+        bot.db_session.add(db_entry)
+    bot.db_session.commit()
