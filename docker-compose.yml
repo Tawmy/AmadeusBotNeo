@@ -18,13 +18,15 @@ services:
     secrets:
       - bot-token
     volumes:
-      - bot:/usr/src/bot/config
+      - bot_config:/usr/src/bot/config
+      - bot_files:/usr/src/bot/files
     depends_on:
       - db
     restart: always
 volumes:
   db:
-  bot:
+  bot_config:
+  bot_files:
 secrets:
   bot-token:
     file: ./bot/token.txt
