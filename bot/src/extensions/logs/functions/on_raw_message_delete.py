@@ -48,14 +48,14 @@ async def __log_not_cached(bot: Bot, payload: RawMessageDeleteEvent, log_channel
 
 async def __log_cached_local(bot: Bot, payload: RawMessageDeleteEvent, log_channel: TextChannel):
     embed = Embed()
-    embed = await __add_title(bot, payload, embed)
-    embed = await __add_author(bot, payload, embed)
-    embed = await __add_channel(bot, payload, embed)
+    embed = await helper.add_title(bot, embed, payload.guild_id, "message_deleted")
+    embed = await helper.add_author(bot, embed, payload.cached_message, payload.guild_id)
+    embed = await helper.add_channel(bot, embed, payload.guild_id, payload.channel_id)
     embed = await __add_content_local(bot, payload, embed)
     embed = await __add_counts_local(bot, payload, embed)
     embed = await __add_mentions(bot, payload, embed)
     embed = await __add_attachment_list_and_image(bot, payload, embed)
-    embed = await __add_footer(payload, embed)
+    embed = await helper.add_footer(payload.cached_message, embed)
     await log_channel.send(embed=embed)
 
 
@@ -73,37 +73,11 @@ async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
     db_entry.event_type = MessageEventType.DELETE
     db_entry.event_at = datetime.utcnow()
 
-    await helper.add_user(bot, payload.cached_message.author.id)
+    await helper.add_user_to_db(bot, payload.cached_message.author.id)
     bot.db_session.add(db_entry)
     if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
         await __log_attachments(bot, payload)
     bot.db_session.commit()
-
-
-async def __add_title(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
-    title = await s.get_string("logs", "message_deleted", bot=bot, guild_id=payload.guild_id)
-    embed.title = title.string
-    return embed
-
-
-async def __add_author(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed):
-    title = await s.get_string("logs", "user", bot=bot, guild_id=payload.guild_id)
-    embed.add_field(name=title.string, value=payload.cached_message.author.mention)
-    return embed
-
-
-async def __add_channel(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
-    channel_title = await s.get_string("logs", "channel", bot=bot, guild_id=payload.guild_id)
-    channel = bot.get_channel(payload.channel_id)
-    embed.add_field(name=channel_title.string, value=channel.mention)
-    return embed
-
-
-async def __add_content_local(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
-    if payload.cached_message.content is not None and len(payload.cached_message.content) > 0:
-        content_title = await s.get_string("logs", "content", bot=bot, guild_id=payload.guild_id)
-        embed.add_field(name=content_title.string, value=payload.cached_message.content, inline=False)
-    return embed
 
 
 async def __add_content_database(payload: RawMessageDeleteEvent, db_entry: Message) -> Message:
@@ -112,6 +86,13 @@ async def __add_content_database(payload: RawMessageDeleteEvent, db_entry: Messa
     else:
         db_entry.content = str()
     return db_entry
+
+
+async def __add_content_local(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
+    if payload.cached_message.content is not None and len(payload.cached_message.content) > 0:
+        content_title = await s.get_string("logs", "content", bot=bot, guild_id=payload.guild_id)
+        embed.add_field(name=content_title.string, value=payload.cached_message.content, inline=False)
+    return embed
 
 
 async def __add_counts_local(bot: Bot, payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
@@ -171,13 +152,6 @@ async def __add_attachment_list_and_image(bot: Bot, payload: RawMessageDeleteEve
                 image_url = inner_embed.url
     if image_is_set:
         embed.set_image(url=image_url)
-    return embed
-
-
-async def __add_footer(payload: RawMessageDeleteEvent, embed: Embed) -> Embed:
-    text = payload.cached_message.created_at.replace(microsecond=0)
-    icon_url = "https://i.imgur.com/FkOFUCC.png"
-    embed.set_footer(text=text, icon_url=icon_url)
     return embed
 
 
