@@ -59,6 +59,7 @@ async def __log_database(bot: Bot, payload: RawMessageUpdateEvent, guild_id: int
 
     await helper.add_user_to_db(bot, db_entry.user_id)
     await __save_to_database(bot, db_entry)
+    bot.db_session.commit()
 
 
 async def __fetch_message(bot: Bot, payload: RawMessageUpdateEvent) -> discord.Message:
@@ -193,4 +194,3 @@ async def __save_to_database(bot: Bot, db_entry: Message):
         db_object.event_at = db_entry.event_at
     else:
         bot.db_session.add(db_entry)
-    bot.db_session.commit()

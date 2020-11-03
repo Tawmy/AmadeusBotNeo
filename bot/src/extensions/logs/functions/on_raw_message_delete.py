@@ -74,7 +74,7 @@ async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
     db_entry.event_at = datetime.utcnow()
 
     await helper.add_user_to_db(bot, payload.cached_message.author.id)
-    bot.db_session.add(db_entry)
+    await __save_to_database(bot, db_entry)
     if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
         await __log_attachments(bot, payload)
     bot.db_session.commit()
@@ -180,3 +180,16 @@ async def __save_attachment(attachment: discord.Attachment, db_entry: Attachment
     except NotFound:
         pass
     return False
+
+
+async def __save_to_database(bot: Bot, db_entry: Message):
+    db_object = bot.db_session.query(Message).filter_by(id=db_entry.id).first()
+    if db_object:
+        db_object.content = db_entry.content
+        db_object.count_mentions = db_entry.count_mentions
+        db_object.count_attachments = db_entry.count_attachments
+        db_object.count_embeds = db_entry.count_embeds
+        db_object.event_at = db_entry.event_at
+        db_object.event_type = MessageEventType.DELETE
+    else:
+        bot.db_session.add(db_entry)
