@@ -9,6 +9,7 @@ from discord.ext.commands import Bot
 from database.models import Message, MessageEventType, Attachment
 from extensions.config import helper as c
 from extensions.logs import helper
+from extensions.logs.enums import ParentType
 from helpers import strings as s
 
 
@@ -70,10 +71,10 @@ async def __log_cached_database(bot: Bot, payload: RawMessageDeleteEvent):
     db_entry = await __add_content_database(payload, db_entry)
     db_entry = await __add_counts_database(payload, db_entry)
 
-    db_entry.event_type = MessageEventType.DELETE
-    db_entry.event_at = datetime.utcnow()
+    db_entry.deleted_at = datetime.utcnow()
 
-    await helper.add_user_to_db(bot, payload.cached_message.author.id)
+    await helper.add_parent_to_db(bot, ParentType.USER, payload.cached_message.author.id)
+    await helper.add_parent_to_db(bot, ParentType.GUILD, payload.guild_id)
     await __save_to_database(bot, db_entry)
     if payload.cached_message.attachments is not None and len(payload.cached_message.attachments) > 0:
         await __log_attachments(bot, payload)
@@ -189,7 +190,6 @@ async def __save_to_database(bot: Bot, db_entry: Message):
         db_object.count_mentions = db_entry.count_mentions
         db_object.count_attachments = db_entry.count_attachments
         db_object.count_embeds = db_entry.count_embeds
-        db_object.event_at = db_entry.event_at
-        db_object.event_type = MessageEventType.DELETE
+        db_object.deleted_at = db_entry.deleted_at
     else:
         bot.db_session.add(db_entry)

@@ -1,8 +1,9 @@
 from discord import TextChannel, Message, Embed
 from discord.ext.commands import Bot
 
-from database.models import User
+from database.models import User, Guild
 from extensions.config import helper as c
+from extensions.logs.enums import ParentType
 from helpers import strings as s
 
 
@@ -22,15 +23,22 @@ async def is_image(url) -> bool:
     return False
 
 
-async def add_user_to_db(bot: Bot, user_id: int):
-    db_object = bot.db_session.query(User).filter_by(id=user_id).first()
+async def add_parent_to_db(bot: Bot, parent_type: ParentType, id: int):
+    obj = None
+    if parent_type == ParentType.GUILD:
+        obj = Guild
+    elif parent_type == ParentType.USER:
+        obj = User
+    if obj is None:
+        return
+    db_object = bot.db_session.query(obj).filter_by(id=id).first()
     if db_object:
         return
     else:
-        db_entry = User()
-        db_entry.id = user_id
+        db_entry = obj()
+        db_entry.id = id
         bot.db_session.add(db_entry)
-        bot.db_session.commit()
+        # TODO check if this works without commit
 
 
 async def add_title(bot: Bot, embed: Embed, guild_id: int, string_name: str) -> Embed:

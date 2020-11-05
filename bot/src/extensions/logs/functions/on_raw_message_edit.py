@@ -1,13 +1,15 @@
 from datetime import datetime
+from typing import Union
 
 import discord
 from ciso8601 import parse_datetime
 from discord import RawMessageUpdateEvent, TextChannel, Embed
 from discord.ext.commands import Bot
 
-from database.models import Message, MessageEventType
+from database.models import Message, MessageEventType, MessageEdit
 from extensions.config import helper as c
 from extensions.logs import helper
+from extensions.logs.enums import ParentType
 from helpers import strings as s
 
 
@@ -42,26 +44,6 @@ async def __log_local(bot: Bot, payload: RawMessageUpdateEvent, log_channel: Tex
     await log_channel.send(embed=embed)
 
 
-async def __log_database(bot: Bot, payload: RawMessageUpdateEvent, guild_id: int):
-    db_entry = Message()
-    db_entry = await __add_general_data_database(payload, db_entry)
-
-    if payload.cached_message is not None:
-        db_entry = await __add_cached_data_database(payload, db_entry)
-    else:
-        status, db_entry = await __add_dict_data_database(payload, db_entry)
-        if status is False:
-            return
-
-    status, db_entry = await __add_counts_from_dict_database(payload, db_entry)
-    if status is False:
-        return
-
-    await helper.add_user_to_db(bot, db_entry.user_id)
-    await __save_to_database(bot, db_entry)
-    bot.db_session.commit()
-
-
 async def __fetch_message(bot: Bot, payload: RawMessageUpdateEvent) -> discord.Message:
     message = None
     if payload.cached_message is None:
@@ -84,7 +66,7 @@ async def __add_author(bot: Bot, payload: RawMessageUpdateEvent, embed: Embed, g
     return embed
 
 
-async def __add_link(bot: Bot, payload: RawMessageUpdateEvent, embed: Embed, guild_id: int, fetched_message: Message) -> Embed:
+async def __add_link(bot: Bot, payload: RawMessageUpdateEvent, embed: Embed, guild_id: int, fetched_message: discord.Message) -> Embed:
     jump_url = None
     if payload.cached_message is not None:
         jump_url = payload.cached_message.jump_url
@@ -125,28 +107,73 @@ async def __add_footer(payload: RawMessageUpdateEvent, embed: Embed):
     return embed
 
 
-async def __add_general_data_database(payload: RawMessageUpdateEvent, db_entry: Message) -> Message:
+async def __log_database(bot: Bot, payload: RawMessageUpdateEvent, guild_id: int):
+    # db_entry = Message()
+    # db_entry = await __add_general_data_database(payload, db_entry)
+    #
+    # if payload.cached_message is not None:
+    #     db_entry = await __add_cached_data_database(payload, db_entry)
+    # else:
+    #     status, db_entry = await __add_dict_data_database(payload, db_entry)
+    #     if status is False:
+    #         return
+    #
+    # status, db_entry = await __add_counts_from_dict_database(payload, db_entry)
+    # if status is False:
+    #     return
+    #
+    # await helper.add_user_to_db(bot, db_entry.user_id)
+    # await __save_to_database(bot, db_entry)
+    # bot.db_session.commit()
+
+    db_entry_message = await __get_message_data(payload)
+    if db_entry_message is None:
+        return
+
+    await helper.add_parent_to_db(bot, ParentType.GUILD, db_entry_message.guild_id)
+    await helper.add_parent_to_db(bot, ParentType.USER, db_entry_message.user_id)
+
+    await __save_message_to_database(bot, db_entry_message)
+    bot.db_session.flush()
+
+    db_entry_message_edit = await __get_message_edit_data(payload, db_entry_message.id)
+    if db_entry_message_edit is None:
+        return
+
+    bot.db_session.add(db_entry_message_edit)
+    bot.db_session.commit()
+
+
+async def __get_message_data(payload: RawMessageUpdateEvent) -> Union[Message, None]:
+    db_entry = Message()
     db_entry.id = payload.message_id
     db_entry.channel_id = payload.channel_id
-    db_entry.event_type = MessageEventType.EDIT
-    db_entry.event_at = datetime.utcnow()
+
+    if payload.cached_message is not None:
+        db_entry = await __get_message_data_cached(payload, db_entry)
+    else:
+        status, db_entry = await __get_message_data_dict(payload, db_entry)
+        if status is False:
+            return None
+
+    status, db_entry = await __get_message_data_counts_cached(payload, db_entry)
+    if status is False:
+        return None
+
     return db_entry
 
 
-async def __add_cached_data_database(payload: RawMessageUpdateEvent, db_entry: Message) -> Message:
+async def __get_message_data_cached(payload: RawMessageUpdateEvent, db_entry: Message) -> Message:
     db_entry.guild_id = payload.cached_message.guild.id
-    user_id = payload.cached_message.author.id
-    db_entry.user_id = user_id
+    db_entry.user_id = payload.cached_message.author.id
     db_entry.created_at = payload.cached_message.created_at
     db_entry.count_mentions = len(payload.cached_message.mentions) if payload.cached_message.mentions is not None else 0
-    db_entry.count_attachments = len(
-        payload.cached_message.attachments) if payload.cached_message.attachments is not None else 0
+    db_entry.count_attachments = len(payload.cached_message.attachments) if payload.cached_message.attachments is not None else 0
     db_entry.count_embeds = len(payload.cached_message.embeds) if payload.cached_message.embeds is not None else 0
-    db_entry.before = payload.cached_message.content if payload.cached_message.content is not None else str()
     return db_entry
 
 
-async def __add_dict_data_database(payload: RawMessageUpdateEvent, db_entry: Message) -> [bool, Message]:
+async def __get_message_data_dict(payload: RawMessageUpdateEvent, db_entry: Message) -> [bool, Message]:
     if payload.data.get("guild_id") is not None:
         db_entry.guild_id = payload.data["guild_id"]
     else:
@@ -163,11 +190,7 @@ async def __add_dict_data_database(payload: RawMessageUpdateEvent, db_entry: Mes
     return True, db_entry
 
 
-async def __add_counts_from_dict_database(payload: RawMessageUpdateEvent, db_entry: Message) -> [bool, Message]:
-    if payload.data.get("content") is not None:
-        db_entry.content = payload.data["content"]
-    else:
-        return False, db_entry
+async def __get_message_data_counts_cached(payload: RawMessageUpdateEvent, db_entry: Message) -> [bool, Message]:
     if payload.data.get("mentions") is not None:
         db_entry.count_mentions = len(payload.data["mentions"])
     elif db_entry.count_mentions is None:
@@ -183,14 +206,23 @@ async def __add_counts_from_dict_database(payload: RawMessageUpdateEvent, db_ent
     return True, db_entry
 
 
-async def __save_to_database(bot: Bot, db_entry: Message):
+async def __save_message_to_database(bot: Bot, db_entry: Message):
     db_object = bot.db_session.query(Message).filter_by(id=db_entry.id).first()
     if db_object:
-        db_object.before = db_entry.before if db_entry.before is not None else db_object.content
-        db_object.content = db_entry.content
         db_object.count_mentions = db_entry.count_mentions
         db_object.count_attachments = db_entry.count_attachments
         db_object.count_embeds = db_entry.count_embeds
-        db_object.event_at = db_entry.event_at
     else:
         bot.db_session.add(db_entry)
+
+
+async def __get_message_edit_data(payload: RawMessageUpdateEvent, message_id: int) -> MessageEdit:
+    db_entry = MessageEdit()
+    db_entry.edited_at = datetime.utcnow()
+    content_after = payload.data.get("content")
+    if content_after is not None and len(content_after) > 0:
+        db_entry.content_after = content_after
+    if payload.cached_message is not None and payload.cached_message.content is not None and len(payload.cached_message.content) > 0:
+        db_entry.content_before = payload.cached_message.content
+    db_entry.message_id = message_id
+    return db_entry
