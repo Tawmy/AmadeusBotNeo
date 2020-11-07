@@ -15,15 +15,7 @@ from helpers import strings as s
 
 async def log(bot: Bot, payload: RawMessageDeleteEvent):
     if await c.get_config("logs", "message_delete_local", bot=bot, guild_id=payload.guild_id):
-        channel_config = await c.get_config("logs", "message_delete_channel", bot=bot, guild_id=payload.guild_id)
-        if channel_config.value is not None:
-            log_channel = bot.get_channel(int(channel_config.value))
-            if log_channel is None:
-                # fall back to log channel if configured channel not found
-                log_channel = await helper.get_log_channel(bot, payload.guild_id)
-        else:
-            log_channel = await helper.get_log_channel(bot, payload.guild_id)
-
+        log_channel = await helper.get_log_channel(bot, payload.guild_id, "message_delete_channel")
         if log_channel is not None:
             if payload.cached_message is not None:
                 await __log_cached_local(bot, payload, log_channel)

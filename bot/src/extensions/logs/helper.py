@@ -7,8 +7,21 @@ from extensions.logs.enums import ParentType
 from helpers import strings as s
 
 
-async def get_log_channel(bot: Bot, guild_id: int) -> TextChannel:
+async def get_log_channel(bot: Bot, guild_id: int, config_option: str):
+    channel_config = await c.get_config("logs", config_option, bot=bot, guild_id=guild_id)
+    if channel_config.value is not None:
+        log_channel = bot.get_channel(int(channel_config.value))
+        if log_channel is None:
+            # fall back to log channel if configured channel not found
+            log_channel = await __get_essential_log_channel(bot, guild_id)
+    else:
+        log_channel = await __get_essential_log_channel(bot, guild_id)
+    return log_channel
+
+
+async def __get_essential_log_channel(bot: Bot, guild_id: int) -> TextChannel:
     log_channel_id = await c.get_config("essential_channels", "log_channel", bot=bot, guild_id=guild_id)
+    # TODO possibly security hole here, could enter another server's channel ID?
     return bot.get_channel(log_channel_id.value)
 
 

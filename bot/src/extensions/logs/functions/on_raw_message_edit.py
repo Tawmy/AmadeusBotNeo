@@ -16,15 +16,7 @@ from helpers import strings as s
 async def log(bot: Bot, payload: RawMessageUpdateEvent):
     guild_id = payload.data["guild_id"]
     if await c.get_config("logs", "message_edit_local", bot=bot, guild_id=guild_id):
-        channel_config = await c.get_config("logs", "message_edit_channel", bot=bot, guild_id=guild_id)
-        if channel_config.value is not None:
-            log_channel = bot.get_channel(int(channel_config.value))
-            if log_channel is None:
-                # fall back to log channel if configured channel not found
-                log_channel = await helper.get_log_channel(bot, guild_id)
-        else:
-            log_channel = await helper.get_log_channel(bot, guild_id)
-
+        log_channel = await helper.get_log_channel(bot, guild_id, "message_edit_channel")
         if log_channel is not None:
             await __log_local(bot, payload, log_channel, guild_id)
     if await c.get_config("logs", "message_edit_database", bot=bot, guild_id=guild_id):
@@ -108,24 +100,6 @@ async def __add_footer(payload: RawMessageUpdateEvent, embed: Embed):
 
 
 async def __log_database(bot: Bot, payload: RawMessageUpdateEvent, guild_id: int):
-    # db_entry = Message()
-    # db_entry = await __add_general_data_database(payload, db_entry)
-    #
-    # if payload.cached_message is not None:
-    #     db_entry = await __add_cached_data_database(payload, db_entry)
-    # else:
-    #     status, db_entry = await __add_dict_data_database(payload, db_entry)
-    #     if status is False:
-    #         return
-    #
-    # status, db_entry = await __add_counts_from_dict_database(payload, db_entry)
-    # if status is False:
-    #     return
-    #
-    # await helper.add_user_to_db(bot, db_entry.user_id)
-    # await __save_to_database(bot, db_entry)
-    # bot.db_session.commit()
-
     db_entry_message = await __get_message_data(payload)
     if db_entry_message is None:
         return
