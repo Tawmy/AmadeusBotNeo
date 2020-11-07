@@ -36,7 +36,7 @@ async def is_image(url) -> bool:
     return False
 
 
-async def add_parent_to_db(bot: Bot, parent_type: ParentType, id: int):
+async def add_parent_to_db(bot: Bot, parent_type: ParentType, obj_id: int):
     obj = None
     if parent_type == ParentType.GUILD:
         obj = Guild
@@ -44,12 +44,12 @@ async def add_parent_to_db(bot: Bot, parent_type: ParentType, id: int):
         obj = User
     if obj is None:
         return
-    db_object = bot.db_session.query(obj).filter_by(id=id).first()
+    db_object = bot.db_session.query(obj).filter_by(id=obj_id).first()
     if db_object:
         return
     else:
         db_entry = obj()
-        db_entry.id = id
+        db_entry.id = obj_id
         bot.db_session.add(db_entry)
         # TODO check if this works without commit
 

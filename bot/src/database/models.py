@@ -1,18 +1,6 @@
-import enum
-
-from sqlalchemy import Column, ForeignKey, Integer, BigInteger, SmallInteger, String, DateTime, Enum, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, BigInteger, SmallInteger, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
-
-
-class MessageEventType(enum.Enum):
-    DELETE = 0
-    EDIT = 1
-
-
-class NameType(enum.Enum):
-    USERNAME = 0
-    NICKNAME = 1
 
 
 Base = declarative_base()

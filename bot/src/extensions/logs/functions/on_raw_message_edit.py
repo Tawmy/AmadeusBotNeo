@@ -6,7 +6,7 @@ from ciso8601 import parse_datetime
 from discord import RawMessageUpdateEvent, TextChannel, Embed
 from discord.ext.commands import Bot
 
-from database.models import Message, MessageEventType, MessageEdit
+from database.models import Message, MessageEdit
 from extensions.config import helper as c
 from extensions.logs import helper
 from extensions.logs.enums import ParentType
