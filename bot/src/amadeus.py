@@ -19,7 +19,7 @@ def get_command_prefix(amadeus, message):
 
 
 intents = discord.Intents.all()
-allowed_mentions = discord.AllowedMentions(everyone=False, roles=False)
+allowed_mentions = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
 
 bot = commands.Bot(command_prefix=get_command_prefix, intents=intents, allowed_mentions=allowed_mentions)
 bot.dev_session = bool(strtobool(os.environ["DEV"]))

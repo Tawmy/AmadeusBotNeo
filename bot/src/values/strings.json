@@ -819,5 +819,39 @@
                 "neutral": "Der gegebene Befehl konnte nicht gefunden werden. Bitte sicherstellen, dass nicht fälschlicherweise eine Kategorie gegeben wurde."
             }
         }
+    },
+    "errors": {
+        "missing_permissions_message": {
+            "en": {
+                "neutral": ["Missing permissions in", ". Please make sure", "has permissions to send messages and embed links."]
+            },
+            "de": {
+                "neutral": ["Fehlende Berechtigungen in", ". Bitte sicherstellen, dass", "Berechtigungen hat, Nachrichten zu Senden und Links einzubetten."]
+            }
+        },
+        "missing_permissions_message_expansion": {
+            "en": {
+                "neutral": ["\n\nSending this error message previously failed in", ", so please check permissions for that channel as well."]
+            },
+            "de": {
+                "neutral": ["\n\nDas Senden dieser Fehlermeldung ist soeben in", "fehlgeschlagen. Deswegen bitte auch Berechtigungen in diesem Kanal überprüfen."]
+            }
+        },
+        "missing_permissions_message_expansion_two": {
+            "en": {
+                "neutral": ["\n\nSending this error message previously failed in", "and", ", so please check permissions for those channels as well."]
+            },
+            "de": {
+                "neutral": ["\n\nDas Senden dieser Fehlermeldung ist soeben in", "und", "fehlgeschlagen. Deswegen bitte auch Berechtigungen in diesen Kanälen überprüfen."]
+            }
+        },
+        "failed_to_send_message": {
+            "en": {
+                "neutral": ["Sending a message failed in", ". This was not necessarily caused by missing permissions. Discord just replied with a generic error message."]
+            },
+            "de": {
+                "neutral": ["Das Senden einer Nachricht in", "ist fehlgeschlagen. Dies wurde nicht unbedingt durch fehlende Berechtigungen verursacht. Es wurde lediglich ein generischer Fehler von Discord zurückgegeben."]
+            }
+        }
     }
 }
