@@ -1,4 +1,4 @@
-from discord import TextChannel, Message, Embed
+from discord import TextChannel, Message, Embed, Member
 from discord.ext.commands import Bot
 
 from database.models import User, Guild
@@ -60,9 +60,12 @@ async def add_title(bot: Bot, embed: Embed, guild_id: int, string_name: str) -> 
     return embed
 
 
-async def add_author(bot: Bot, embed: Embed, cached_message: Message, guild_id: int):
+async def add_author(bot: Bot, embed: Embed, guild_id: int, message: Message = None, member: Member = None):
     title = await s.get_string("logs", "user", bot=bot, guild_id=guild_id)
-    embed.add_field(name=title.string, value=cached_message.author.mention)
+    if message is not None:
+        embed.add_field(name=title.string, value=message.author.mention)
+    elif member is not None:
+        embed.add_field(name=title.string, value=member.mention)
     return embed
 
 

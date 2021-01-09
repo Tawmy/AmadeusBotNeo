@@ -49,7 +49,7 @@ async def __fetch_message(bot: Bot, payload: RawMessageUpdateEvent) -> discord.M
 
 async def __add_author(bot: Bot, payload: RawMessageUpdateEvent, embed: Embed, guild_id: int) -> Embed:
     if payload.cached_message is not None:
-        embed = await helper.add_author(bot, embed, payload.cached_message, guild_id)
+        embed = await helper.add_author(bot, embed, guild_id, payload.cached_message)
     else:
         author_id = payload.data.get("author", {}).get("id")
         if author_id is not None:

@@ -932,6 +932,46 @@
             "de": {
                 "neutral": "Inhalt (vor)"
             }
+        },
+        "nick_changed": {
+            "en": {
+                "neutral": "Nickname edited"
+            },
+            "de": {
+                "neutral": "Nickname bearbeitet"
+            }
+        },
+        "new": {
+            "en": {
+                "neutral": "New"
+            },
+            "de": {
+                "neutral": "Neu"
+            }
+        },
+        "old": {
+            "en": {
+                "neutral": "Old"
+            },
+            "de": {
+                "neutral": "Alt"
+            }
+        },
+        "after": {
+            "en": {
+                "neutral": "After"
+            },
+            "de": {
+                "neutral": "Nach"
+            }
+        },
+        "before": {
+            "en": {
+                "neutral": "Before"
+            },
+            "de": {
+                "neutral": "Vor"
+            }
         }
     }
 }

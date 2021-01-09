@@ -1,6 +1,6 @@
-from discord import RawMessageDeleteEvent, RawMessageUpdateEvent
+from discord import RawMessageDeleteEvent, RawMessageUpdateEvent, Member
 from discord.ext import commands
-from extensions.logs.functions import on_raw_message_delete, on_raw_message_edit
+from extensions.logs.functions import on_raw_message_delete, on_raw_message_edit, on_member_update_nick
 
 
 class Logs(commands.Cog):
@@ -23,6 +23,11 @@ class Logs(commands.Cog):
                 return
         if self.bot.ready and "guild_id" in payload.data and payload.data["guild_id"] is not None and len(payload.data["guild_id"]) > 0:
             await on_raw_message_edit.log(self.bot, payload)
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before: Member, after: Member):
+        if before.nick != after.nick:
+            await on_member_update_nick.log(self.bot, before, after)
 
 
 def setup(bot):

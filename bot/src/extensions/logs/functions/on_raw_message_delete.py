@@ -42,7 +42,7 @@ async def __log_not_cached(bot: Bot, payload: RawMessageDeleteEvent, log_channel
 async def __log_cached_local(bot: Bot, payload: RawMessageDeleteEvent, log_channel: TextChannel):
     embed = Embed()
     embed = await helper.add_title(bot, embed, payload.guild_id, "message_deleted")
-    embed = await helper.add_author(bot, embed, payload.cached_message, payload.guild_id)
+    embed = await helper.add_author(bot, embed, payload.guild_id, payload.cached_message)
     embed = await helper.add_channel(bot, embed, payload.guild_id, payload.channel_id)
     embed = await __add_content_local(bot, payload, embed)
     embed = await __add_counts_local(bot, payload, embed)
