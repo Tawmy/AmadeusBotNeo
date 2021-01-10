@@ -1,3 +1,4 @@
+import discord
 from discord import TextChannel, Message, Embed, Member
 from discord.ext.commands import Bot
 
@@ -60,12 +61,14 @@ async def add_title(bot: Bot, embed: Embed, guild_id: int, string_name: str) -> 
     return embed
 
 
-async def add_author(bot: Bot, embed: Embed, guild_id: int, message: Message = None, member: Member = None):
+async def add_author(bot: Bot, embed: Embed, guild_id: int, message: Message = None, member: Member = None, user: discord.User = None):
     title = await s.get_string("logs", "user", bot=bot, guild_id=guild_id)
     if message is not None:
         embed.add_field(name=title.string, value=message.author.mention)
     elif member is not None:
         embed.add_field(name=title.string, value=member.mention)
+    elif user is not None:
+        embed.add_field(name=title.string, value=user.mention)
     return embed
 
 

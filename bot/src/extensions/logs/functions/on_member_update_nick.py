@@ -3,7 +3,7 @@ from datetime import datetime
 from discord import Member, Embed, TextChannel
 from discord.ext.commands import Bot
 
-from database.models import Name
+from database.models import Name, NameType
 from extensions.config import helper as c
 from extensions.logs.enums import ParentType
 from helpers import strings as s
@@ -22,7 +22,6 @@ async def log(bot: Bot, before: Member, after: Member):
 
 async def __log_local(bot: Bot, before: Member, after: Member, log_channel: TextChannel):
     embed = Embed()
-    embed.title = await s.get_string("logs", "nick_changed", bot=bot, guild_id=after.guild.id)
     embed = await helper.add_title(bot, embed, after.guild.id, "nick_changed")
     embed = await helper.add_author(bot, embed, after.guild.id, member=after)
     embed = await __add_nick_local(bot, after, embed, "after")
@@ -38,6 +37,7 @@ async def __add_nick_local(bot: Bot, member: Member, embed: Embed, string_title:
 
 async def __log_database(bot: Bot, before: Member, after: Member):
     db_entry = Name()
+    db_entry.name_type = NameType.NICKNAME
     db_entry.user_id = after.id
     db_entry.set_at = datetime.utcnow()
     db_entry.guild_id = after.guild.id

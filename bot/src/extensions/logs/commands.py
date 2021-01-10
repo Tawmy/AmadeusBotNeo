@@ -1,6 +1,7 @@
-from discord import RawMessageDeleteEvent, RawMessageUpdateEvent, Member
+from discord import RawMessageDeleteEvent, RawMessageUpdateEvent, Member, User
 from discord.ext import commands
-from extensions.logs.functions import on_raw_message_delete, on_raw_message_edit, on_member_update_nick
+from extensions.logs.functions import on_raw_message_delete, on_raw_message_edit, on_member_update_nick, \
+    on_user_update_name
 
 
 class Logs(commands.Cog):
@@ -28,6 +29,12 @@ class Logs(commands.Cog):
     async def on_member_update(self, before: Member, after: Member):
         if before.nick != after.nick:
             await on_member_update_nick.log(self.bot, before, after)
+
+    @commands.Cog.listener()
+    async def on_user_update(self, before: User, after: User):
+        pass
+        if before.name != after.name:
+            await on_user_update_name.iterate_and_log(self.bot, before, after)
 
 
 def setup(bot):
