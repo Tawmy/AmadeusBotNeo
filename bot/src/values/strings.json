@@ -980,6 +980,30 @@
             "de": {
                 "neutral": "Benutzername geändert"
             }
+        },
+        "member_join": {
+            "en": {
+                "neutral": "User joined"
+            },
+            "de": {
+                "neutral": "Benutzer beigetreten"
+            }
+        },
+        "created_relative": {
+            "en": {
+                "neutral": ["Created", "days,", "hours,", "min ago"]
+            },
+            "de": {
+                "neutral": ["Erstellt vor", "Tagen,", "Stunden,", "Min"]
+            }
+        },
+        "created_absolute": {
+            "en": {
+                "neutral": ["Created:"]
+            },
+            "de": {
+                "neutral": ["Erstellt:"]
+            }
         }
     }
 }
