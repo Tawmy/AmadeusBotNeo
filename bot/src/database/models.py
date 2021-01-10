@@ -1,9 +1,17 @@
-from sqlalchemy import Column, ForeignKey, Integer, BigInteger, SmallInteger, String, DateTime
+from dataclasses import dataclass
+
+import enum
+from sqlalchemy import Column, ForeignKey, Integer, BigInteger, SmallInteger, String, DateTime, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
 
 Base = declarative_base()
+
+
+class NameType(enum.Enum):
+    USERNAME = 0
+    NICKNAME = 1
 
 
 class User(Base):
@@ -62,8 +70,9 @@ class Name(Base):
     __tablename__ = "name"
     id = Column(Integer, primary_key=True)
     user_id = Column(BigInteger, ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    guild_id = Column(BigInteger, ForeignKey('guild.id', ondelete='CASCADE'), nullable=False)
     set_at = Column(DateTime, nullable=False)
-    guild_id = Column(BigInteger, ForeignKey('guild.id', ondelete='CASCADE'), nullable=True)
+    name_type = Column(Enum(NameType), nullable=False)
     name_after = Column(String)
     name_before = Column(String)
     user = relationship('User', backref=backref('Names', passive_deletes=True))
