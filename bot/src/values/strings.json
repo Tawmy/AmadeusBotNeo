@@ -972,6 +972,14 @@
             "de": {
                 "neutral": "Vor"
             }
+        },
+        "name_changed": {
+            "en": {
+                "neutral": "Username changed"
+            },
+            "de": {
+                "neutral": "Benutzername geändert"
+            }
         }
     }
 }
