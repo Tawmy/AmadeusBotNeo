@@ -8,7 +8,7 @@ from discord.ext.commands import Context
 from components.amadeusMenu import AmadeusMenu
 from components.amadeusPrompt import AmadeusPrompt
 from helpers.strings import String
-from helpers import strings as s
+from helpers import strings as s, messages
 
 
 async def ask_for_input(ctx: Context, string: String) -> str:
@@ -57,7 +57,7 @@ async def show_result(ctx: Context, added: bool):
     else:
         string = await s.get_string(ctx, "changelog", "not_added")
     embed.title = string.string
-    await ctx.send(embed=embed)
+    await messages.reply(ctx, embed)
 
 
 async def save_changelog(bot):

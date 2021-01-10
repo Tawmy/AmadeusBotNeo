@@ -10,6 +10,7 @@ from extensions.config.enums import SetupType, SetupStatus
 from extensions.config.functions import config
 from extensions.config.functions import setup as setup_functions
 from extensions.config import helper as c
+from helpers import messages
 
 
 class Config(commands.Cog):
@@ -40,7 +41,7 @@ class Config(commands.Cog):
         setup_type_selection = await setup_functions.ask_for_setup_type(ctx, menu, setup_emoji)
         if setup_type_selection.setup_type == SetupType.CANCELLED:
             embed = await setup_functions.prepare_status_embed(ctx, SetupStatus.CANCELLED)
-            return await setup_type_selection.message.edit(embed=embed)
+            return await messages.edit(setup_type_selection.message, embed)
 
         # copy current config to later apply if cancelled
         backed_up_config = copy.deepcopy(self.bot.config.get(str(ctx.guild.id)))
@@ -66,7 +67,7 @@ class Config(commands.Cog):
             embed = await setup_functions.add_default_limits_to_embed(ctx, embed)
         elif setup_status == SetupStatus.CANCELLED and setup_type_selection.setup_type == SetupType.REGULAR:
             self.bot.config[str(ctx.guild.id)] = backed_up_config
-        await setup_type_selection.message.edit(embed=embed)
+        await messages.edit(setup_type_selection.message, embed)
 
 
 def setup(bot):

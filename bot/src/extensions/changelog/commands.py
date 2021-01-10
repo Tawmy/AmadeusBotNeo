@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from helpers import strings as s
+from helpers import strings as s, messages
 from components.amadeusPrompt import AmadeusPromptStatus
 from extensions.changelog.functions import changelog, addchangelog
 
@@ -27,9 +27,9 @@ class Changelog(commands.Cog):
             embed = await changelog.prepare_version_info_embed(ctx, version)
             # if prompt shown previously, edit, otherwise send new message
             if result is not None and result.message is not None:
-                await result.message.edit(embed=embed)
+                await messages.edit(result.message, embed)
             else:
-                await ctx.send(embed=embed)
+                await messages.reply(ctx, embed)
 
     @commands.command(name='addchangelog')
     @commands.is_owner()

@@ -7,7 +7,7 @@ from components import amadeusMenu, amadeusPrompt
 from components.amadeusMenu import AmadeusMenuStatus, AmadeusMenu
 from components.amadeusPrompt import AmadeusPromptStatus, AmadeusPrompt
 from extensions.config import helper
-from helpers import strings as s, general
+from helpers import strings as s, general, messages
 from extensions.config.dataclasses import ConfigStep, InputData, InputType, ConfigStatus
 
 
@@ -300,6 +300,6 @@ async def __show_config_status(ctx: Context, message: discord.Message, status: C
     embed.set_footer(text=name, icon_url=avatar)
 
     if message is not None:
-        await message.edit(embed=embed)
+        await messages.edit(message, embed)
     else:
-        await ctx.send(embed=embed)
+        await messages.reply(ctx, embed)

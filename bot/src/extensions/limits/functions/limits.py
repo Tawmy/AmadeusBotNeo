@@ -10,7 +10,7 @@ from extensions.config.helper import save_config
 from extensions.limits.dataclasses import InputData, PreparedInput
 from extensions.limits.enums import InnerScope, LimitStep, OuterScope, ConfigType, EditType, LimitStatus
 from extensions.limits import helper
-from helpers import strings as s, general
+from helpers import strings as s, general, messages
 
 
 async def check_input(ctx: Context, args, input_data: InputData) -> InputData:
@@ -459,9 +459,9 @@ async def __show_limit_status(ctx: Context, input_data: InputData, status: Limit
     embed.set_footer(text=name, icon_url=avatar)
 
     if input_data.message is not None:
-        await input_data.message.edit(embed=embed)
+        await messages.edit(input_data.message, embed)
     else:
-        await ctx.send(embed=embed)
+        await messages.reply(ctx, embed)
 
 
 async def __add_current_values(ctx: Context, input_data: InputData, menu: Union[AmadeusMenu, AmadeusPrompt]):

@@ -5,11 +5,11 @@ import discord
 
 from dataclasses import dataclass
 
-from discord import Message
+from discord import Message, AllowedMentions
 from discord.ext.commands import Bot, Context
 
 from components.amadeusInput import AmadeusInput
-from helpers import strings as s
+from helpers import strings as s, messages
 
 
 class AmadeusPromptStatus(Enum):
@@ -75,9 +75,9 @@ class AmadeusPrompt(AmadeusInput):
         await self.__prepare_footer(ctx)
         await self.__add_cancel_string_to_footer(ctx)
         if message is None:
-            self.__result.message = await ctx.send(embed=self.embed)
+            self.__result.message = await messages.reply(ctx, self.embed)
         else:
-            await message.edit(embed=self.embed)
+            await messages.edit(message, self.embed)
             self.__result.message = message
         self.__result.status = AmadeusPromptStatus.SHOWN
         await self.__await_user_input(ctx, timeout_seconds)
@@ -108,7 +108,7 @@ class AmadeusPrompt(AmadeusInput):
         if string is not None:
             self.embed.title = string.string
         await self.__prepare_footer(ctx)
-        self.__result.message = await self.__result.message.edit(embed=self.embed)
+        await messages.edit(self.__result.message, self.embed)
 
     async def __prepare_footer(self, ctx: Context):
         text = ""

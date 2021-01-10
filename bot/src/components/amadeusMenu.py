@@ -5,11 +5,11 @@ import discord
 
 from dataclasses import dataclass
 
-from discord import Message
+from discord import Message, AllowedMentions
 from discord.ext.commands import Bot, Context
 
 from components.amadeusInput import AmadeusInput
-from helpers import strings as s
+from helpers import strings as s, messages
 
 
 class AmadeusMenuStatus(Enum):
@@ -114,9 +114,9 @@ class AmadeusMenu(AmadeusInput):
             return self.__result
         else:
             if message is None:
-                message = await ctx.send(embed=self.embed)
+                message = await messages.reply(ctx, self.embed)
             else:
-                await message.edit(embed=self.embed)
+                await messages.edit(message, self.embed)
             self.__result.status = AmadeusMenuStatus.SHOWN
             await self.__add_reactions(message)
             await self.__await_user_reaction(ctx, message, timeout_seconds)
@@ -149,7 +149,7 @@ class AmadeusMenu(AmadeusInput):
         if string is not None:
             self.embed.title = string.string
         await self.__prepare_footer(ctx)
-        self.__result.message = await self.__result.message.edit(embed=self.embed)
+        self.__result.message = await messages.edit(self.__result.message, self.embed)
 
     async def __prepare_footer(self, ctx: Context):
         name = ""

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from discord import Embed, HTTPException, Forbidden, TextChannel
+from discord import Embed, HTTPException, Forbidden, TextChannel, Message, AllowedMentions
 from discord.ext.commands import Context
 
 from extensions.config import helper as c
@@ -12,7 +12,7 @@ class ErrorType(Enum):
     HTTPEXCEPTION = 1
 
 
-async def reply(ctx: Context, embed: Embed):
+async def reply(ctx: Context, embed: Embed) -> Message:
     try:
         return await ctx.message.reply(embed=embed)
     except Forbidden:
@@ -67,3 +67,9 @@ async def __dm_error_to_owner(ctx: Context, mod_channel: TextChannel, bot_channe
         await ctx.guild.owner.send(final_string)
     except HTTPException:
         pass # do nothing
+
+
+async def edit(message: Message, embed: Embed) -> Message:
+    allowed_mentions = AllowedMentions(everyone=False, roles=False, replied_user=False)
+    return await message.edit(embed=embed, allowed_mentions=allowed_mentions)
+    # TODO check permissions
