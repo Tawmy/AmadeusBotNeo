@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import discord
 from discord import TextChannel, Message, Embed, Member
 from discord.ext.commands import Bot
@@ -84,3 +86,25 @@ async def add_footer(cached_message: Message, embed: Embed) -> Embed:
     icon_url = "https://i.imgur.com/FkOFUCC.png"
     embed.set_footer(text=text, icon_url=icon_url)
     return embed
+
+
+async def get_time(bot: Bot, guild_id: int, delta: timedelta) -> str:
+    if delta.days == 0 and delta.seconds < 60:
+        string_seconds = await s.get_string("time", "seconds", bot=bot, guild_id=guild_id)
+        return f"{delta.seconds} {string_seconds.string}"
+    elif delta.days == 0 and delta.seconds < 3600:
+        string_minutes = await s.get_string("time", "minutes", bot=bot, guild_id=guild_id)
+        string_seconds = await s.get_string("time", "seconds", bot=bot, guild_id=guild_id)
+        minutes, seconds = divmod(delta.seconds, 60)
+        return f"{minutes} {string_minutes.string}, {seconds} {string_seconds.string}"
+    elif delta.days == 0:
+        string_hours = await s.get_string("time", "hours", bot=bot, guild_id=guild_id)
+        string_minutes = await s.get_string("time", "minutes", bot=bot, guild_id=guild_id)
+        hours, remainder = divmod(delta.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{hours} {string_hours.string}, {minutes} {string_minutes.string}"
+    else:
+        string_days = await s.get_string("time", "days", bot=bot, guild_id=guild_id)
+        string_hours = await s.get_string("time", "hours", bot=bot, guild_id=guild_id)
+        hours, remainder = divmod(delta.seconds, 3600)
+        return f"{delta.days} {string_days.string}, {hours} {string_hours.string}"

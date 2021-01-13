@@ -991,10 +991,10 @@
         },
         "created_relative": {
             "en": {
-                "neutral": ["Created", "days,", "hours,", "min ago"]
+                "neutral": ["Created", "ago"]
             },
             "de": {
-                "neutral": ["Erstellt vor", "Tagen,", "Stunden,", "Min"]
+                "neutral": ["Erstellt vor"]
             }
         },
         "created_absolute": {
@@ -1023,10 +1023,44 @@
         },
         "joined_relative": {
             "en": {
-                "neutral": ["Joined", "days,", "hours,", "min ago"]
+                "neutral": ["Joined", "ago"]
             },
             "de": {
-                "neutral": ["Beigetreten vor", "Tagen,", "Stunden,", "Min"]
+                "neutral": ["Beigetreten vor"]
+            }
+        }
+    },
+    "time": {
+        "days": {
+            "en": {
+                "neutral": "days"
+            },
+            "de": {
+                "neutral": "Tage"
+            }
+        },
+        "hours": {
+            "en": {
+                "neutral": "hours"
+            },
+            "de": {
+                "neutral": "Stunden"
+            }
+        },
+        "minutes": {
+            "en": {
+                "neutral": "minutes"
+            },
+            "de": {
+                "neutral": "Minuten"
+            }
+        },
+        "seconds": {
+            "en": {
+                "neutral": "seconds"
+            },
+            "de": {
+                "neutral": "Sekunden"
             }
         }
     }
