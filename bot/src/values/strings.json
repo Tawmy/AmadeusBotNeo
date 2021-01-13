@@ -991,10 +991,10 @@
         },
         "created_relative": {
             "en": {
-                "neutral": ["Created", "ago"]
+                "neutral": ["Created:", "ago"]
             },
             "de": {
-                "neutral": ["Erstellt vor"]
+                "neutral": ["Erstellt: Vor"]
             }
         },
         "created_absolute": {
@@ -1023,10 +1023,10 @@
         },
         "joined_relative": {
             "en": {
-                "neutral": ["Joined", "ago"]
+                "neutral": ["Joined:", "ago"]
             },
             "de": {
-                "neutral": ["Beigetreten vor"]
+                "neutral": ["Beigetreten: Vor"]
             }
         },
         "member_pending": {

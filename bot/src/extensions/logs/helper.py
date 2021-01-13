@@ -1,6 +1,8 @@
 from datetime import timedelta, datetime
 
 import calendar
+from typing import Union
+
 import discord
 from discord import TextChannel, Message, Embed, Member
 from discord.ext.commands import Bot
@@ -90,7 +92,7 @@ async def add_footer(cached_message: Message, embed: Embed) -> Embed:
     return embed
 
 
-async def add_footer_joined(bot: Bot, member: Member, embed: Embed) -> Embed:
+async def add_footer_joined(bot: Bot, member: Member, embed: Embed, return_str: bool = False) -> Union[Embed, str]:
     time_difference_member_joined = datetime.utcnow() - member.joined_at
     if time_difference_member_joined.days < 30:
         string_to_be_inserted = await get_time(bot, member.guild.id, time_difference_member_joined)
@@ -100,7 +102,26 @@ async def add_footer_joined(bot: Bot, member: Member, embed: Embed) -> Embed:
         strings_to_be_inserted = [f"{member.joined_at.day:02d}. {calendar.month_abbr[member.joined_at.month]} {member.joined_at.year}"]
         strings = await s.get_string("logs", "joined_absolute", bot=bot, guild_id=member.guild.id)
     time_str = await s.insert_into_string(strings_to_be_inserted, strings.list, InsertPosition.RIGHT)
+    if return_str:
+        return time_str.string_combined
     embed.set_footer(text=time_str.string_combined)
+    return embed
+
+
+async def add_footer_created(bot: Bot, member: Member, embed: Embed, string_to_be_appended: str = None) -> Embed:
+    time_difference_account_creation = datetime.utcnow() - member.created_at
+    if time_difference_account_creation.days < 30:
+        string_to_be_inserted = await get_time(bot, member.guild.id, time_difference_account_creation)
+        strings_to_be_inserted = [string_to_be_inserted]
+        string = await s.get_string("logs", "created_relative", bot=bot, guild_id=member.guild.id)
+    else:
+        strings_to_be_inserted = [f"{member.created_at.day:02d}. {calendar.month_abbr[member.created_at.month]} {member.created_at.year}"]
+        string = await s.get_string("logs", "created_absolute", bot=bot, guild_id=member.guild.id)
+    string_processed = await s.insert_into_string(strings_to_be_inserted, string.list, InsertPosition.RIGHT)
+    if string_to_be_appended is not None:
+        embed.set_footer(text=f"{string_to_be_appended}\n{string_processed.string_combined}")
+    else:
+        embed.set_footer(text=string_processed.string_combined)
     return embed
 
 

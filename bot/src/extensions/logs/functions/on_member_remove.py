@@ -1,13 +1,8 @@
-import calendar
-from datetime import datetime
-
 from discord import Member, TextChannel, Embed
 from discord.ext.commands import Bot
 
 from extensions.config import helper as c
-from helpers import strings as s
 from extensions.logs import helper
-from helpers.strings import InsertPosition
 
 
 async def log(bot: Bot, member: Member):
