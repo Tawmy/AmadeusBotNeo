@@ -1,7 +1,7 @@
 from discord import RawMessageDeleteEvent, RawMessageUpdateEvent, Member, User
 from discord.ext import commands
 from extensions.logs.functions import on_raw_message_delete, on_raw_message_edit, on_member_update_nick, \
-    on_user_update_name, on_member_join
+    on_user_update_name, on_member_join, on_member_remove
 
 
 class Logs(commands.Cog):
@@ -38,6 +38,10 @@ class Logs(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
         await on_member_join.log(self.bot, member)
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: Member):
+        await on_member_remove.log(self.bot, member)
 
 def setup(bot):
     bot.add_cog(Logs(bot))

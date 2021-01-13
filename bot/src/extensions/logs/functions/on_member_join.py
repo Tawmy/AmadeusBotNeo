@@ -22,7 +22,7 @@ async def __log_local(bot: Bot, member: Member, log_channel: TextChannel):
     embed = await helper.add_title(bot, embed, member.guild.id, "member_join")
     embed.description = f"{member.mention}\n*{str(member)}*"
     embed = await __add_footer(bot, member, embed)
-    embed.set_thumbnail(url=member.avatar_url_as(static_format="png", size=128))
+    embed.set_thumbnail(url=member.avatar_url_as(static_format="png", size=256))
     embed.colour = 5877227
     await log_channel.send(embed=embed)
 

@@ -1004,6 +1004,30 @@
             "de": {
                 "neutral": ["Erstellt:"]
             }
+        },
+        "member_leave": {
+            "en": {
+                "neutral": "User left"
+            },
+            "de": {
+                "neutral": "Benutzer verlassen"
+            }
+        },
+        "joined_absolute": {
+            "en": {
+                "neutral": ["Joined:"]
+            },
+            "de": {
+                "neutral": ["Beigetreten:"]
+            }
+        },
+        "joined_relative": {
+            "en": {
+                "neutral": ["Joined", "days,", "hours,", "min ago"]
+            },
+            "de": {
+                "neutral": ["Beigetreten vor", "Tagen,", "Stunden,", "Min"]
+            }
         }
     }
 }
