@@ -1028,6 +1028,14 @@
             "de": {
                 "neutral": ["Beigetreten vor"]
             }
+        },
+        "member_pending": {
+            "en": {
+                "neutral": "Accepted terms"
+            },
+            "de": {
+                "neutral": "Bedingungen akzeptiert"
+            }
         }
     },
     "time": {

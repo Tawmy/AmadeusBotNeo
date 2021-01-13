@@ -1,5 +1,6 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
+import calendar
 import discord
 from discord import TextChannel, Message, Embed, Member
 from discord.ext.commands import Bot
@@ -8,6 +9,7 @@ from database.models import User, Guild
 from extensions.config import helper as c
 from extensions.logs.enums import ParentType
 from helpers import strings as s
+from helpers.strings import InsertPosition
 
 
 async def get_log_channel(bot: Bot, guild_id: int, config_option: str):
@@ -85,6 +87,20 @@ async def add_footer(cached_message: Message, embed: Embed) -> Embed:
     text = cached_message.created_at.replace(microsecond=0)
     icon_url = "https://i.imgur.com/FkOFUCC.png"
     embed.set_footer(text=text, icon_url=icon_url)
+    return embed
+
+
+async def add_footer_joined(bot: Bot, member: Member, embed: Embed) -> Embed:
+    time_difference_member_joined = datetime.utcnow() - member.joined_at
+    if time_difference_member_joined.days < 30:
+        string_to_be_inserted = await get_time(bot, member.guild.id, time_difference_member_joined)
+        strings_to_be_inserted = [string_to_be_inserted]
+        strings = await s.get_string("logs", "joined_relative", bot=bot, guild_id=member.guild.id)
+    else:
+        strings_to_be_inserted = [f"{member.joined_at.day:02d}. {calendar.month_abbr[member.joined_at.month]} {member.joined_at.year}"]
+        strings = await s.get_string("logs", "joined_absolute", bot=bot, guild_id=member.guild.id)
+    time_str = await s.insert_into_string(strings_to_be_inserted, strings.list, InsertPosition.RIGHT)
+    embed.set_footer(text=time_str.string_combined)
     return embed
 
 
