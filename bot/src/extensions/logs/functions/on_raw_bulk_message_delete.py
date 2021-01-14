@@ -12,6 +12,7 @@ async def log(bot: Bot, payload: RawBulkMessageDeleteEvent):
         if log_channel is not None:
             await __log_local(bot, payload, log_channel)
 
+
 async def __log_local(bot: Bot, payload: RawBulkMessageDeleteEvent, log_channel: TextChannel):
     embed = Embed()
     embed = await helper.add_title(bot, embed, payload.guild_id, "message_deleted_bulk")

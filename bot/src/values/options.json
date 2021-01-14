@@ -254,7 +254,7 @@
                 },
                 "description": {
                     "en": "Log users agreeing to the server terms as a message in your server's log channel or a separate one.",
-                    "de": "Protolliere die Bestätigung der Server-Regelungen von Benutzern als Nachricht im Log-Kanal oder separatem."
+                    "de": "Protokolliere die Bestätigung der Server-Regelungen von Benutzern als Nachricht im Log-Kanal oder separatem."
                 },
                 "default": true,
                 "data_type": "boolean",
@@ -282,7 +282,7 @@
                 },
                 "description": {
                     "en": "Log reactions as a message in your server's log channel or a separate one.",
-                    "de": "Protolliere Reaktionen als Nachricht im Log-Kanal oder separatem."
+                    "de": "Protokolliere Reaktionen als Nachricht im Log-Kanal oder separatem."
                 },
                 "default": true,
                 "data_type": "boolean",
