@@ -1,7 +1,7 @@
-from discord import RawMessageDeleteEvent, RawMessageUpdateEvent, Member, User
+from discord import RawMessageDeleteEvent, RawMessageUpdateEvent, Member, User, RawBulkMessageDeleteEvent
 from discord.ext import commands
 from extensions.logs.functions import on_raw_message_delete, on_raw_message_edit, on_member_update_nick, \
-    on_user_update_name, on_member_join, on_member_remove, on_member_update_pending
+    on_user_update_name, on_member_join, on_member_remove, on_member_update_pending, on_raw_bulk_message_delete
 
 
 class Logs(commands.Cog):
@@ -12,6 +12,11 @@ class Logs(commands.Cog):
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
         if self.bot.ready and payload.guild_id is not None:
             await on_raw_message_delete.log(self.bot, payload)
+
+    @commands.Cog.listener()
+    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent):
+        if self.bot.ready and payload.guild_id is not None:
+            await on_raw_bulk_message_delete.log(self.bot, payload)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: RawMessageUpdateEvent):

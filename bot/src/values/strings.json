@@ -837,6 +837,22 @@
                 "neutral": "Eine nicht zwischengespeicherte Nachricht wurde gelöscht, weswegen keine Details über diese verfügbar sind. Dies passiert für gewöhnlich bei älteren Nachrichten."
             }
         },
+        "message_deleted_bulk": {
+            "en": {
+                "neutral": "Messages deleted"
+            },
+            "de": {
+                "neutral": "Nachrichten gelöscht"
+            }
+        },
+        "message_deleted_bulk_description": {
+            "en": {
+                "neutral": "Multiple messages were deleted at once in the following location:"
+            },
+            "de": {
+                "neutral": "Am folgenden Ort wurden mehrere Nachrichten gleichzeitig gelöscht:"
+            }
+        },
         "message_edited": {
             "en": {
                 "neutral": "Message edited"
@@ -1035,6 +1051,14 @@
             },
             "de": {
                 "neutral": "Bedingungen akzeptiert"
+            }
+        },
+        "count": {
+            "en": {
+                "neutral": "Count"
+            },
+            "de": {
+                "neutral": "Anzahl"
             }
         }
     },
