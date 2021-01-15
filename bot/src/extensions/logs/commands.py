@@ -1,7 +1,8 @@
 from discord import RawMessageDeleteEvent, RawMessageUpdateEvent, Member, User, RawBulkMessageDeleteEvent
 from discord.ext import commands
 from extensions.logs.functions import on_raw_message_delete, on_raw_message_edit, on_member_update_nick, \
-    on_user_update_name, on_member_join, on_member_remove, on_member_update_pending, on_raw_bulk_message_delete
+    on_user_update_name, on_member_join, on_member_remove, on_member_update_pending, on_raw_bulk_message_delete, \
+    on_user_update_avatar
 
 
 class Logs(commands.Cog):
@@ -44,6 +45,8 @@ class Logs(commands.Cog):
         if before.name != after.name:
             if self.bot.ready:
                 await on_user_update_name.iterate_and_log(self.bot, before, after)
+        if before.avatar != after.avatar:
+            await on_user_update_avatar.log(self.bot, before, after)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):

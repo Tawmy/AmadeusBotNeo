@@ -16,7 +16,7 @@ from helpers.strings import InsertPosition
 
 async def get_log_channel(bot: Bot, guild_id: int, config_option: str):
     channel_config = await c.get_config("logs", config_option, bot=bot, guild_id=guild_id)
-    if channel_config.value is not None and len(channel_config.value) > 0:
+    if channel_config.value is not None:
         log_channel = bot.get_channel(int(channel_config.value))
         if log_channel is None:
             # fall back to log channel if configured channel not found

@@ -219,6 +219,48 @@
                 "is_list": false,
                 "is_essential": false
             },
+            "avatar_local": {
+                "name": {
+                    "en": "Avatar changes (in channel)",
+                    "de": "Avataränderungen (in Kanal)"
+                },
+                "description": {
+                    "en": "Log avatar changes as a message in your server's log channel or a separate one.",
+                    "de": "Protolliere Avatarsänderungen als Nachricht im Log-Kanal oder separatem."
+                },
+                "default": true,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
+            "avatar_channel": {
+                "name": {
+                    "en": "Channel for avatar changes",
+                    "de": "Kanal für Avataränderungen"
+                },
+                "description": {
+                    "en": "Channel to log avatar changes in (overrides log channel)",
+                    "de": "Kanal zur Protokollierung von Avataränderungen (überschreibt Log-Kanal)"
+                },
+                "default": "log_channel",
+                "data_type": "channel",
+                "is_list": false,
+                "is_essential": false
+            },
+            "avatar_database": {
+                "name": {
+                    "en": "Avatar changes (in database)",
+                    "de": "Avataränderungen (in Datenbank)"
+                },
+                "description": {
+                    "en": "Log avatar changes in a database. You can then use advanced search functions on these.",
+                    "de": "Protokolliere Avataränderungen in Datenbank. Auf diese Daten können erweiterte Suchfunktionen angewendet werden."
+                },
+                "default": false,
+                "data_type": "boolean",
+                "is_list": false,
+                "is_essential": false
+            },
             "member_join_local": {
                 "name": {
                     "en": "Server joins (in channel)",

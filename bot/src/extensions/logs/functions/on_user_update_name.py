@@ -22,7 +22,6 @@ async def iterate_and_log(bot: Bot, before: User, after: User):
 
 async def __log_local(bot: Bot, before: User, after: User, guild_id: int, log_channel: TextChannel):
     embed = Embed()
-    embed.title = await s.get_string("logs", "name_changed", bot=bot, guild_id=guild_id)
     embed = await helper.add_title(bot, embed, guild_id, "name_changed")
     embed = await helper.add_author(bot, embed, guild_id, user=after)
     embed = await __add_name_local(bot, after, embed, "after", guild_id)

@@ -1060,6 +1060,14 @@
             "de": {
                 "neutral": "Anzahl"
             }
+        },
+        "avatar_changed": {
+            "en": {
+                "neutral": "Avatar changed"
+            },
+            "de": {
+                "neutral": "Avatar geändert"
+            }
         }
     },
     "time": {
