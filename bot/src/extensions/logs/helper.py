@@ -14,16 +14,12 @@ from helpers import strings as s
 from helpers.strings import InsertPosition
 
 
-async def get_log_channel(bot: Bot, guild_id: int, config_option: str):
+async def get_log_channel(bot: Bot, guild_id: int, config_option: str) -> TextChannel:
+    log_channel = None
     channel_config = await c.get_config("logs", config_option, bot=bot, guild_id=guild_id)
-    if channel_config.value is not None:
+    if channel_config.value is not None and not (isinstance(channel_config.value, str) and len(channel_config.value) < 1):
         log_channel = bot.get_channel(int(channel_config.value))
-        if log_channel is None:
-            # fall back to log channel if configured channel not found
-            log_channel = await __get_essential_log_channel(bot, guild_id)
-    else:
-        log_channel = await __get_essential_log_channel(bot, guild_id)
-    return log_channel
+    return log_channel if log_channel is not None else await __get_essential_log_channel(bot, guild_id)
 
 
 async def __get_essential_log_channel(bot: Bot, guild_id: int) -> TextChannel:
